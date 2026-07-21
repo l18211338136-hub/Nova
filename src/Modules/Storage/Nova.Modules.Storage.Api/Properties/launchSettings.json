@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Nova.Modules.Storage.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:49200;http://localhost:49201"
+    }
+  }
+}

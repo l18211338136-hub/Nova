@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\..\Framework\Nova.Framework.MultiTenancy\Nova.Framework.MultiTenancy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 动态加载各业务模块 API 层的 DLL 到运行目录 -->
+    <ProjectReference Include="..\..\Modules\**\*.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Nova.Modules.Identity.Api\Nova.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Workspace\Nova.Modules.Workspace.Api\Nova.Modules.Workspace.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Agent\Nova.Modules.Agent.Api\Nova.Modules.Agent.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\Nova.Modules.Workflow.Api\Nova.Modules.Workflow.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Memory\Nova.Modules.Memory.Api\Nova.Modules.Memory.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Knowledge\Nova.Modules.Knowledge.Api\Nova.Modules.Knowledge.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Chat\Nova.Modules.Chat.Api\Nova.Modules.Chat.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Prompt\Nova.Modules.Prompt.Api\Nova.Modules.Prompt.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Model\Nova.Modules.Model.Api\Nova.Modules.Model.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Tool\Nova.Modules.Tool.Api\Nova.Modules.Tool.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\MCP\Nova.Modules.MCP.Api\Nova.Modules.MCP.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Billing\Nova.Modules.Billing.Api\Nova.Modules.Billing.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Storage\Nova.Modules.Storage.Api\Nova.Modules.Storage.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Audit\Nova.Modules.Audit.Api\Nova.Modules.Audit.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Notification\Nova.Modules.Notification.Api\Nova.Modules.Notification.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Multitenancy\Nova.Modules.Multitenancy.Api\Nova.Modules.Multitenancy.Api.csproj" />
+  </ItemGroup>
+
+</Project>

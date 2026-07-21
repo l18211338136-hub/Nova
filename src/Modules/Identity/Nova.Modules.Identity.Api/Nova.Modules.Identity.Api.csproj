@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Identity.Application\Nova.Modules.Identity.Application.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Identity.Infrastructure\Nova.Modules.Identity.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
