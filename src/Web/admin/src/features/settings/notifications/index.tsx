@@ -1,11 +1,13 @@
 import { ContentSection } from '../components/content-section'
+import { useTranslation } from 'react-i18next'
 import { NotificationsForm } from './notifications-form'
 
 export function SettingsNotifications() {
+  const { t } = useTranslation()
   return (
     <ContentSection
-      title='Notifications'
-      desc='Configure how you receive notifications.'
+      title={t('Notifications')}
+      desc={t('Configure how you receive notifications.')}
     >
       <NotificationsForm />
     </ContentSection>

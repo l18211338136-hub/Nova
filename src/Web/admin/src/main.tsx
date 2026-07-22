@@ -17,6 +17,9 @@ import { ThemeProvider } from './context/theme-provider'
 import { routeTree } from './routeTree.gen'
 // Styles
 import './styles/index.css'
+// i18n
+import './lib/i18n'
+
 
 const queryClient = new QueryClient({
   defaultOptions: {

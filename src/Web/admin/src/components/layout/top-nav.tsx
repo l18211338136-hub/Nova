@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ type TopNavProps = React.HTMLAttributes<HTMLElement> & {
 }
 
 export function TopNav({ className, links, ...props }: TopNavProps) {
+  const { t } = useTranslation()
   return (
     <>
       <DropdownMenu modal={false}>
@@ -40,7 +42,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
                 className={!isActive ? 'text-muted-foreground' : ''}
                 disabled={disabled}
               >
-                {title}
+                {t(title)}
               </Link>
             </DropdownMenuItem>
           ))}
@@ -61,7 +63,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
             disabled={disabled}
             className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? '' : 'text-muted-foreground'}`}
           >
-            {title}
+            {t(title)}
           </Link>
         ))}
       </nav>

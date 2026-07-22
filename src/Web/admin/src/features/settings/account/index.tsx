@@ -1,12 +1,13 @@
 import { ContentSection } from '../components/content-section'
+import { useTranslation } from 'react-i18next'
 import { AccountForm } from './account-form'
 
 export function SettingsAccount() {
+  const { t } = useTranslation()
   return (
     <ContentSection
-      title='Account'
-      desc='Update your account settings. Set your preferred language and
-          timezone.'
+      title={t('Account')}
+      desc={t('Update your account settings. Set your preferred language and timezone.')}
     >
       <AccountForm />
     </ContentSection>

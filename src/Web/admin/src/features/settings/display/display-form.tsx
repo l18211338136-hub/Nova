@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { showSubmittedData } from '@/lib/show-submitted-data'
@@ -41,13 +42,13 @@ const items = [
   },
 ] as const
 
-const displayFormSchema = z.object({
+const getDisplayFormSchema = (t: (arg: string) => string) => z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one item.',
+    message: t('You have to select at least one item.'),
   }),
 })
 
-type DisplayFormValues = z.infer<typeof displayFormSchema>
+type DisplayFormValues = z.infer<ReturnType<typeof getDisplayFormSchema>>
 
 // This can come from your database or API.
 const defaultValues: Partial<DisplayFormValues> = {
@@ -55,6 +56,8 @@ const defaultValues: Partial<DisplayFormValues> = {
 }
 
 export function DisplayForm() {
+  const { t } = useTranslation()
+  const displayFormSchema = getDisplayFormSchema(t)
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
     defaultValues,
@@ -72,9 +75,9 @@ export function DisplayForm() {
           render={() => (
             <FormItem>
               <div className='mb-4'>
-                <FormLabel className='text-base'>Sidebar</FormLabel>
+                <FormLabel className='text-base'>{t('Sidebar')}</FormLabel>
                 <FormDescription>
-                  Select the items you want to display in the sidebar.
+                  {t('Select the items you want to display in the sidebar.')}
                 </FormDescription>
               </div>
               {items.map((item) => (
@@ -103,7 +106,7 @@ export function DisplayForm() {
                           />
                         </FormControl>
                         <FormLabel className='font-normal'>
-                          {item.label}
+                          {t(item.label)}
                         </FormLabel>
                       </FormItem>
                     )
@@ -114,7 +117,7 @@ export function DisplayForm() {
             </FormItem>
           )}
         />
-        <Button type='submit'>Update display</Button>
+        <Button type='submit'>{t('Update display')}</Button>
       </form>
     </Form>
   )

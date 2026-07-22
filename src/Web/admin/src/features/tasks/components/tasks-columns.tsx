@@ -6,7 +6,7 @@ import { labels, priorities, statuses } from '../data/data'
 import { type Task } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
 
-export const tasksColumns: ColumnDef<Task>[] = [
+export const getTasksColumns = (t: (arg: string) => string): ColumnDef<Task>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -34,7 +34,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
   {
     accessorKey: 'id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Task' />
+      <DataTableColumnHeader column={column} title={t('Task')} />
     ),
     cell: ({ row }) => <div className='w-20'>{row.getValue('id')}</div>,
     enableSorting: false,
@@ -43,7 +43,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
   {
     accessorKey: 'title',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Title' />
+      <DataTableColumnHeader column={column} title={t('Title')} />
     ),
     meta: {
       className: 'ps-1 max-w-0 w-2/3',
@@ -54,7 +54,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
 
       return (
         <div className='flex space-x-2'>
-          {label && <Badge variant='outline'>{label.label}</Badge>}
+          {label && <Badge variant='outline'>{t(label.label)}</Badge>}
           <span className='truncate font-medium'>{row.getValue('title')}</span>
         </div>
       )
@@ -63,7 +63,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title={t('Status')} />
     ),
     meta: { className: 'ps-1', tdClassName: 'ps-4' },
     cell: ({ row }) => {
@@ -80,7 +80,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
           {status.icon && (
             <status.icon className='size-4 text-muted-foreground' />
           )}
-          <span>{status.label}</span>
+          <span>{t(status.label)}</span>
         </div>
       )
     },
@@ -91,7 +91,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
   {
     accessorKey: 'priority',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Priority' />
+      <DataTableColumnHeader column={column} title={t('Priority')} />
     ),
     meta: { className: 'ps-1', tdClassName: 'ps-3' },
     cell: ({ row }) => {
@@ -108,7 +108,7 @@ export const tasksColumns: ColumnDef<Task>[] = [
           {priority.icon && (
             <priority.icon className='size-4 text-muted-foreground' />
           )}
-          <span>{priority.label}</span>
+          <span>{t(priority.label)}</span>
         </div>
       )
     },

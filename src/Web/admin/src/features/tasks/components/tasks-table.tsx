@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   type SortingState,
@@ -26,7 +27,7 @@ import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { priorities, statuses } from '../data/data'
 import { type Task } from '../data/schema'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { tasksColumns as columns } from './tasks-columns'
+import { getTasksColumns } from './tasks-columns'
 
 const route = getRouteApi('/_authenticated/tasks/')
 
@@ -35,6 +36,7 @@ type DataTableProps = {
 }
 
 export function TasksTable({ data }: DataTableProps) {
+  const { t } = useTranslation()
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [sorting, setSorting] = useState<SortingState>([])
@@ -64,6 +66,8 @@ export function TasksTable({ data }: DataTableProps) {
       { columnId: 'priority', searchKey: 'priority', type: 'array' },
     ],
   })
+
+  const columns = useMemo(() => getTasksColumns(t), [t])
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -113,17 +117,17 @@ export function TasksTable({ data }: DataTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter by title or ID...'
+        searchPlaceholder={t('Filter by title or ID...')}
         filters={[
           {
             columnId: 'status',
-            title: 'Status',
-            options: statuses,
+            title: t('Status'),
+            options: statuses.map(s => ({ ...s, label: t(s.label) })),
           },
           {
             columnId: 'priority',
-            title: 'Priority',
-            options: priorities,
+            title: t('Priority'),
+            options: priorities.map(p => ({ ...p, label: t(p.label) })),
           },
         ]}
       />
@@ -183,7 +187,7 @@ export function TasksTable({ data }: DataTableProps) {
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  {t('No results.')}
                 </TableCell>
               </TableRow>
             )}

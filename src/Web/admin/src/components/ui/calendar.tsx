@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
+import { zhCN, enUS } from 'react-day-picker/locale'
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -20,6 +22,8 @@ function Calendar({
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>['variant']
 }) {
+  const { i18n } = useTranslation()
+  const locale = i18n.language.startsWith('zh') ? zhCN : enUS
   const defaultClassNames = getDefaultClassNames()
 
   return (
@@ -32,9 +36,10 @@ function Calendar({
         className
       )}
       captionLayout={captionLayout}
+      locale={locale}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString('default', { month: 'short' }),
+          date.toLocaleString(i18n.language, { month: 'short' }),
         ...formatters,
       }}
       classNames={{
