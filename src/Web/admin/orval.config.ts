@@ -17,7 +17,7 @@ export default defineConfig({
             const renameMap: Record<string, string> = {};
             
             Object.keys(schemas).forEach(key => {
-              let newKey = key.replace(/(Command|Result)$/, '');
+              let newKey = key.replace(/Command$/, '');
               if (newKey !== key) {
                 renameMap[`#/components/schemas/${key}`] = `#/components/schemas/${newKey}`;
               }

@@ -5,10 +5,15 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * @nullable
- */
-export type RegisterUser = {
-  /** 新创建用户的唯一标识 ID */
-  userId?: string;
-} | null;
+export interface RegisterUser {
+  /** 新用户名 */
+  username?: string;
+  /** 用户邮箱 */
+  email?: string;
+  /** 密码 */
+  password?: string;
+  /** 确认密码 */
+  confirmPassword?: string;
+  /** 邮箱验证码 */
+  emailCode?: string;
+}

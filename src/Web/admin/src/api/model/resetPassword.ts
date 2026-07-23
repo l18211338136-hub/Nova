@@ -5,7 +5,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface SendEmailRegisterCode {
+export interface ResetPassword {
   /** 注册邮箱 */
   email?: string;
+  /** 验证码 */
+  code?: string;
+  /** 新密码 */
+  newPassword?: string;
 }

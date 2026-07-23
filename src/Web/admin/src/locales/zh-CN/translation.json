@@ -339,5 +339,15 @@
     "does not exist or might have been removed.":  "不存在或已被删除。",
     "Unauthorized Access":  "未授权访问",
     "Please log in with the appropriate credentials":  "请使用适当的凭据登录",
-    "to access this resource.":  "以访问此资源。"
+    "to access this resource.":  "以访问此资源。",
+    "Something went wrong!": "出错了！",
+    "No content.": "暂无数据。",
+    "Please enter the verification code.": "请输入验证码。",
+    "Verification Code": "验证码",
+    "Send Code": "获取验证码",
+    "Verification code sent successfully.": "验证码发送成功。",
+    "Failed to send verification code.": "验证码发送失败，请稍后再试。",
+    "Please sign in.": "请登录。",
+    "Password Login": "密码登录",
+    "Code Login": "验证码登录"
 }

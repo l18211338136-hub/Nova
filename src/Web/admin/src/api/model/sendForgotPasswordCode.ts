@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface SendEmailRegisterCode {
+export interface SendForgotPasswordCode {
   /** 注册邮箱 */
   email?: string;
 }

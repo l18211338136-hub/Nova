@@ -1,4 +1,4 @@
-﻿using Nova.Contracts.Exceptions;
+using Nova.Contracts.Exceptions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,13 +22,13 @@ public class RegisterUserCommandHandler : IConsumer<RegisterUserCommand>
     {
         var command = context.Message;
         
-        if (!_memoryCache.TryGetValue("RegisterCode:$($command.Email)", out string? cachedCode) || cachedCode != command.EmailCode)
+        if (!_memoryCache.TryGetValue($"RegisterCode:{command.Email}", out string? cachedCode) || cachedCode != command.EmailCode)
         {
             throw new NovaValidationException("验证码错误或已过期");
         }
 
         // 验证成功后清理缓存
-        _memoryCache.Remove("RegisterCode:$($command.Email)");
+        _memoryCache.Remove($"RegisterCode:{command.Email}");
 
         var existingUser = await _userManager.FindByEmailAsync(command.Email);
         if (existingUser != null)

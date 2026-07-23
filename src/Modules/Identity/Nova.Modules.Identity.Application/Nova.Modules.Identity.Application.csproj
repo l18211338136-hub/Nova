@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Nova.Modules.Identity.Domain\Nova.Modules.Identity.Domain.csproj" />
     <ProjectReference Include="..\..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.Application\Nova.Framework.Application.csproj" />
   </ItemGroup>
 
 </Project>

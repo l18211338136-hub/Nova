@@ -5,14 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * @nullable
- */
-export type Login = {
-  /** JWT Token，需在请求头带上 Bearer {Token} */
-  token?: string;
-  /** 刷新令牌，用于在 AccessToken 过期后获取新的 Token */
-  refreshToken?: string;
-  /** 访问令牌的过期时间（单位：秒） */
-  expiresIn?: number;
-} | null;
+export interface Login {
+  /** 账号 (用户名或邮箱) */
+  account?: string;
+  /** 密码 */
+  password?: string;
+}

@@ -9,32 +9,31 @@ using Nova.Modules.Identity.Domain.Users;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeCommand>
+public class SendForgotPasswordCodeCommandHandler : IConsumer<SendForgotPasswordCodeCommand>
 {
     private readonly UserManager<User> _userManager;
     private readonly IMediator _mediator;
     private readonly IMemoryCache _memoryCache;
 
-    public SendEmailLoginCodeCommandHandler(UserManager<User> userManager, IMediator mediator, IMemoryCache memoryCache)
+    public SendForgotPasswordCodeCommandHandler(UserManager<User> userManager, IMediator mediator, IMemoryCache memoryCache)
     {
         _userManager = userManager;
         _mediator = mediator;
         _memoryCache = memoryCache;
     }
 
-    public async Task Consume(ConsumeContext<SendEmailLoginCodeCommand> context)
+    public async Task Consume(ConsumeContext<SendForgotPasswordCodeCommand> context)
     {
         var request = context.Message;
-
+        
         var cacheKey = $"RateLimit:SendCode:{request.Email}";
         _memoryCache.EnsureRateLimit(cacheKey);
-        
+
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
             // 为防止用户枚举攻击，即使用户不存在也不应该返回报错
-            // 可以直接抛出一个通用异常或者返回成功。此处选择直接返回
-            await context.RespondAsync(new SendEmailLoginCodeResult { Success = true });
+            await context.RespondAsync(new SendForgotPasswordCodeResult { Success = true });
             return;
         }
 
@@ -42,15 +41,14 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
 
         var emailBody = $@"
-            <h3>安全登录验证码</h3>
-            <p>您的登录验证码是：<strong>{code}</strong></p>
-            <p>该验证码在 3 分钟内有效。请勿泄露给他人。</p>
+            <h3>重置密码验证码</h3>
+            <p>您正在进行重置密码操作，您的验证码是：<strong>{code}</strong></p>
+            <p>该验证码在 3 分钟内有效。如果这不是您的操作，请忽略此邮件。</p>
         ";
 
-        // 依靠已重构好的 Notification 模块发送邮件
         await _mediator.Send(new SendEmailCommand(
             To: request.Email,
-            Subject: "【Nova】您的登录验证码",
+            Subject: "【Nova】重置密码验证码",
             Body: emailBody,
             IsHtml: true
         ));
@@ -58,6 +56,6 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         // 设置 60 秒发送冷却时间
         _memoryCache.SetRateLimit(cacheKey, 60);
 
-        await context.RespondAsync(new SendEmailLoginCodeResult { Success = true });
+        await context.RespondAsync(new SendForgotPasswordCodeResult { Success = true });
     }
 }

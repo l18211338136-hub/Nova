@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { useSendForgotPasswordCode } from '@/api/endpoints/identity/identity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -38,19 +39,27 @@ export function ForgotPasswordForm({
     defaultValues: { email: '' },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  const { mutateAsync: sendCode } = useSendForgotPasswordCode()
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
-    toast.promise(sleep(2000), {
-      loading: t('Sending email...'),
-      success: () => {
-        setIsLoading(false)
+    try {
+      const res = await sendCode({ data: { email: data.email } })
+      if (res.code === 200) {
+        toast.success(`${t('Email sent to')} ${data.email}`)
         form.reset()
-        navigate({ to: '/otp' })
-        return `${t('Email sent to')} ${data.email}`
-      },
-      error: t('Error'),
-    })
+        // 将邮箱通过 query 传递给下一页或者存在状态中
+        // 为了简便，目前我们依赖用户在 reset-password 页面再次确认邮箱，或者把 email 传过去
+        navigate({ to: '/reset-password', search: { email: data.email } })
+      } else {
+        toast.error(res.message || t('Error'))
+      }
+    } catch (e: any) {
+      // 错误由全局拦截器处理
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

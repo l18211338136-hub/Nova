@@ -5,7 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface SendEmailRegisterCode {
-  /** 注册邮箱 */
-  email?: string;
-}
+/**
+ * @nullable
+ */
+export type SendEmailLoginCodeResult = {
+  /** 发送结果 */
+  success?: boolean;
+} | null;

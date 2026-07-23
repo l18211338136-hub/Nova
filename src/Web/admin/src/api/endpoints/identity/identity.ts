@@ -15,16 +15,20 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ApiResponseOfLogin,
-  ApiResponseOfRegisterUser,
-  ApiResponseOfSendEmailLoginCode,
-  ApiResponseOfSendEmailRegisterCode,
+  ApiResponseOfLoginResult,
+  ApiResponseOfRegisterUserResult,
+  ApiResponseOfResetPasswordResult,
+  ApiResponseOfSendEmailLoginCodeResult,
+  ApiResponseOfSendEmailRegisterCodeResult,
+  ApiResponseOfSendForgotPasswordCodeResult,
   EmailLogin,
   Login,
   RefreshToken,
   RegisterUser,
+  ResetPassword,
   SendEmailLoginCode,
-  SendEmailRegisterCode
+  SendEmailRegisterCode,
+  SendForgotPasswordCode
 } from '../../model';
 
 import { customInstance } from '../../../lib/api-client';
@@ -44,7 +48,7 @@ export const emailLogin = (
 ) => {
 
 
-      return customInstance<ApiResponseOfLogin>(
+      return customInstance<ApiResponseOfLoginResult>(
       {url: `/api/identity/email-login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: emailLogin, signal
@@ -104,15 +108,15 @@ export const useEmailLogin = <TError = unknown,
  * @summary 用户登录
  */
 export const login = (
-    loginNull: Login | null,
+    login: Login,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-      return customInstance<ApiResponseOfLogin>(
+      return customInstance<ApiResponseOfLoginResult>(
       {url: `/api/identity/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: loginNull, signal
+      data: login, signal
     },
       options);
     }
@@ -121,8 +125,8 @@ export const login = (
 
 
 export const getLoginMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login | null}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login | null}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login}, TContext> => {
 
 const mutationKey = ['login'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -134,7 +138,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: Login | null}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: Login}> = (props) => {
           const {data} = props ?? {};
 
           return  login(data,requestOptions)
@@ -148,18 +152,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
-    export type LoginMutationBody = Login | null
+    export type LoginMutationBody = Login
     export type LoginMutationError = unknown
 
     /**
  * @summary 用户登录
  */
 export const useLogin = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login | null}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: Login}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof login>>,
         TError,
-        {data: Login | null},
+        {data: Login},
         TContext
       > => {
       return useMutation(getLoginMutationOptions(options), queryClient);
@@ -174,7 +178,7 @@ export const refresh = (
 ) => {
 
 
-      return customInstance<ApiResponseOfLogin>(
+      return customInstance<ApiResponseOfLoginResult>(
       {url: `/api/identity/refresh`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: refreshToken, signal
@@ -234,15 +238,15 @@ export const useRefresh = <TError = unknown,
  * @summary 用户注册
  */
 export const register = (
-    registerUserNull: RegisterUser | null,
+    registerUser: RegisterUser,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-      return customInstance<ApiResponseOfRegisterUser>(
+      return customInstance<ApiResponseOfRegisterUserResult>(
       {url: `/api/identity/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: registerUserNull, signal
+      data: registerUser, signal
     },
       options);
     }
@@ -251,8 +255,8 @@ export const register = (
 
 
 export const getRegisterMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser | null}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser | null}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser}, TContext> => {
 
 const mutationKey = ['register'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -264,7 +268,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register>>, {data: RegisterUser | null}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register>>, {data: RegisterUser}> = (props) => {
           const {data} = props ?? {};
 
           return  register(data,requestOptions)
@@ -278,36 +282,101 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type RegisterMutationResult = NonNullable<Awaited<ReturnType<typeof register>>>
-    export type RegisterMutationBody = RegisterUser | null
+    export type RegisterMutationBody = RegisterUser
     export type RegisterMutationError = unknown
 
     /**
  * @summary 用户注册
  */
 export const useRegister = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser | null}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: RegisterUser}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof register>>,
         TError,
-        {data: RegisterUser | null},
+        {data: RegisterUser},
         TContext
       > => {
       return useMutation(getRegisterMutationOptions(options), queryClient);
+    }
+    /**
+ * 通过邮箱验证码重置用户密码
+ * @summary 重置密码
+ */
+export const resetPassword = (
+    resetPassword: ResetPassword,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfResetPasswordResult>(
+      {url: `/api/identity/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPassword, signal
+    },
+      options);
+    }
+
+
+
+
+export const getResetPasswordMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPassword}, TContext> => {
+
+const mutationKey = ['resetPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetPassword>>, {data: ResetPassword}> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>
+    export type ResetPasswordMutationBody = ResetPassword
+    export type ResetPasswordMutationError = unknown
+
+    /**
+ * @summary 重置密码
+ */
+export const useResetPassword = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetPassword>>,
+        TError,
+        {data: ResetPassword},
+        TContext
+      > => {
+      return useMutation(getResetPasswordMutationOptions(options), queryClient);
     }
     /**
  * 通过邮箱发送用于免密登录的 6 位数验证码
  * @summary 发送登录验证码
  */
 export const sendLoginCode = (
-    sendEmailLoginCodeNull: SendEmailLoginCode | null,
+    sendEmailLoginCode: SendEmailLoginCode,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-      return customInstance<ApiResponseOfSendEmailLoginCode>(
+      return customInstance<ApiResponseOfSendEmailLoginCodeResult>(
       {url: `/api/identity/send-login-code`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: sendEmailLoginCodeNull, signal
+      data: sendEmailLoginCode, signal
     },
       options);
     }
@@ -316,8 +385,8 @@ export const sendLoginCode = (
 
 
 export const getSendLoginCodeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode | null}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode | null}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode}, TContext> => {
 
 const mutationKey = ['sendLoginCode'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -329,7 +398,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendLoginCode>>, {data: SendEmailLoginCode | null}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendLoginCode>>, {data: SendEmailLoginCode}> = (props) => {
           const {data} = props ?? {};
 
           return  sendLoginCode(data,requestOptions)
@@ -343,18 +412,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SendLoginCodeMutationResult = NonNullable<Awaited<ReturnType<typeof sendLoginCode>>>
-    export type SendLoginCodeMutationBody = SendEmailLoginCode | null
+    export type SendLoginCodeMutationBody = SendEmailLoginCode
     export type SendLoginCodeMutationError = unknown
 
     /**
  * @summary 发送登录验证码
  */
 export const useSendLoginCode = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode | null}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLoginCode>>, TError,{data: SendEmailLoginCode}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendLoginCode>>,
         TError,
-        {data: SendEmailLoginCode | null},
+        {data: SendEmailLoginCode},
         TContext
       > => {
       return useMutation(getSendLoginCodeMutationOptions(options), queryClient);
@@ -364,15 +433,15 @@ export const useSendLoginCode = <TError = unknown,
  * @summary 发送注册验证码
  */
 export const sendRegisterCode = (
-    sendEmailRegisterCodeNull: SendEmailRegisterCode | null,
+    sendEmailRegisterCode: SendEmailRegisterCode,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-      return customInstance<ApiResponseOfSendEmailRegisterCode>(
+      return customInstance<ApiResponseOfSendEmailRegisterCodeResult>(
       {url: `/api/identity/send-register-code`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: sendEmailRegisterCodeNull, signal
+      data: sendEmailRegisterCode, signal
     },
       options);
     }
@@ -381,8 +450,8 @@ export const sendRegisterCode = (
 
 
 export const getSendRegisterCodeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode | null}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode | null}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode}, TContext> => {
 
 const mutationKey = ['sendRegisterCode'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -394,7 +463,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendRegisterCode>>, {data: SendEmailRegisterCode | null}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendRegisterCode>>, {data: SendEmailRegisterCode}> = (props) => {
           const {data} = props ?? {};
 
           return  sendRegisterCode(data,requestOptions)
@@ -408,19 +477,84 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SendRegisterCodeMutationResult = NonNullable<Awaited<ReturnType<typeof sendRegisterCode>>>
-    export type SendRegisterCodeMutationBody = SendEmailRegisterCode | null
+    export type SendRegisterCodeMutationBody = SendEmailRegisterCode
     export type SendRegisterCodeMutationError = unknown
 
     /**
  * @summary 发送注册验证码
  */
 export const useSendRegisterCode = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode | null}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRegisterCode>>, TError,{data: SendEmailRegisterCode}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendRegisterCode>>,
         TError,
-        {data: SendEmailRegisterCode | null},
+        {data: SendEmailRegisterCode},
         TContext
       > => {
       return useMutation(getSendRegisterCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * 通过邮箱发送用于重置密码的 6 位数验证码
+ * @summary 发送忘记密码验证码
+ */
+export const sendForgotPasswordCode = (
+    sendForgotPasswordCode: SendForgotPasswordCode,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfSendForgotPasswordCodeResult>(
+      {url: `/api/identity/send-forgot-password-code`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: sendForgotPasswordCode, signal
+    },
+      options);
+    }
+
+
+
+
+export const getSendForgotPasswordCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendForgotPasswordCode>>, TError,{data: SendForgotPasswordCode}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendForgotPasswordCode>>, TError,{data: SendForgotPasswordCode}, TContext> => {
+
+const mutationKey = ['sendForgotPasswordCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendForgotPasswordCode>>, {data: SendForgotPasswordCode}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendForgotPasswordCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendForgotPasswordCodeMutationResult = NonNullable<Awaited<ReturnType<typeof sendForgotPasswordCode>>>
+    export type SendForgotPasswordCodeMutationBody = SendForgotPasswordCode
+    export type SendForgotPasswordCodeMutationError = unknown
+
+    /**
+ * @summary 发送忘记密码验证码
+ */
+export const useSendForgotPasswordCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendForgotPasswordCode>>, TError,{data: SendForgotPasswordCode}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sendForgotPasswordCode>>,
+        TError,
+        {data: SendForgotPasswordCode},
+        TContext
+      > => {
+      return useMutation(getSendForgotPasswordCodeMutationOptions(options), queryClient);
     }

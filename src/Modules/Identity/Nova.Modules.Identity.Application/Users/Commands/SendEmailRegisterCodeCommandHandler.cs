@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;
+using Nova.Framework.Application.Extensions;
 using Nova.Modules.Identity.Domain.Users;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
@@ -24,6 +25,9 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
     public async Task Consume(ConsumeContext<SendEmailRegisterCodeCommand> context)
     {
         var request = context.Message;
+
+        var cacheKey = $"RateLimit:SendCode:{request.Email}";
+        _memoryCache.EnsureRateLimit(cacheKey);
         
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user != null)
@@ -51,6 +55,9 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
             Body: emailBody,
             IsHtml: true
         ));
+
+        // 设置 60 秒发送冷却时间
+        _memoryCache.SetRateLimit(cacheKey, 60);
 
         await context.RespondAsync(new SendEmailRegisterCodeResult { Success = true });
     }

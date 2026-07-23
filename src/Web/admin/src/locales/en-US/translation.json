@@ -342,5 +342,15 @@
     "does not exist or might have been removed.":  "does not exist or might have been removed.",
     "Unauthorized Access":  "Unauthorized Access",
     "Please log in with the appropriate credentials":  "Please log in with the appropriate credentials",
-    "to access this resource.":  "to access this resource."
+    "to access this resource.":  "to access this resource.",
+    "Something went wrong!": "Something went wrong!",
+    "No content.": "No content.",
+    "Please enter the verification code.": "Please enter the verification code.",
+    "Verification Code": "Verification Code",
+    "Send Code": "Send Code",
+    "Verification code sent successfully.": "Verification code sent successfully.",
+    "Failed to send verification code.": "Failed to send verification code, please try again.",
+    "Please sign in.": "Please sign in.",
+    "Password Login": "Password Login",
+    "Code Login": "Code Login"
 }

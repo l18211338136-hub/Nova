@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -6,9 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
-import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import { useLogin, useEmailLogin, useSendLoginCode } from '@/api/endpoints/identity/identity'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -20,8 +21,9 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-const getFormSchema = (t: (arg: string) => string) => z.object({
+const getPasswordFormSchema = (t: (arg: string) => string) => z.object({
   email: z.email({
     error: (iss) => (iss.input === '' ? t('Please enter your email.') : undefined),
   }),
@@ -31,7 +33,14 @@ const getFormSchema = (t: (arg: string) => string) => z.object({
     .min(7, t('Password must be at least 7 characters long.')),
 })
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
+const getCodeFormSchema = (t: (arg: string) => string) => z.object({
+  email: z.email({
+    error: (iss) => (iss.input === '' ? t('Please enter your email.') : undefined),
+  }),
+  emailCode: z.string().min(1, t('Please enter the verification code.')),
+})
+
+interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   redirectTo?: string
 }
 
@@ -41,93 +50,208 @@ export function UserAuthForm({
   ...props
 }: UserAuthFormProps) {
   const { t } = useTranslation()
-  const formSchema = getFormSchema(t)
+  const passwordFormSchema = getPasswordFormSchema(t)
+  const codeFormSchema = getCodeFormSchema(t)
+  
   const [isLoading, setIsLoading] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  
   const navigate = useNavigate()
   const { auth } = useAuthStore()
+  
+  const { mutateAsync: login } = useLogin()
+  const { mutateAsync: emailLogin } = useEmailLogin()
+  const { mutateAsync: sendCode } = useSendLoginCode()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+    }
+    return () => clearTimeout(timer)
+  }, [countdown])
+
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
       email: '',
       password: '',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  const codeForm = useForm<z.infer<typeof codeFormSchema>>({
+    resolver: zodResolver(codeFormSchema),
+    defaultValues: {
+      email: '',
+      emailCode: '',
+    },
+  })
+
+  async function handleSendCode() {
+    const email = codeForm.getValues('email')
+    const result = z.string().email().safeParse(email)
+    if (!result.success) {
+      codeForm.setError('email', { type: 'manual', message: t('Please enter a valid email.') })
+      return
+    }
+
+    setIsSendingCode(true)
+    try {
+      const res = await sendCode({ data: { email } })
+      if (res.code === 200) {
+        toast.success(t('Verification code sent successfully.'))
+        setCountdown(60)
+      } else {
+        toast.error(res.message || t('Failed to send verification code.'))
+      }
+    } catch (error: any) {
+      // handled globally
+    } finally {
+      setIsSendingCode(false)
+    }
+  }
+
+  async function onSubmitPassword(data: z.infer<typeof passwordFormSchema>) {
     setIsLoading(true)
+    try {
+      const response = await login({
+        data: { account: data.email, password: data.password },
+      })
+      handleLoginSuccess(response)
+    } catch (error: any) {
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-    toast.promise(sleep(2000), {
-      loading: t('Signing in...'),
-      success: () => {
-        setIsLoading(false)
+  async function onSubmitCode(data: z.infer<typeof codeFormSchema>) {
+    setIsLoading(true)
+    try {
+      const response = await emailLogin({
+        data: { email: data.email, code: data.emailCode },
+      })
+      handleLoginSuccess(response)
+    } catch (error: any) {
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-        // Mock successful authentication with expiry computed at success time
-        const mockUser = {
-          accountNo: 'ACC001',
-          email: data.email,
-          role: ['user'],
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-        }
-
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
-        navigate({ to: targetPath, replace: true })
-
-        return `${t('Welcome back')}, ${data.email}!`
-      },
-      error: t('Error'),
-    })
+  function handleLoginSuccess(response: any) {
+    const resData = response.data
+    if (response.code === 200 && resData && resData.token) {
+      auth.setAccessToken(resData.token)
+      if (resData.refreshToken) {
+        auth.setRefreshToken(resData.refreshToken)
+      }
+      toast.success(`${t('Welcome back')}!`)
+      const targetPath = redirectTo || '/'
+      navigate({ to: targetPath, replace: true })
+    } else {
+      toast.error(response.message || t('Error signing in'))
+    }
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={cn('grid gap-3', className)}
-        {...props}
-      >
-        <FormField
-          control={form.control}
-          name='email'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Email')}</FormLabel>
-              <FormControl>
-                <Input placeholder='name@example.com' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='password'
-          render={({ field }) => (
-            <FormItem className='relative'>
-              <FormLabel>{t('Password')}</FormLabel>
-              <FormControl>
-                <PasswordInput placeholder='********' {...field} />
-              </FormControl>
-              <FormMessage />
-              <Link
-                to='/forgot-password'
-                className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
-              >
-                {t('Forgot password?')}
-              </Link>
-            </FormItem>
-          )}
-        />
-        <Button className='mt-2' disabled={isLoading}>
-          {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
-          {t('Sign In')}
-        </Button>
-
+    <div className={cn('grid gap-6', className)} {...props}>
+      <Tabs defaultValue="password">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="password">{t('Password Login')}</TabsTrigger>
+          <TabsTrigger value="code">{t('Code Login')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="password">
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className='grid gap-3 pt-4'>
+              <FormField
+                control={passwordForm.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Email')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder='name@example.com' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
+                name='password'
+                render={({ field }) => (
+                  <FormItem className='relative'>
+                    <FormLabel>{t('Password')}</FormLabel>
+                    <FormControl>
+                      <PasswordInput placeholder='********' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    <Link
+                      to='/forgot-password'
+                      className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
+                    >
+                      {t('Forgot password?')}
+                    </Link>
+                  </FormItem>
+                )}
+              />
+              <Button className='mt-2' disabled={isLoading}>
+                {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
+                {t('Sign In')}
+              </Button>
+            </form>
+          </Form>
+        </TabsContent>
+        <TabsContent value="code">
+          <Form {...codeForm}>
+            <form onSubmit={codeForm.handleSubmit(onSubmitCode)} className='grid gap-3 pt-4'>
+              <FormField
+                control={codeForm.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Email')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder='name@example.com' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={codeForm.control}
+                name='emailCode'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Verification Code')}</FormLabel>
+                    <div className='flex gap-2'>
+                      <FormControl>
+                        <Input placeholder='123456' {...field} />
+                      </FormControl>
+                      <Button 
+                        type='button' 
+                        variant='outline' 
+                        disabled={countdown > 0 || isSendingCode} 
+                        onClick={handleSendCode}
+                      >
+                        {countdown > 0 ? `${countdown}s` : (isSendingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Send Code'))}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button className='mt-2' disabled={isLoading}>
+                {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
+                {t('Sign In')}
+              </Button>
+            </form>
+          </Form>
+        </TabsContent>
+      </Tabs>
+      
+      {/* 暂时隐藏的第三方登录按钮，等后端接入 OAuth 后去掉 hidden 即可恢复 */}
+      <div className='hidden'>
         <div className='relative my-2'>
           <div className='absolute inset-0 flex items-center'>
             <span className='w-full border-t' />
@@ -147,7 +271,7 @@ export function UserAuthForm({
             <IconFacebook className='h-4 w-4' /> {t('Facebook')}
           </Button>
         </div>
-      </form>
-    </Form>
+      </div>
+    </div>
   )
 }

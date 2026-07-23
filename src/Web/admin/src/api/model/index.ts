@@ -5,14 +5,24 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export * from './apiResponseOfLogin';
-export * from './apiResponseOfRegisterUser';
-export * from './apiResponseOfSendEmailLoginCode';
-export * from './apiResponseOfSendEmailRegisterCode';
+export * from './apiResponseOfLoginResult';
+export * from './apiResponseOfRegisterUserResult';
+export * from './apiResponseOfResetPasswordResult';
+export * from './apiResponseOfSendEmailLoginCodeResult';
+export * from './apiResponseOfSendEmailRegisterCodeResult';
+export * from './apiResponseOfSendForgotPasswordCodeResult';
 export * from './createTenant';
 export * from './emailLogin';
 export * from './login';
+export * from './loginResult';
 export * from './refreshToken';
 export * from './registerUser';
+export * from './registerUserResult';
+export * from './resetPassword';
+export * from './resetPasswordResult';
 export * from './sendEmailLoginCode';
+export * from './sendEmailLoginCodeResult';
 export * from './sendEmailRegisterCode';
+export * from './sendEmailRegisterCodeResult';
+export * from './sendForgotPasswordCode';
+export * from './sendForgotPasswordCodeResult';
