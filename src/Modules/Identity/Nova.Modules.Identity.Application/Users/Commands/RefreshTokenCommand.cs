@@ -3,7 +3,7 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/refresh", typeof(LoginResult), "Identity", Summary = "刷新令牌", Description = "使用 RefreshToken 获取新的 AccessToken")]
+[ApiEndpoint("POST", "/api/identity/refresh", typeof(LoginResult), "授权认证", Summary = "刷新令牌", Description = "使用 RefreshToken 获取新的 AccessToken")]
 public record RefreshTokenCommand
 {
     /// <summary>

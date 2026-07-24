@@ -20,9 +20,20 @@ public static class ModuleExtensions
         var assemblies = new List<Assembly>();
         var directory = AppDomain.CurrentDomain.BaseDirectory;
         var dllFiles = Directory.GetFiles(directory, "Nova.*.dll");
+        
+        var mvcBuilder = services.AddMvcCore();
+        
         foreach (var file in dllFiles)
         {
-            try { assemblies.Add(Assembly.LoadFrom(file)); } catch { }
+            try 
+            { 
+                var asm = Assembly.LoadFrom(file);
+                assemblies.Add(asm); 
+                // 关键修复：将动态加载的程序集注册到 MVC 的 ApplicationPart 中
+                // 这样底层的 ApiExplorer 和 OpenAPI 生成器就能自动发现并读取对应的 .xml 注释文件了
+                mvcBuilder.AddApplicationPart(asm);
+            } 
+            catch { }
         }
 
         // 1. Global Auto Dependency Injection (IScopedDependency, etc.)

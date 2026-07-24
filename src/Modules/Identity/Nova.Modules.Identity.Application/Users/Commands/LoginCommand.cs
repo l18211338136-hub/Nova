@@ -3,7 +3,7 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/login", typeof(LoginResult), "Identity", Summary = "用户登录", Description = "通过用户名和密码获取身份认证 Token")]
+[ApiEndpoint("POST", "/api/identity/login", typeof(LoginResult), "授权认证", Summary = "用户登录", Description = "通过用户名和密码获取身份认证 Token")]
 public record LoginCommand
 {
     /// <summary>

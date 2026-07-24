@@ -36,7 +36,7 @@ public class IdentityModule : IModule
         // Register ASP.NET Core Identity
         services.AddIdentity<User, Role>(options =>
         {
-            options.Password.RequireUppercase = false; // 用户要求密码为 qwe@123!，无大写字母
+            options.Password.RequireUppercase = false; 
         })
             .AddEntityFrameworkStores<IdentityDbContext>()
             .AddDefaultTokenProviders();

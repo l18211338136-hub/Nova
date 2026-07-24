@@ -1,12 +1,9 @@
 using Mapster;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.OData.Routing.Attributes;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Extensions;
-using Nova.Modules.Identity.Infrastructure.Database;
+using Nova.Framework.Web.Filters;
 using Nova.Framework.Web.Responses;
+using Nova.Modules.Identity.Application.Users.Queries;
+using Nova.Modules.Identity.Infrastructure.Database;
 
 namespace Nova.Modules.Identity.Api;
 
@@ -16,29 +13,10 @@ public static class IdentityODataEndpoints
     {
         endpoints.MapGet("/api/identity/users", [EnableQuery] (IIdentityDbContext db) =>
         {
-            return db.Users.ProjectToType<Application.Users.Queries.UserDto>();
+            return db.Users.ProjectToType<UserDto>();
         })
-        .Produces<ApiResponse<ODataPagedResult<Application.Users.Queries.UserDto>>>(200)
-        .AddEndpointFilter(async (context, next) =>
-        {
-            var result = await next(context);
-            var odataFeature = context.HttpContext.Request.ODataFeature();
-            long countVal = odataFeature.TotalCount ?? 0;
-
-            var paged = new 
-            {
-                TotalCount = countVal,
-                Items = result
-            };
-            
-            return ApiResponse<object>.Success(paged);
-        })
-        .WithTags("Users OData Query");
+        .Produces<ApiResponse<PagedResult<UserDto>>>(200)
+        .AddEndpointFilter<ODataResultFilter>()
+        .WithTags("用户管理");
     }
-}
-
-public record ODataPagedResult<T>
-{
-    public long TotalCount { get; init; }
-    public IEnumerable<T> Items { get; init; } = Array.Empty<T>();
 }
