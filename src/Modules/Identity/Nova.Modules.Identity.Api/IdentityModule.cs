@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Nova.Framework.MultiTenancy;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
 using Nova.Framework.Web.Modular;
-using Nova.Modules.Identity.Application.Database;
+using Nova.Modules.Identity.Infrastructure.Database;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Infrastructure;
@@ -45,8 +45,7 @@ public class IdentityModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        // Endpoints are automatically generated via [ApiEndpoint] characteristics on CQRS commands
-        // Custom non-CQRS endpoints can still be added here if needed.
+        endpoints.MapIdentityODataEndpoints();
     }
 }
 

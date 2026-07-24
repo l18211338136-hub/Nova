@@ -7073,7 +7073,7 @@ snapshots:
   tsx@4.20.3:
     dependencies:
       esbuild: 0.25.11
-      get-tsconfig: 4.13.7
+      get-tsconfig: 4.14.0
     optionalDependencies:
       fsevents: 2.3.3
 

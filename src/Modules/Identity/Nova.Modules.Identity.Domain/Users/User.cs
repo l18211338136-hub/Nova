@@ -21,4 +21,26 @@ public class User : IdentityUser<Guid>, IFullAuditedEntity
     public string? Remarks { get; set; }
     public int Sort { get; set; }
     public bool IsEnabled { get; set; } = true;
+
+    // Factory method
+    public static User Create(string userName, string email)
+    {
+        return new User
+        {
+            UserName = userName,
+            Email = email,
+            EmailConfirmed = true,
+            IsEnabled = true
+        };
+    }
+
+    public void Enable()
+    {
+        IsEnabled = true;
+    }
+
+    public void Disable()
+    {
+        IsEnabled = false;
+    }
 }

@@ -7,7 +7,6 @@ import {
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -22,18 +21,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { roles } from '../data/data'
 import { type User } from '../data/schema'
+import { useUsers } from '@/api/endpoints/users-odata-query/users-odata-query'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { usersColumns as columns } from './users-columns'
 
 type DataTableProps = {
-  data: User[]
   search: Record<string, unknown>
   navigate: NavigateFn
 }
 
-export function UsersTable({ data, search, navigate }: DataTableProps) {
+export function UsersTable({ search, navigate }: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -56,17 +54,34 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: false },
     columnFilters: [
-      // username per-column text filter
-      { columnId: 'username', searchKey: 'username', type: 'string' },
-      { columnId: 'status', searchKey: 'status', type: 'array' },
-      { columnId: 'role', searchKey: 'role', type: 'array' },
+      { columnId: 'userName', searchKey: 'userName', type: 'string' },
     ],
   })
 
+  // Fetch from OData API
+  const { data: apiResponse } = useUsers({
+    query: {
+      queryKey: ['users', pagination, columnFilters],
+    },
+    request: {
+      params: {
+        $count: true,
+        $skip: pagination.pageIndex * pagination.pageSize,
+        $top: pagination.pageSize,
+      }
+    }
+  })
+
+  const usersData = (apiResponse?.data?.items as User[]) ?? []
+  const totalCount = apiResponse?.data?.totalCount ?? 0
+  const pageCount = Math.ceil(totalCount / pagination.pageSize)
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data,
+    data: usersData,
     columns,
+    pageCount,
+    manualPagination: true,
     state: {
       sorting,
       pagination,
@@ -80,7 +95,6 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    getPaginationRowModel: getPaginationRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -102,24 +116,8 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
       <DataTableToolbar
         table={table}
         searchPlaceholder='Filter users...'
-        searchKey='username'
-        filters={[
-          {
-            columnId: 'status',
-            title: 'Status',
-            options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
-              { label: 'Invited', value: 'invited' },
-              { label: 'Suspended', value: 'suspended' },
-            ],
-          },
-          {
-            columnId: 'role',
-            title: 'Role',
-            options: roles.map((role) => ({ ...role })),
-          },
-        ]}
+        searchKey='userName'
+        filters={[]}
       />
       <div className='overflow-hidden rounded-md border'>
         <Table>

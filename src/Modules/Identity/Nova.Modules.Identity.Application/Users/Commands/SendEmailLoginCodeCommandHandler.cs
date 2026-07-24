@@ -1,7 +1,7 @@
 using MassTransit;
 using MassTransit.Mediator;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Caching.Memory;
+using Nova.Contracts.Caching;
 using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;
 using Nova.Framework.Application.Extensions;
@@ -13,13 +13,13 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
 {
     private readonly UserManager<User> _userManager;
     private readonly IMediator _mediator;
-    private readonly IMemoryCache _memoryCache;
+    private readonly INovaCache _cache;
 
-    public SendEmailLoginCodeCommandHandler(UserManager<User> userManager, IMediator mediator, IMemoryCache memoryCache)
+    public SendEmailLoginCodeCommandHandler(UserManager<User> userManager, IMediator mediator, INovaCache cache)
     {
         _userManager = userManager;
         _mediator = mediator;
-        _memoryCache = memoryCache;
+        _cache = cache;
     }
 
     public async Task Consume(ConsumeContext<SendEmailLoginCodeCommand> context)
@@ -27,7 +27,7 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         var request = context.Message;
 
         var cacheKey = $"RateLimit:SendCode:{request.Email}";
-        _memoryCache.EnsureRateLimit(cacheKey);
+        await _cache.EnsureRateLimitAsync(cacheKey);
         
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null)
@@ -56,7 +56,7 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         ));
 
         // 设置 60 秒发送冷却时间
-        _memoryCache.SetRateLimit(cacheKey, 60);
+        await _cache.SetRateLimitAsync(cacheKey, 60);
 
         await context.RespondAsync(new SendEmailLoginCodeResult { Success = true });
     }

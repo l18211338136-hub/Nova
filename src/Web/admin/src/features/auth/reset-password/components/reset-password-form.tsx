@@ -23,12 +23,11 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-  InputOTPSeparator,
 } from '@/components/ui/input-otp'
 
 const getFormSchema = (t: (arg: string) => string) => z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? t('Please enter your email.') : undefined),
+  email: z.string().email({
+    message: t('Please enter a valid email.'),
   }),
   code: z.string().min(6, t('Please enter the 6-digit code.')),
   newPassword: z
@@ -57,7 +56,7 @@ export function ResetPasswordForm({ className, ...props }: ResetPasswordFormProp
   })
 
   useEffect(() => {
-    let timer: NodeJS.Timeout
+    let timer: ReturnType<typeof setTimeout>
     if (countdown > 0) {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000)
     }

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Nova.Modules.Identity.Domain.Users;
 
-namespace Nova.Modules.Identity.Application.Database;
+namespace Nova.Modules.Identity.Infrastructure.Database;
 
 public interface IIdentityDbContext
 {

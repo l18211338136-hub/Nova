@@ -40,6 +40,7 @@
     <ProjectReference Include="..\..\Modules\Audit\Nova.Modules.Audit.Api\Nova.Modules.Audit.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Notification\Nova.Modules.Notification.Api\Nova.Modules.Notification.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Multitenancy\Nova.Modules.Multitenancy.Api\Nova.Modules.Multitenancy.Api.csproj" />
+    <ProjectReference Include="..\..\Framework\Nova.Framework.Infrastructure\Nova.Framework.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,8 @@
 using Nova.Contracts.Exceptions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Identity;
+using Nova.Contracts.Caching;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Domain;
 
@@ -10,25 +11,26 @@ namespace Nova.Modules.Identity.Application.Users.Commands;
 public class RegisterUserCommandHandler : IConsumer<RegisterUserCommand>
 {
     private readonly UserManager<User> _userManager;
-    private readonly IMemoryCache _memoryCache;
+    private readonly INovaCache _cache;
 
-    public RegisterUserCommandHandler(UserManager<User> userManager, IMemoryCache memoryCache)
+    public RegisterUserCommandHandler(UserManager<User> userManager, INovaCache cache)
     {
         _userManager = userManager;
-        _memoryCache = memoryCache;
+        _cache = cache;
     }
 
     public async Task Consume(ConsumeContext<RegisterUserCommand> context)
     {
         var command = context.Message;
         
-        if (!_memoryCache.TryGetValue($"RegisterCode:{command.Email}", out string? cachedCode) || cachedCode != command.EmailCode)
+        var cachedCode = await _cache.GetAsync<string>($"RegisterCode:{command.Email}");
+        if (cachedCode != command.EmailCode)
         {
             throw new NovaValidationException("验证码错误或已过期");
         }
 
         // 验证成功后清理缓存
-        _memoryCache.Remove($"RegisterCode:{command.Email}");
+        await _cache.RemoveAsync($"RegisterCode:{command.Email}");
 
         var existingUser = await _userManager.FindByEmailAsync(command.Email);
         if (existingUser != null)
@@ -42,13 +44,7 @@ public class RegisterUserCommandHandler : IConsumer<RegisterUserCommand>
             throw new NovaValidationException("该用户名已经被使用");
         }
 
-        var user = new User
-        {
-            UserName = command.Username,
-            Email = command.Email,
-            EmailConfirmed = true,
-            IsEnabled = true
-        };
+        var user = User.Create(command.Username, command.Email);
 
         var result = await _userManager.CreateAsync(user, command.Password);
         if (!result.Succeeded)

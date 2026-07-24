@@ -2,13 +2,16 @@ using Scalar.AspNetCore;
 using Nova.Framework.Web.OpenApi;
 using Nova.Framework.MultiTenancy;
 using Nova.Framework.Web.Modular;
-using Nova.WebApi.Extensions;
 using Nova.Framework.Web.Authentication;
 using Nova.Framework.Web.Cors;
+using Nova.Framework.Web.Extensions;
+using Nova.WebApi.Extensions;
+using Nova.Framework.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMemoryCache();
+builder.Services.AddNovaCaching(builder.Configuration);
+
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddDocumentTransformer<JwtBearerDocumentTransformer>();
@@ -18,6 +21,7 @@ builder.Services.AddOpenApi("v1", options =>
 
 builder.Services.AddNovaCors(builder.Configuration);
 builder.Services.AddNovaJwtAuthentication(builder.Configuration);
+builder.Services.AddNovaOData();
 builder.Services.AddModules(builder.Configuration);
 builder.Services.AddNovaMultiTenancy(builder.Configuration);
 

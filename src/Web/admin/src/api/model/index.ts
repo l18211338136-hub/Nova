@@ -6,6 +6,7 @@
  */
 
 export * from './apiResponseOfLoginResult';
+export * from './apiResponseOfODataPagedResultOfUserDto';
 export * from './apiResponseOfRegisterUserResult';
 export * from './apiResponseOfResetPasswordResult';
 export * from './apiResponseOfSendEmailLoginCodeResult';
@@ -15,6 +16,7 @@ export * from './createTenant';
 export * from './emailLogin';
 export * from './login';
 export * from './loginResult';
+export * from './oDataPagedResultOfUserDto';
 export * from './refreshToken';
 export * from './registerUser';
 export * from './registerUserResult';
@@ -26,3 +28,4 @@ export * from './sendEmailRegisterCode';
 export * from './sendEmailRegisterCodeResult';
 export * from './sendForgotPasswordCode';
 export * from './sendForgotPasswordCodeResult';
+export * from './userDto';

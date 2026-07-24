@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Nova.Contracts.CQRS;
-
+using Microsoft.AspNetCore.Mvc;
 using Nova.Framework.Web.Responses;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace Nova.Framework.Web.CQRS;
 
@@ -50,12 +51,26 @@ public static class AutoEndpointExtensions
         where TCommand : class
         where TResponse : class
     {
-        var builder = endpoints.MapMethods(route, new[] { method.ToUpper() }, async (TCommand command, IMediator mediator) =>
+        RouteHandlerBuilder builder;
+
+        if (method.Equals("GET", StringComparison.OrdinalIgnoreCase))
         {
-            var client = mediator.CreateRequestClient<TCommand>();
-            var response = await client.GetResponse<TResponse>(command);
-            return Results.Ok(ApiResponse<TResponse>.Success(response.Message));
-        });
+            builder = endpoints.MapMethods(route, new[] { method.ToUpper() }, async ([AsParameters] TCommand command, IMediator mediator) =>
+            {
+                var client = mediator.CreateRequestClient<TCommand>();
+                var response = await client.GetResponse<TResponse>(command);
+                return Results.Ok(ApiResponse<TResponse>.Success(response.Message));
+            });
+        }
+        else
+        {
+            builder = endpoints.MapMethods(route, new[] { method.ToUpper() }, async ([FromBody] TCommand command, IMediator mediator) =>
+            {
+                var client = mediator.CreateRequestClient<TCommand>();
+                var response = await client.GetResponse<TResponse>(command);
+                return Results.Ok(ApiResponse<TResponse>.Success(response.Message));
+            });
+        }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);
 
