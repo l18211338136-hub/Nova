@@ -75,6 +75,13 @@ export function DataTableColumnFilter<TData, TValue>({ column }: DataTableColumn
           onChange={e =>
             setValue((old: any) => [e.target.value, old?.[1]])
           }
+          onClick={(e) => {
+            if (filterType === 'date' && 'showPicker' in e.currentTarget) {
+              try {
+                ;(e.currentTarget as any).showPicker()
+              } catch (err) {}
+            }
+          }}
           placeholder={t('Min')}
           className="h-8 w-full min-w-[70px] text-xs"
         />
@@ -84,6 +91,13 @@ export function DataTableColumnFilter<TData, TValue>({ column }: DataTableColumn
           onChange={e =>
             setValue((old: any) => [old?.[0], e.target.value])
           }
+          onClick={(e) => {
+            if (filterType === 'date' && 'showPicker' in e.currentTarget) {
+              try {
+                ;(e.currentTarget as any).showPicker()
+              } catch (err) {}
+            }
+          }}
           placeholder={t('Max')}
           className="h-8 w-full min-w-[70px] text-xs"
         />

@@ -14,4 +14,7 @@ public class NovaTenantInfo : ITenantInfo, IGlobalEntity
     public bool IsActive { get; set; } = true;
     public DateTime ValidUpto { get; set; } = DateTime.UtcNow.AddYears(1);
     public string? Issuer { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? AdminPassword { get; set; }
 }

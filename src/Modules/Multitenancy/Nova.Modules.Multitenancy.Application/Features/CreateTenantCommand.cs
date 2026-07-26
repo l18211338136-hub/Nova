@@ -5,7 +5,7 @@ public record CreateTenantCommand(
     string Name,
     string? ConnectionString,
     string AdminEmail,
-    string AdminPassword,
+    string? AdminPassword,
     string? Issuer);
 
 public record CreateTenantResult(string TenantId);

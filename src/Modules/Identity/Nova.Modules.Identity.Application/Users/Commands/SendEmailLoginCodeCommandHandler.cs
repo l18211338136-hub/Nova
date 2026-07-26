@@ -41,6 +41,8 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         // 使用 Identity 自带的 DefaultEmailProvider (基于 TOTP 算法) 生成 6 位数验证码
         var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
 
+        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for user '{user.Email}'");
+
         var emailBody = $@"
             <h3>安全登录验证码</h3>
             <p>您的登录验证码是：<strong>{code}</strong></p>

@@ -66,6 +66,28 @@ public class IdentityDbContext : IdentityDbContext<User, Role, Guid>, IIdentityD
             }
         }
         
+        // Remove unique constraint for User and Role names, uniqueness validation will be handled in code
+        builder.Entity<User>(b =>
+        {
+            var index = b.Metadata.GetIndexes().FirstOrDefault(i => i.GetDatabaseName() == "UserNameIndex");
+            if (index != null) b.Metadata.RemoveIndex(index);
+            
+            b.HasIndex("NormalizedUserName").HasDatabaseName("UserNameIndex").IsUnique(false);
+            
+            var emailIndex = b.Metadata.GetIndexes().FirstOrDefault(i => i.GetDatabaseName() == "EmailIndex");
+            if (emailIndex != null) b.Metadata.RemoveIndex(emailIndex);
+            
+            b.HasIndex("NormalizedEmail").HasDatabaseName("EmailIndex").IsUnique(false);
+        });
+
+        builder.Entity<Role>(b =>
+        {
+            var index = b.Metadata.GetIndexes().FirstOrDefault(i => i.GetDatabaseName() == "RoleNameIndex");
+            if (index != null) b.Metadata.RemoveIndex(index);
+            
+            b.HasIndex("NormalizedName").HasDatabaseName("RoleNameIndex").IsUnique(false);
+        });
+
         // 菜单配置
         builder.Entity<Menu>(b =>
         {

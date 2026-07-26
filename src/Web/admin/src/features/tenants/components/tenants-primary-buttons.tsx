@@ -1,0 +1,16 @@
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+import { useTenantsContext } from './tenants-provider'
+import { useTranslation } from 'react-i18next'
+
+export function TenantsPrimaryButtons() {
+  const { setOpen } = useTenantsContext()
+  const { t } = useTranslation()
+  return (
+    <div className='flex gap-2'>
+      <Button className='space-x-1' onClick={() => setOpen('create')}>
+        <span>{t('Create Tenant')}</span> <Plus size={18} />
+      </Button>
+    </div>
+  )
+}

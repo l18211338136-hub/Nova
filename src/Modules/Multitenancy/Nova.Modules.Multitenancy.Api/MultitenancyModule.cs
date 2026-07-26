@@ -18,6 +18,8 @@ public class MultitenancyModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapMultitenancyODataEndpoints();
+
         endpoints.MapPost("/api/tenants", async (CreateTenantCommand request, IMediator mediator) =>
         {
             var client = mediator.CreateRequestClient<CreateTenantCommand>();
@@ -28,6 +30,35 @@ public class MultitenancyModule : IModule
         .WithTags("Tenants")
         .WithSummary("创建租户")
         .WithDescription("初始化并创建一个新的租户")
-        .Produces<string>(StatusCodes.Status200OK);
+        .Produces<string>(StatusCodes.Status200OK)
+        .RequireAuthorization()
+        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Multitenancy.Tenants.Create"));
+
+        endpoints.MapPut("/api/tenants/{id}", async (string id, UpdateTenantCommand request, IMediator mediator) =>
+        {
+            if (id != request.Id) return Results.BadRequest("Id mismatch");
+            var client = mediator.CreateRequestClient<UpdateTenantCommand>();
+            var response = await client.GetResponse<UpdateTenantResult>(request);
+            return Results.Ok(new { TenantId = response.Message.TenantId });
+        })
+        .WithName("UpdateTenant")
+        .WithTags("Tenants")
+        .WithSummary("更新租户")
+        .Produces<string>(StatusCodes.Status200OK)
+        .RequireAuthorization()
+        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Multitenancy.Tenants.Update"));
+
+        endpoints.MapDelete("/api/tenants/{id}", async (string id, IMediator mediator) =>
+        {
+            var client = mediator.CreateRequestClient<DeleteTenantCommand>();
+            var response = await client.GetResponse<DeleteTenantResult>(new DeleteTenantCommand(id));
+            return Results.Ok(new { TenantId = response.Message.TenantId });
+        })
+        .WithName("DeleteTenant")
+        .WithTags("Tenants")
+        .WithSummary("删除租户")
+        .Produces<string>(StatusCodes.Status200OK)
+        .RequireAuthorization()
+        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Multitenancy.Tenants.Delete"));
     }
 }

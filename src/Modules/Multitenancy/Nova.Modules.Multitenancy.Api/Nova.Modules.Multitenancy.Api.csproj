@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="MassTransit.Abstractions" />
+    <PackageReference Include="Mapster" />
   </ItemGroup>
 
 </Project>

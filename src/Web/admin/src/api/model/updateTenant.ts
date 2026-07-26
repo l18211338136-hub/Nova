@@ -5,14 +5,14 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateTenant {
+export interface UpdateTenant {
   id: string;
   name: string;
   /** @nullable */
   connectionString: string | null;
   adminEmail: string;
   /** @nullable */
-  adminPassword: string | null;
-  /** @nullable */
   issuer: string | null;
+  isActive: boolean;
+  validUpto: string;
 }

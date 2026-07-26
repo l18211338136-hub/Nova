@@ -36,7 +36,28 @@ public class TenantService : ITenantService, IScopedDependency
         return tenant.Id;
     }
 
-    public async Task MigrateTenantAsync(string tenantId, CancellationToken cancellationToken)
+    public async Task UpdateTenantAsync(string id, string name, string? connectionString, string adminEmail, string? issuer, bool isActive, DateTime validUpto, CancellationToken cancellationToken)
+    {
+        var tenant = await _tenantStore.GetAsync(id).ConfigureAwait(false);
+        if (tenant == null)
+            throw new Exception($"Tenant {id} not found.");
+
+        tenant.Name = name;
+        tenant.ConnectionString = connectionString;
+        tenant.AdminEmail = adminEmail;
+        tenant.Issuer = issuer;
+        tenant.IsActive = isActive;
+        tenant.ValidUpto = validUpto;
+
+        await _tenantStore.UpdateAsync(tenant).ConfigureAwait(false);
+    }
+
+    public async Task DeleteTenantAsync(string id, CancellationToken cancellationToken)
+    {
+        await _tenantStore.RemoveAsync(id).ConfigureAwait(false);
+    }
+
+    public async Task MigrateTenantAsync(string tenantId, string? adminPassword = null, CancellationToken cancellationToken = default)
     {
         var tenant = await _tenantStore.GetAsync(tenantId).ConfigureAwait(false);
         if (tenant == null)
@@ -45,6 +66,12 @@ public class TenantService : ITenantService, IScopedDependency
         }
 
         using var scope = _serviceProvider.CreateScope();
+
+        // 绑定管理密码
+        if (adminPassword != null)
+        {
+            tenant.AdminPassword = adminPassword;
+        }
 
         // 切换到目标租户的上下文
         scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>()

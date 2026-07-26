@@ -46,14 +46,17 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
 
     private async Task SeedRolesAsync(CancellationToken cancellationToken)
     {
-        // 确保 Admin 角色存在
+        var tenantInfo = _dbContext.TenantInfo as NovaTenantInfo;
+        var isRootTenant = tenantInfo?.Identifier == NovaIdentityConstants.Tenants.RootTenantId;
+
+        // Admin 角色对所有租户都需要
         if (await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Admin) == null)
         {
             await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.Admin, "系统管理", "系统租户管理员角色，拥有当前租户下的所有权限。", 1));
         }
 
-        // 确保 Root 角色存在
-        if (await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root) == null)
+        // Root 角色仅为宿主租户创建
+        if (isRootTenant && await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root) == null)
         {
             await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.Root, "超级管理", "宿主租户超级管理员角色，拥有整个系统最高级别的权限。", 0));
         }
@@ -95,15 +98,17 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             // 确保管理员账号存在
             if (await _userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var adminUser = User.Create("admin", adminEmail);
+                var adminUser = User.Create(adminEmail, adminEmail);
 
-                // 自动生成安全的随机初始密码
-                var defaultPassword = GenerateRandomPassword();
+                // 优先使用新建租户时传过来的密码，否则生成安全的随机初始密码
+                var defaultPassword = tenantInfo?.AdminPassword ?? GenerateRandomPassword();
 
                 var result = await _userManager.CreateAsync(adminUser, defaultPassword);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(adminUser, NovaIdentityConstants.Roles.Admin);
+                    
+                    Console.WriteLine($"[Nova.Database] Successfully created admin user '{adminEmail}' for tenant '{tenantInfo?.Name ?? "root"}' with password: {defaultPassword}");
 
                     // 使用注入的 MassTransit IMediator 发送欢迎邮件命令
                     var emailBody = $@"
@@ -143,11 +148,6 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
 
     private async Task SeedMenusAsync(CancellationToken cancellationToken)
     {
-        if (await _dbContext.Menus.AnyAsync(cancellationToken))
-        {
-            return;
-        }
-
         var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seed_menus.json");
         if (!File.Exists(jsonPath))
         {
@@ -160,20 +160,48 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         
         if (seedMenus == null) return;
 
+        var tenantInfoEarly = _dbContext.TenantInfo as NovaTenantInfo;
+        var isRootTenantEarly = tenantInfoEarly?.Identifier == NovaIdentityConstants.Tenants.RootTenantId;
+
+        // 仅宿主租户才有的菜单路径，普通租户不插入这些菜单记录
+        var hostOnlyMenuPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "/tenants"
+        };
+
+        var existingMenus = await _dbContext.Menus.ToListAsync(cancellationToken);
         var allMenus = new List<Menu>();
 
         foreach (var rootSeed in seedMenus)
         {
-            var rootMenu = Menu.Create(rootSeed.Name, rootSeed.Path, rootSeed.Component, rootSeed.Icon, null, rootSeed.Sort);
-            _dbContext.Menus.Add(rootMenu);
+            // 根据 Path 路由地址做全局判重
+            var rootMenu = existingMenus.FirstOrDefault(m => m.Path == rootSeed.Path);
+            if (rootMenu == null)
+            {
+                rootMenu = Menu.Create(rootSeed.Name, rootSeed.Path, rootSeed.Component, rootSeed.Icon, null, rootSeed.Sort);
+                _dbContext.Menus.Add(rootMenu);
+                existingMenus.Add(rootMenu);
+            }
             allMenus.Add(rootMenu);
 
             if (rootSeed.Children != null)
             {
                 foreach (var childSeed in rootSeed.Children)
                 {
-                    var childMenu = Menu.Create(childSeed.Name, childSeed.Path, childSeed.Component, childSeed.Icon, rootMenu.Id, childSeed.Sort);
-                    _dbContext.Menus.Add(childMenu);
+                    // 非宿主租户跳过仅宿主菜单，不插入数据库
+                    if (!isRootTenantEarly && hostOnlyMenuPaths.Contains(childSeed.Path))
+                    {
+                        continue;
+                    }
+
+                    // 根据 Path 路由地址做全局判重
+                    var childMenu = existingMenus.FirstOrDefault(m => m.Path == childSeed.Path);
+                    if (childMenu == null)
+                    {
+                        childMenu = Menu.Create(childSeed.Name, childSeed.Path, childSeed.Component, childSeed.Icon, rootMenu.Id, childSeed.Sort);
+                        _dbContext.Menus.Add(childMenu);
+                        existingMenus.Add(childMenu);
+                    }
                     allMenus.Add(childMenu);
                 }
             }
@@ -190,9 +218,14 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             
             var existingClaims = await _roleManager.GetClaimsAsync(role);
             
-            // 1. 分配菜单访问权限
+            // 分配菜单访问权限（非宿主租户跳过仅宿主菜单）
             foreach (var menu in dbMenus)
             {
+                if (!isRootTenantEarly && hostOnlyMenuPaths.Contains(menu.Path))
+                {
+                    continue;
+                }
+
                 if (!existingClaims.Any(c => c.Type == "Menu" && c.Value == menu.Id.ToString()))
                 {
                     await _roleManager.AddClaimAsync(role, new Claim("Menu", menu.Id.ToString()));
@@ -203,12 +236,14 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
 
     private async Task SeedPermissionsAsync(CancellationToken cancellationToken)
     {
-        var rootRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root);
+        var tenantInfo = _dbContext.TenantInfo as NovaTenantInfo;
+        var isRootTenant = tenantInfo?.Identifier == NovaIdentityConstants.Tenants.RootTenantId;
+
         var adminRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Admin);
 
         // Root 的超级权限在登录时动态注入，不再需要持久化写入数据库
 
-        // 2. 为 Admin 角色分配所有具体的菜单和API权限 (通过反射自动收集)
+        // 为 Admin 角色分配所有具体的 API 权限 (通过反射自动收集)
         if (adminRole != null)
         {
             var adminClaims = await _roleManager.GetClaimsAsync(adminRole);
@@ -235,6 +270,12 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
 
             foreach (var perm in apiPermissions)
             {
+                // 非宿主租户不应拥有多租户管理权限
+                if (!isRootTenant && perm.StartsWith("Multitenancy.", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 if (!adminClaims.Any(c => c.Type == "Permission" && c.Value == perm))
                 {
                     await _roleManager.AddClaimAsync(adminRole, new Claim("Permission", perm));

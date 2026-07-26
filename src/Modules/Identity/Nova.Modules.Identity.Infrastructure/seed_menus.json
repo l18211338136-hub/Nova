@@ -26,6 +26,13 @@
         "component": "features/menus",
         "icon": "List",
         "sort": 3
+      },
+      {
+        "name": "租户管理",
+        "path": "/tenants",
+        "component": "features/tenants",
+        "icon": "Building",
+        "sort": 4
       }
     ]
   }

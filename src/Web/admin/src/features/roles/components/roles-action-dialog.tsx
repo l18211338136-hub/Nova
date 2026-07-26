@@ -44,7 +44,6 @@ const getFormSchema = (t: (arg: string) => string) => z.object({
   remarks: z.string().nullable().optional(),
   sort: z.number(),
   isEnabled: z.boolean(),
-  isEnabled: z.boolean(),
 })
 
 type RoleForm = z.infer<ReturnType<typeof getFormSchema>>
