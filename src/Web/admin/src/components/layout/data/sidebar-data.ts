@@ -15,12 +15,13 @@ import {
   Wrench,
   UserCog,
   UserX,
-  Users,
   MessagesSquare,
   ShieldCheck,
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
+  UserCheck,
+  Users,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -72,11 +73,6 @@ export const sidebarData: SidebarData = {
           url: '/chats',
           badge: '3',
           icon: MessagesSquare,
-        },
-        {
-          title: 'Users',
-          url: '/users',
-          icon: Users,
         },
         {
           title: 'Secured by Clerk',

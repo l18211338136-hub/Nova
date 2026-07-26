@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { type Table } from '@tanstack/react-table'
 import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
-import { sleep } from '@/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
+import { useDeleteUser, getUsersQueryKey } from '@/api/endpoints/users'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,8 @@ export function UsersMultiDeleteDialog<TData>({
 }: UserMultiDeleteDialogProps<TData>) {
   const { t } = useTranslation()
   const [value, setValue] = useState('')
+  const queryClient = useQueryClient()
+  const deleteMutation = useDeleteUser()
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
 
@@ -37,14 +40,19 @@ export function UsersMultiDeleteDialog<TData>({
 
     onOpenChange(false)
 
-    toast.promise(sleep(2000), {
+    const deletePromises = selectedRows.map((row) =>
+      deleteMutation.mutateAsync({ id: (row.original as any).id! })
+    )
+
+    toast.promise(Promise.all(deletePromises), {
       loading: t('Deleting users...'),
       success: () => {
         setValue('')
         table.resetRowSelection()
+        queryClient.invalidateQueries({ queryKey: ['users'] })
         return t('Deleted {{count}} {{item}}', { count: selectedRows.length, item: selectedRows.length > 1 ? t('users') : t('user') })
       },
-      error: t('Error'),
+      error: t('Error deleting users'),
     })
   }
 

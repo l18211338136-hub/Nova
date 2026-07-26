@@ -7,7 +7,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Loader2, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { useResetPassword, useSendForgotPasswordCode } from '@/api/endpoints/identity/identity'
+import { useResetPassword, useSendForgotPasswordCode } from '@/api/endpoints/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,

@@ -1,7 +1,7 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
 import { type Row } from '@tanstack/react-table'
-import { Trash2, UserPen } from 'lucide-react'
+import { ShieldAlert, Trash2, UserPen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,8 +11,8 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { type User } from '../data/schema'
-import { useUsers } from './users-provider'
+import { type UserDto as User } from '@/api/model'
+import { useUsersContext } from './users-provider'
 
 type DataTableRowActionsProps = {
   row: Row<User>
@@ -20,7 +20,7 @@ type DataTableRowActionsProps = {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { t } = useTranslation()
-  const { setOpen, setCurrentRow } = useUsers()
+  const { setOpen, setCurrentRow } = useUsersContext()
   return (
     <>
       <DropdownMenu modal={false}>
@@ -40,10 +40,17 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               setOpen('edit')
             }}
           >
+            <UserPen className="mr-2 h-4 w-4 text-primary" />
             {t('Edit')}
-            <DropdownMenuShortcut>
-              <UserPen size={16} />
-            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('permissions')
+            }}
+          >
+            <ShieldAlert className="mr-2 h-4 w-4 text-emerald-500" />
+            <span className="text-emerald-500">{t('权限分配')}</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -51,12 +58,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               setCurrentRow(row.original)
               setOpen('delete')
             }}
-            className='text-red-500!'
+            className='text-red-500 focus:text-red-500'
           >
+            <Trash2 className="mr-2 h-4 w-4" />
             {t('Delete')}
-            <DropdownMenuShortcut>
-              <Trash2 size={16} />
-            </DropdownMenuShortcut>
+            <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -7,7 +7,7 @@ import { Loader2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { cn } from '@/lib/utils'
-import { useRegister, useSendRegisterCode } from '@/api/endpoints/identity/identity'
+import { useRegisterUser, useSendEmailRegisterCode } from '@/api/endpoints/auth'
 import { useRouter } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,8 +46,8 @@ export function SignUpForm({
   const { t } = useTranslation()
   const formSchema = getFormSchema(t)
   const [isLoading, setIsLoading] = useState(false)
-  const { mutateAsync: register } = useRegister()
-  const { mutateAsync: sendCode } = useSendRegisterCode()
+  const { mutateAsync: register } = useRegisterUser()
+  const { mutateAsync: sendCode } = useSendEmailRegisterCode()
   const router = useRouter()
   const [countdown, setCountdown] = useState(0)
 

@@ -1,10 +1,10 @@
 import { MailPlus, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { useUsers } from './users-provider'
+import { useUsersContext } from './users-provider'
 
 export function UsersPrimaryButtons() {
-  const { setOpen } = useUsers()
+  const { setOpen } = useUsersContext()
   const { t } = useTranslation()
   return (
     <div className='flex gap-2'>

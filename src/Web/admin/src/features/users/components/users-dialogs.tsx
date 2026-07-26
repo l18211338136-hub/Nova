@@ -1,22 +1,23 @@
 import { UsersActionDialog } from './users-action-dialog'
 import { UsersDeleteDialog } from './users-delete-dialog'
 import { UsersInviteDialog } from './users-invite-dialog'
-import { useUsers } from './users-provider'
+import { UsersPermissionsDialog } from './users-permissions-dialog'
+import { useUsersContext } from './users-provider'
 
 export function UsersDialogs() {
-  const { open, setOpen, currentRow, setCurrentRow } = useUsers()
+  const { open, setOpen, currentRow, setCurrentRow } = useUsersContext()
   return (
     <>
       <UsersActionDialog
         key='user-add'
         open={open === 'add'}
-        onOpenChange={() => setOpen('add')}
+        onOpenChange={(b) => setOpen(b ? 'add' : null)}
       />
 
       <UsersInviteDialog
         key='user-invite'
         open={open === 'invite'}
-        onOpenChange={() => setOpen('invite')}
+        onOpenChange={(b) => setOpen(b ? 'invite' : null)}
       />
 
       {currentRow && (
@@ -24,11 +25,13 @@ export function UsersDialogs() {
           <UsersActionDialog
             key={`user-edit-${currentRow.id}`}
             open={open === 'edit'}
-            onOpenChange={() => {
-              setOpen('edit')
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
+            onOpenChange={(b) => {
+              setOpen(b ? 'edit' : null)
+              if (!b) {
+                setTimeout(() => {
+                  setCurrentRow(null)
+                }, 500)
+              }
             }}
             currentRow={currentRow}
           />
@@ -36,11 +39,27 @@ export function UsersDialogs() {
           <UsersDeleteDialog
             key={`user-delete-${currentRow.id}`}
             open={open === 'delete'}
-            onOpenChange={() => {
-              setOpen('delete')
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
+            onOpenChange={(b) => {
+              setOpen(b ? 'delete' : null)
+              if (!b) {
+                setTimeout(() => {
+                  setCurrentRow(null)
+                }, 500)
+              }
+            }}
+            currentRow={currentRow}
+          />
+          
+          <UsersPermissionsDialog
+            key={`user-permissions-${currentRow.id}`}
+            open={open === 'permissions'}
+            onOpenChange={(b) => {
+              setOpen(b ? 'permissions' : null)
+              if (!b) {
+                setTimeout(() => {
+                  setCurrentRow(null)
+                }, 500)
+              }
             }}
             currentRow={currentRow}
           />

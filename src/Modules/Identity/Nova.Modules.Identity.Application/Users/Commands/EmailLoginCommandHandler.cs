@@ -1,24 +1,31 @@
-﻿using Nova.Contracts.Exceptions;
+using Nova.Contracts.Exceptions;
 using Finbuckle.MultiTenant.Abstractions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Nova.Modules.Identity.Application.Services;
 using Nova.Modules.Identity.Domain.Users;
+using Nova.Modules.Identity.Domain.Roles;
+using Nova.Modules.Identity.Domain;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
 {
     private readonly UserManager<User> _userManager;
+    private readonly RoleManager<Role> _roleManager;
     private readonly ITokenService _tokenService;
     private readonly ITenantInfo? _tenantInfo;
 
     public EmailLoginCommandHandler(
         UserManager<User> userManager,
+        RoleManager<Role> roleManager,
         ITokenService tokenService,
         ITenantInfo? tenantInfo = null)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
         _tokenService = tokenService;
         _tenantInfo = tenantInfo;
     }
@@ -41,7 +48,38 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         }
 
         var tenantId = _tenantInfo?.Identifier;
-        var tokenResult = _tokenService.GenerateToken(user, tenantId);
+        
+        var claims = new List<Claim>();
+        var roles = await _userManager.GetRolesAsync(user);
+        foreach (var roleName in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, roleName));
+
+            if (roleName == NovaIdentityConstants.Roles.Root)
+            {
+                if (!claims.Any(c => c.Type == "Permission" && c.Value == "*"))
+                    claims.Add(new Claim("Permission", "*"));
+                if (!claims.Any(c => c.Type == "Menu" && c.Value == "*"))
+                    claims.Add(new Claim("Menu", "*"));
+                continue;
+            }
+
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role != null)
+            {
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                var authClaims = roleClaims.Where(c => c.Type == "Permission" || c.Type == "Menu");
+                foreach (var c in authClaims)
+                {
+                    if (!claims.Any(existing => existing.Type == c.Type && existing.Value == c.Value))
+                    {
+                        claims.Add(c);
+                    }
+                }
+            }
+        }
+
+        var tokenResult = _tokenService.GenerateToken(user, tenantId, claims);
 
         // Generate Refresh Token
         var refreshToken = Guid.NewGuid().ToString("N");

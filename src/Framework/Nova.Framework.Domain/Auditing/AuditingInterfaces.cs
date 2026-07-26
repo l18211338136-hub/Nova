@@ -15,7 +15,7 @@ public interface IFullAuditedEntity : IAuditedEntity
     Guid? DeletedBy { get; set; }
     DateTimeOffset? DeletedAt { get; set; }
     bool IsDeleted { get; set; }
-    string? Remarks { get; set; }
-    int Sort { get; set; }
-    bool IsEnabled { get; set; }
+    string? Remarks { get; }
+    int Sort { get; }
+    bool IsEnabled { get; }
 }

@@ -45,6 +45,13 @@ type UseTableUrlStateParams = {
         serialize?: (value: unknown) => unknown
         deserialize?: (value: unknown) => unknown
       }
+    | {
+        columnId: string
+        searchKey: string
+        type: 'boolean'
+        serialize?: (value: unknown) => unknown
+        deserialize?: (value: unknown) => unknown
+      }
   >
 }
 
@@ -91,9 +98,16 @@ export function useTableUrlState(
     for (const cfg of columnFiltersCfg) {
       const raw = (search as SearchRecord)[cfg.searchKey]
       const deserialize = cfg.deserialize ?? ((v: unknown) => v)
-      if (cfg.type === 'string') {
+      if (cfg.type === 'string' || cfg.type === undefined) {
         const value = (deserialize(raw) as string) ?? ''
         if (typeof value === 'string' && value.trim() !== '') {
+          collected.push({ id: cfg.columnId, value })
+        }
+      } else if (cfg.type === 'boolean') {
+        let value = deserialize(raw)
+        if (value === 'true') value = true
+        if (value === 'false') value = false
+        if (typeof value === 'boolean') {
           collected.push({ id: cfg.columnId, value })
         }
       } else {
@@ -168,11 +182,14 @@ export function useTableUrlState(
     for (const cfg of columnFiltersCfg) {
       const found = next.find((f) => f.id === cfg.columnId)
       const serialize = cfg.serialize ?? ((v: unknown) => v)
-      if (cfg.type === 'string') {
+      if (cfg.type === 'string' || cfg.type === undefined) {
         const value =
           typeof found?.value === 'string' ? (found.value as string) : ''
         patch[cfg.searchKey] =
           value.trim() !== '' ? serialize(value) : undefined
+      } else if (cfg.type === 'boolean') {
+        const value = typeof found?.value === 'boolean' ? found.value : undefined
+        patch[cfg.searchKey] = value !== undefined ? serialize(value) : undefined
       } else {
         const value = Array.isArray(found?.value)
           ? (found!.value as unknown[])

@@ -7,6 +7,7 @@ using Nova.Framework.Web.Cors;
 using Nova.Framework.Web.Extensions;
 using Nova.WebApi.Extensions;
 using Nova.Framework.Infrastructure.Extensions;
+using Nova.Framework.Web.CQRS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddOpenApi("v1", options =>
     options.AddDocumentTransformer<JwtBearerDocumentTransformer>();
     options.AddOperationTransformer<JwtBearerOperationTransformer>();
     options.AddOperationTransformer<TenantHeaderOperationTransformer>();
+    options.AddOperationTransformer<AutoEndpointOperationTransformer>();
 });
 
 builder.Services.AddNovaCors(builder.Configuration);

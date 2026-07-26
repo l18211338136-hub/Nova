@@ -6,6 +6,10 @@ using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
+using Nova.Modules.Identity.Domain.Menus;
+using System.Security.Claims;
+using System.Reflection;
+using System.Text.Json;
 
 namespace Nova.Modules.Identity.Infrastructure;
 
@@ -35,6 +39,8 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
         await SeedRolesAsync(cancellationToken);
+        await SeedMenusAsync(cancellationToken);
+        await SeedPermissionsAsync(cancellationToken);
         await SeedAdminUserAsync(cancellationToken);
     }
 
@@ -43,13 +49,13 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         // 确保 Admin 角色存在
         if (await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Admin) == null)
         {
-            await _roleManager.CreateAsync(new Role { Name = NovaIdentityConstants.Roles.Admin, Remarks = "Administrator role with full permissions." });
+            await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.Admin, "系统管理", "系统租户管理员角色，拥有当前租户下的所有权限。", 1));
         }
 
         // 确保 Root 角色存在
         if (await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root) == null)
         {
-            await _roleManager.CreateAsync(new Role { Name = NovaIdentityConstants.Roles.Root, Remarks = "Super Administrator role for host tenant." });
+            await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.Root, "超级管理", "宿主租户超级管理员角色，拥有整个系统最高级别的权限。", 0));
         }
     }
 
@@ -62,13 +68,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         {
             if (await _userManager.FindByEmailAsync(NovaIdentityConstants.Seed.RootEmail) == null)
             {
-                var rootUser = new User
-                {
-                    UserName = NovaIdentityConstants.Seed.RootUserName,
-                    Email = NovaIdentityConstants.Seed.RootEmail,
-                    EmailConfirmed = true,
-                    IsEnabled = true
-                };
+                var rootUser = User.Create(NovaIdentityConstants.Seed.RootUserName, NovaIdentityConstants.Seed.RootEmail);
 
                 var result = await _userManager.CreateAsync(rootUser, NovaIdentityConstants.Seed.RootPassword);
                 if (result.Succeeded)
@@ -95,13 +95,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             // 确保管理员账号存在
             if (await _userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var adminUser = new User
-                {
-                    UserName = "admin",
-                    Email = adminEmail,
-                    EmailConfirmed = true,
-                    IsEnabled = true
-                };
+                var adminUser = User.Create("admin", adminEmail);
 
                 // 自动生成安全的随机初始密码
                 var defaultPassword = GenerateRandomPassword();
@@ -132,6 +126,118 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                 else
                 {
                     Console.WriteLine($"[Nova.Database] Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+            }
+        }
+    }
+
+    private class MenuSeedDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public string Component { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public int Sort { get; set; }
+        public List<MenuSeedDto>? Children { get; set; }
+    }
+
+    private async Task SeedMenusAsync(CancellationToken cancellationToken)
+    {
+        if (await _dbContext.Menus.AnyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seed_menus.json");
+        if (!File.Exists(jsonPath))
+        {
+            Console.WriteLine($"[Nova.Database] Menus seed file not found at {jsonPath}. Skipping menu seeding.");
+            return;
+        }
+
+        var jsonContent = await File.ReadAllTextAsync(jsonPath, cancellationToken);
+        var seedMenus = JsonSerializer.Deserialize<List<MenuSeedDto>>(jsonContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        
+        if (seedMenus == null) return;
+
+        var allMenus = new List<Menu>();
+
+        foreach (var rootSeed in seedMenus)
+        {
+            var rootMenu = Menu.Create(rootSeed.Name, rootSeed.Path, rootSeed.Component, rootSeed.Icon, null, rootSeed.Sort);
+            _dbContext.Menus.Add(rootMenu);
+            allMenus.Add(rootMenu);
+
+            if (rootSeed.Children != null)
+            {
+                foreach (var childSeed in rootSeed.Children)
+                {
+                    var childMenu = Menu.Create(childSeed.Name, childSeed.Path, childSeed.Component, childSeed.Icon, rootMenu.Id, childSeed.Sort);
+                    _dbContext.Menus.Add(childMenu);
+                    allMenus.Add(childMenu);
+                }
+            }
+        }
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var rootRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root);
+        var adminRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Admin);
+        var dbMenus = await _dbContext.Menus.ToListAsync(cancellationToken);
+
+        foreach (var role in new[] { rootRole, adminRole })
+        {
+            if (role == null) continue;
+            
+            var existingClaims = await _roleManager.GetClaimsAsync(role);
+            
+            // 1. 分配菜单访问权限
+            foreach (var menu in dbMenus)
+            {
+                if (!existingClaims.Any(c => c.Type == "Menu" && c.Value == menu.Id.ToString()))
+                {
+                    await _roleManager.AddClaimAsync(role, new Claim("Menu", menu.Id.ToString()));
+                }
+            }
+        }
+    }
+
+    private async Task SeedPermissionsAsync(CancellationToken cancellationToken)
+    {
+        var rootRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root);
+        var adminRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Admin);
+
+        // Root 的超级权限在登录时动态注入，不再需要持久化写入数据库
+
+        // 2. 为 Admin 角色分配所有具体的菜单和API权限 (通过反射自动收集)
+        if (adminRole != null)
+        {
+            var adminClaims = await _roleManager.GetClaimsAsync(adminRole);
+            var apiPermissions = new HashSet<string>();
+            var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
+            
+            foreach (var file in dllFiles)
+            {
+                try
+                {
+                    var assembly = Assembly.LoadFrom(file);
+                    var types = assembly.GetTypes();
+                    foreach (var type in types)
+                    {
+                        var attr = type.GetCustomAttribute<Nova.Contracts.Security.RequirePermissionAttribute>();
+                        if (attr != null)
+                        {
+                            apiPermissions.Add(attr.Permission);
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            foreach (var perm in apiPermissions)
+            {
+                if (!adminClaims.Any(c => c.Type == "Permission" && c.Value == perm))
+                {
+                    await _roleManager.AddClaimAsync(adminRole, new Claim("Permission", perm));
                 }
             }
         }

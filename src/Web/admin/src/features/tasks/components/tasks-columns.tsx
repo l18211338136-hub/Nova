@@ -118,6 +118,9 @@ export const getTasksColumns = (t: (arg: string) => string): ColumnDef<Task>[] =
   },
   {
     id: 'actions',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t('Actions')} />
+    ),
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ]

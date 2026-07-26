@@ -1,0 +1,32 @@
+[
+  {
+    "name": "系统设置",
+    "path": "/system",
+    "component": "Layout",
+    "icon": "Settings",
+    "sort": 99,
+    "children": [
+      {
+        "name": "用户管理",
+        "path": "/users",
+        "component": "features/users",
+        "icon": "Users",
+        "sort": 1
+      },
+      {
+        "name": "角色管理",
+        "path": "/roles",
+        "component": "features/roles",
+        "icon": "UserCheck",
+        "sort": 2
+      },
+      {
+        "name": "菜单管理",
+        "path": "/menus",
+        "component": "features/menus",
+        "icon": "List",
+        "sort": 3
+      }
+    ]
+  }
+]

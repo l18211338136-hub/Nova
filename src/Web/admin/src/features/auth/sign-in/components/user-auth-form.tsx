@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
-import { useLogin, useEmailLogin, useSendLoginCode } from '@/api/endpoints/identity/identity'
+import { useLogin, useEmailLogin, useSendEmailLoginCode } from '@/api/endpoints/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -62,7 +62,7 @@ export function UserAuthForm({
   
   const { mutateAsync: login } = useLogin()
   const { mutateAsync: emailLogin } = useEmailLogin()
-  const { mutateAsync: sendCode } = useSendLoginCode()
+  const { mutateAsync: sendCode } = useSendEmailLoginCode()
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>

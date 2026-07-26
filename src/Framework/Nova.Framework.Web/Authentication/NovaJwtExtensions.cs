@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,8 @@ public static class NovaJwtExtensions
     {
         var jwtSettings = configuration.GetSection("Jwt");
         var secretKey = jwtSettings["SecretKey"] ?? "super-secret-key-for-nova-application-development";
+        var validIssuer = jwtSettings["Issuer"];
+        var validAudience = jwtSettings["Audience"];
 
         services.AddAuthentication(options =>
         {
@@ -22,14 +24,15 @@ public static class NovaJwtExtensions
         {
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
+                ValidateIssuer = !string.IsNullOrEmpty(validIssuer),
+                ValidateAudience = !string.IsNullOrEmpty(validAudience),
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
+                ValidIssuer = validIssuer,
+                ValidAudience = validAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
             };
+
         });
 
         services.AddAuthorization();

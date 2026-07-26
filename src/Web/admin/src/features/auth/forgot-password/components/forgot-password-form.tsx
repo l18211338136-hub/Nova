@@ -7,7 +7,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { useSendForgotPasswordCode } from '@/api/endpoints/identity/identity'
+import { useSendForgotPasswordCode } from '@/api/endpoints/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,

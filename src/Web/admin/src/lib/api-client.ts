@@ -29,7 +29,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().auth.accessToken;
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     // 优先从 localStorage 获取 tenant，如果没有则默认使用 'root'
     if (config.headers && !config.headers['X-Tenant-Id']) {
@@ -69,16 +69,28 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = useAuthStore.getState().auth.refreshToken;
-      if (!refreshToken) {
+      const accessToken = useAuthStore.getState().auth.accessToken;
+      if (!refreshToken || !accessToken) {
         useAuthStore.getState().auth.reset();
         window.location.href = '/sign-in';
         return Promise.reject(error);
       }
 
       try {
-        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/identity/refresh`, {
-          refreshToken: refreshToken
-        });
+        const accessToken = useAuthStore.getState().auth.accessToken;
+        const storedTenant = localStorage.getItem('tenant') || 'root';
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL || ''}/api/identity/refresh`,
+          {
+            accessToken: accessToken,
+            refreshToken: refreshToken
+          },
+          {
+            headers: {
+              'X-Tenant-Id': storedTenant
+            }
+          }
+        );
 
         if (data && data.data && data.data.token) {
           useAuthStore.getState().auth.setAccessToken(data.data.token);
@@ -105,13 +117,9 @@ apiClient.interceptors.response.use(
       const status = error.response.status;
       if (status === 403) {
         window.location.href = '/403';
-      } else if (status === 404) {
-        window.location.href = '/404';
-      } else if (status === 500) {
-        window.location.href = '/500';
-      } else if (status === 503) {
-        window.location.href = '/503';
       }
+      // Note: We intentionally do not redirect on 404, 500, or 503 
+      // so that react-query mutations can catch the error and show a toast!
     }
 
     return Promise.reject(error);

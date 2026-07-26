@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { type User } from '../data/schema'
+import { type UserDto as User } from '@/api/model'
 
-type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete'
+type UsersDialogType = 'invite' | 'add' | 'edit' | 'delete' | 'permissions'
 
 type UsersContextType = {
   open: UsersDialogType | null
@@ -25,7 +25,7 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useUsers = () => {
+export const useUsersContext = () => {
   const usersContext = React.useContext(UsersContext)
 
   if (!usersContext) {

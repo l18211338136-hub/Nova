@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useQueryClient } from '@tanstack/react-query'
+import { useDeleteUser, getUsersQueryKey } from '@/api/endpoints/users'
+import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { type User } from '../data/schema'
+import { type UserDto as User } from '@/api/model'
 
 type UserDeleteDialogProps = {
   open: boolean
@@ -23,12 +25,22 @@ export function UsersDeleteDialog({
 }: UserDeleteDialogProps) {
   const { t } = useTranslation()
   const [value, setValue] = useState('')
+  const queryClient = useQueryClient()
+  const deleteMutation = useDeleteUser()
 
   const handleDelete = () => {
     if (value.trim() !== currentRow.userName) return
 
-    onOpenChange(false)
-    showSubmittedData(currentRow, t('The following user has been deleted:'))
+    deleteMutation.mutate(
+      { id: currentRow.id! },
+      {
+        onSuccess: () => {
+          toast.success(t('User deleted successfully'))
+          onOpenChange(false)
+          queryClient.invalidateQueries({ queryKey: ['users'] })
+        },
+      }
+    )
   }
 
   return (
@@ -56,8 +68,7 @@ export function UsersDeleteDialog({
           className='space-y-4'
         >
           <p className='mb-2'>
-            {t('Are you sure you want to delete')}{' '}
-            {t('Please type')} <span className='font-bold'>{currentRow.userName}</span>{' '}?
+            {t('Are you sure you want to delete')} <span className='font-bold'>{currentRow.userName}</span> ?
             <br />
             {t('This action will permanently remove the user with the role of')}{' '}
             <span className='font-bold'>
@@ -71,7 +82,7 @@ export function UsersDeleteDialog({
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder='Enter username to confirm delete.'
+              placeholder={t('Enter username to confirm deletion.')}
               autoFocus
             />
           </Label>

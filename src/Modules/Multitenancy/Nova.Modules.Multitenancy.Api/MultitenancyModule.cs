@@ -25,7 +25,9 @@ public class MultitenancyModule : IModule
             return Results.Ok(new { TenantId = response.Message.TenantId });
         })
         .WithName("CreateTenant")
-        .WithTags("租户管理")
+        .WithTags("Tenants")
+        .WithSummary("创建租户")
+        .WithDescription("初始化并创建一个新的租户")
         .Produces<string>(StatusCodes.Status200OK);
     }
 }

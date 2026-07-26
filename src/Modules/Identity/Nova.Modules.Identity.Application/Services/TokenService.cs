@@ -17,7 +17,7 @@ public class TokenService : ITokenService, ITransientDependency
         _configuration = configuration;
     }
 
-    public (string Token, int ExpiresIn) GenerateToken(User user, string? tenantId)
+    public (string Token, int ExpiresIn) GenerateToken(User user, string? tenantId, IEnumerable<Claim>? additionalClaims = null)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
         var secretKey = jwtSettings["SecretKey"] ?? "super-secret-key-for-nova-application-development";
@@ -31,6 +31,11 @@ public class TokenService : ITokenService, ITransientDependency
         if (!string.IsNullOrEmpty(tenantId))
         {
             claims.Add(new Claim("tenantId", tenantId));
+        }
+
+        if (additionalClaims != null)
+        {
+            claims.AddRange(additionalClaims);
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));

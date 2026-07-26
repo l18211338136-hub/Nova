@@ -15,7 +15,7 @@ export default defineConfig({
             const schemas = api.components.schemas;
             const renamed: Record<string, any> = {};
             const renameMap: Record<string, string> = {};
-            
+
             Object.keys(schemas).forEach(key => {
               let newKey = key.replace(/Command$/, '');
               if (newKey !== key) {
@@ -24,7 +24,7 @@ export default defineConfig({
               renamed[newKey] = schemas[key];
             });
             api.components.schemas = renamed;
-            
+
             const replaceRefs = (obj: any) => {
               if (typeof obj !== 'object' || obj === null) return;
               if (obj.$ref && renameMap[obj.$ref]) {
@@ -41,7 +41,7 @@ export default defineConfig({
       }
     },
     output: {
-      mode: 'tags-split',
+      mode: 'tags',
       target: 'src/api/endpoints',
       schemas: 'src/api/model',
       client: 'react-query',

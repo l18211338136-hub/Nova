@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   type SortingState,
   type VisibilityState,
@@ -20,11 +21,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { type User } from '../data/schema'
-import { useUsers } from '@/api/endpoints/users-odata-query/users-odata-query'
+import { DataTablePagination, DataTableToolbar, DataTableColumnFilter } from '@/components/data-table'
+import { type UserDto as User } from '@/api/model'
+import { useUsers } from '@/api/endpoints/users'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { usersColumns as columns } from './users-columns'
+import { useUsersColumns } from './users-columns'
+import { buildODataFilter, buildODataOrderBy } from '@/lib/odata'
 
 type DataTableProps = {
   search: Record<string, unknown>
@@ -32,6 +34,8 @@ type DataTableProps = {
 }
 
 export function UsersTable({ search, navigate }: DataTableProps) {
+  const { t } = useTranslation()
+  const columns = useUsersColumns()
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -55,25 +59,35 @@ export function UsersTable({ search, navigate }: DataTableProps) {
     globalFilter: { enabled: false },
     columnFilters: [
       { columnId: 'userName', searchKey: 'userName', type: 'string' },
+      { columnId: 'email', searchKey: 'email', type: 'string' },
+      { columnId: 'phoneNumber', searchKey: 'phoneNumber', type: 'string' },
+      { columnId: 'isEnabled', searchKey: 'isEnabled', type: 'boolean' },
+      { columnId: 'createdAt', searchKey: 'createdAt', type: 'string' },
     ],
   })
+
+  // Build OData params using global utility
+  const $filter = buildODataFilter(columnFilters)
+  const $orderby = buildODataOrderBy(sorting) || 'CreatedAt desc'
 
   // Fetch from OData API
   const { data: apiResponse } = useUsers({
     query: {
-      queryKey: ['users', pagination, columnFilters],
+      queryKey: ['users', pagination, columnFilters, sorting],
     },
     request: {
       params: {
         $count: true,
         $skip: pagination.pageIndex * pagination.pageSize,
         $top: pagination.pageSize,
+        ...($filter && { $filter }),
+        ...($orderby && { $orderby })
       }
     }
   })
 
   const usersData = (apiResponse?.data?.items as User[]) ?? []
-  const totalCount = apiResponse?.data?.totalCount ?? 0
+  const totalCount = apiResponse?.data?.total ?? 0
   const pageCount = Math.ceil(totalCount / pagination.pageSize)
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -82,6 +96,8 @@ export function UsersTable({ search, navigate }: DataTableProps) {
     columns,
     pageCount,
     manualPagination: true,
+    manualFiltering: true,
+    manualSorting: true,
     state: {
       sorting,
       pagination,
@@ -115,36 +131,56 @@ export function UsersTable({ search, navigate }: DataTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter users...'
-        searchKey='userName'
+        hideSearch={true}
         filters={[]}
       />
       <div className='overflow-hidden rounded-md border'>
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className='group/row'>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      className={cn(
-                        'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
-                        header.column.columnDef.meta?.className,
-                        header.column.columnDef.meta?.thClassName
-                      )}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
+              <Fragment key={headerGroup.id}>
+                <TableRow className='group/row'>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
+                          header.column.columnDef.meta?.className,
+                          header.column.columnDef.meta?.thClassName
+                        )}
+                      >
+                        {header.isPlaceholder ? null : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+                {/* 过滤器专属行 */}
+                <TableRow className='group/row border-b shadow-sm'>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={`${header.id}-filter`}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          'bg-muted/30 group-hover/row:bg-muted/50 py-1 align-top',
+                          header.column.columnDef.meta?.className
+                        )}
+                      >
+                        {header.isPlaceholder ? null : (
+                          header.column.getCanFilter() ? (
+                            <DataTableColumnFilter column={header.column} />
+                          ) : null
+                        )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              </Fragment>
             ))}
           </TableHeader>
           <TableBody>
@@ -178,7 +214,7 @@ export function UsersTable({ search, navigate }: DataTableProps) {
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  {t('No results.')}
                 </TableCell>
               </TableRow>
             )}

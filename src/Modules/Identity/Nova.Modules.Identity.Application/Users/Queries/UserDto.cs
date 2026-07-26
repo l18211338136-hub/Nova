@@ -2,11 +2,15 @@ using System;
 
 using System.ComponentModel;
 
+using Nova.Contracts.Security;
+
 namespace Nova.Modules.Identity.Application.Users.Queries;
 
 /// <summary>
 /// 用户数据传输对象
 /// </summary>
+[RequirePermission("Identity.Users.Read")]
+[Description("用户管理")]
 public class UserDto
 {
     /// <summary>
