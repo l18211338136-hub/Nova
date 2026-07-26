@@ -8,6 +8,7 @@ using Nova.Framework.Web.Extensions;
 using Nova.WebApi.Extensions;
 using Nova.Framework.Infrastructure.Extensions;
 using Nova.Framework.Web.CQRS;
+using Nova.Framework.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddNovaJwtAuthentication(builder.Configuration);
 builder.Services.AddNovaOData();
 builder.Services.AddModules(builder.Configuration);
 builder.Services.AddNovaMultiTenancy(builder.Configuration);
+builder.Services.AddNovaJobs(builder.Configuration);
 
 var app = builder.Build();
 
@@ -42,6 +44,7 @@ app.UseHttpsRedirection();
 app.UseNovaCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseNovaJobs(requireAuth: false); // 开发阶段暂不限制，生产环境改为 true
 app.UseNovaMultiTenancy();
 
 await app.ApplyDatabaseMigrationsAsync();

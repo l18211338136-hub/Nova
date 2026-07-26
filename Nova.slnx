@@ -6,6 +6,7 @@
     <Project Path="src/Framework/Nova.Framework.Domain/Nova.Framework.Domain.csproj" />
     <Project Path="src/Framework/Nova.Framework.EventBus/Nova.Framework.EventBus.csproj" />
     <Project Path="src/Framework/Nova.Framework.Infrastructure/Nova.Framework.Infrastructure.csproj" />
+    <Project Path="src/Framework/Nova.Framework.Jobs/Nova.Framework.Jobs.csproj" />
     <Project Path="src/Framework/Nova.Framework.Messaging/Nova.Framework.Messaging.csproj" />
     <Project Path="src/Framework/Nova.Framework.MultiTenancy/Nova.Framework.MultiTenancy.csproj" />
     <Project Path="src/Framework/Nova.Framework.Persistence/Nova.Framework.Persistence.csproj" />

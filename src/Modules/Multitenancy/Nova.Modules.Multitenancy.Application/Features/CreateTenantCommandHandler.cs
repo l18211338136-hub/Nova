@@ -1,3 +1,4 @@
+using Hangfire;
 using MassTransit;
 using Nova.Modules.Multitenancy.Application.Services;
 
@@ -6,17 +7,19 @@ namespace Nova.Modules.Multitenancy.Application.Features;
 public class CreateTenantCommandHandler : IConsumer<CreateTenantCommand>
 {
     private readonly ITenantService _tenantService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public CreateTenantCommandHandler(ITenantService tenantService)
+    public CreateTenantCommandHandler(ITenantService tenantService, IBackgroundJobClient backgroundJobClient)
     {
         _tenantService = tenantService;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     public async Task Consume(ConsumeContext<CreateTenantCommand> context)
     {
         var request = context.Message;
-        
-        // 1. 在中央租户信息存储库中创建租户记录
+
+        // 1. 在中央租户信息存储库中创建租户记录（同步）
         var tenantId = await _tenantService.CreateTenantAsync(
             request.Id,
             request.Name,
@@ -25,11 +28,12 @@ public class CreateTenantCommandHandler : IConsumer<CreateTenantCommand>
             request.Issuer,
             context.CancellationToken).ConfigureAwait(false);
 
-        // 2. 触发新创建租户的数据库迁移和数据初始化
-        // 在包含多个模块的生产环境中，这可能被发送到后台任务队列（如 Hangfire）。
-        // 目前，我们同步执行它，以确保租户数据库立即准备就绪。
-        await _tenantService.MigrateTenantAsync(tenantId, request.AdminPassword, context.CancellationToken).ConfigureAwait(false);
+        // 2. 将数据库迁移和数据初始化作为后台任务异步执行
+        // 任务完成后会自动发送账号密码到 AdminEmail
+        _backgroundJobClient.Enqueue<ITenantService>(
+            s => s.MigrateTenantAsync(tenantId, request.AdminPassword, CancellationToken.None));
 
+        // 3. 立即响应前端，无需等待初始化完成
         await context.RespondAsync(new CreateTenantResult(tenantId));
     }
 }
