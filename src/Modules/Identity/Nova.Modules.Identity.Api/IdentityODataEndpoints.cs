@@ -1,18 +1,19 @@
 using Mapster;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Extensions;
-using Microsoft.OData.ModelBuilder;
-using Microsoft.EntityFrameworkCore;
-using Nova.Framework.Web.Responses;
-using Nova.Modules.Identity.Application.Users.Queries;
-using Nova.Modules.Identity.Application.Roles.Queries;
-using Nova.Modules.Identity.Application.Menus.Queries;
-using Nova.Modules.Identity.Application.Database;
-using System.Reflection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OData.ModelBuilder;
+using Nova.Contracts.Security;
+using Nova.Framework.Web.Responses;
+using Nova.Framework.Web.Security;
+using Nova.Modules.Identity.Application.Database;
+using Nova.Modules.Identity.Application.Menus.Queries;
+using Nova.Modules.Identity.Application.Roles.Queries;
+using Nova.Modules.Identity.Application.Users.Queries;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace Nova.Modules.Identity.Api;
 
@@ -62,7 +63,7 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<UserDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Identity.Users.Read"))
+        .AddEndpointFilter(new PermissionFilter("Identity.Users.Read"))
         .WithTags("Users")
         .WithSummary("获取用户列表")
         .WithDescription("获取分页的用户列表数据");
@@ -109,7 +110,7 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<RoleDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Identity.Roles.Read"))
+        .AddEndpointFilter(new PermissionFilter("Identity.Roles.Read"))
         .WithTags("Roles")
         .WithSummary("获取角色列表")
         .WithDescription("获取分页的角色列表数据");
@@ -156,7 +157,7 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<MenuDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Identity.Menus.Read"))
+        .AddEndpointFilter(new PermissionFilter("Identity.Menus.Read"))
         .WithTags("Menus")
         .WithSummary("获取菜单列表")
         .WithDescription("获取分页的菜单列表数据");
@@ -165,7 +166,7 @@ public static class IdentityODataEndpoints
         {
             var apiPermissions = new HashSet<string>();
             var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
-            
+
             foreach (var file in dllFiles)
             {
                 try
@@ -174,7 +175,7 @@ public static class IdentityODataEndpoints
                     var types = assembly.GetTypes();
                     foreach (var type in types)
                     {
-                        var attr = type.GetCustomAttribute<Nova.Contracts.Security.RequirePermissionAttribute>();
+                        var attr = type.GetCustomAttribute<RequirePermissionAttribute>();
                         if (attr != null)
                         {
                             apiPermissions.Add(attr.Permission);
@@ -195,7 +196,7 @@ public static class IdentityODataEndpoints
         {
             var groups = new Dictionary<string, string>();
             var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
-            
+
             foreach (var file in dllFiles)
             {
                 try
@@ -204,13 +205,13 @@ public static class IdentityODataEndpoints
                     var types = assembly.GetTypes();
                     foreach (var type in types)
                     {
-                        var attr = type.GetCustomAttribute<Nova.Contracts.Security.RequirePermissionAttribute>();
+                        var attr = type.GetCustomAttribute<RequirePermissionAttribute>();
                         if (attr != null)
                         {
                             var parts = attr.Permission.Split('.');
                             var prefix = parts.Length > 1 ? $"{parts[0]}.{parts[1]}" : parts[0];
-                            
-                            var descAttr = type.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+
+                            var descAttr = type.GetCustomAttribute<DescriptionAttribute>();
                             if (descAttr != null && !groups.ContainsKey(prefix))
                             {
                                 groups[prefix] = descAttr.Description;
@@ -235,7 +236,7 @@ public static class IdentityODataEndpoints
 
             var claims = await roleManager.GetClaimsAsync(role);
             var permissions = claims.Where(c => c.Type == "Permission").Select(c => c.Value).ToList();
-            
+
             return ApiResponse<List<string>>.Success(permissions);
         })
         .Produces<ApiResponse<List<string>>>(200)

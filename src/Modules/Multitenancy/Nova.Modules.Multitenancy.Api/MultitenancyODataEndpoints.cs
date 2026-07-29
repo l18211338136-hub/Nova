@@ -2,14 +2,13 @@ using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Extensions;
-using Microsoft.OData.ModelBuilder;
-using Microsoft.EntityFrameworkCore;
-using Nova.Framework.Web.Responses;
-using Nova.Modules.Multitenancy.Application.Queries;
-using Nova.Framework.MultiTenancy;
 using Microsoft.AspNetCore.Routing;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OData.ModelBuilder;
+using Nova.Framework.MultiTenancy;
+using Nova.Framework.Web.Responses;
+using Nova.Framework.Web.Security;
+using Nova.Modules.Multitenancy.Application.Queries;
 
 namespace Nova.Modules.Multitenancy.Api;
 
@@ -59,7 +58,7 @@ public static class MultitenancyODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<TenantDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter("Multitenancy.Tenants.Read"))
+        .AddEndpointFilter(new PermissionFilter("Multitenancy.Tenants.Read"))
         .WithTags("Tenants")
         .WithSummary("获取租户列表")
         .WithDescription("获取分页的租户列表数据");

@@ -1,12 +1,12 @@
-using System.Reflection;
 using MassTransit.Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Nova.Contracts.CQRS;
-using Microsoft.AspNetCore.Mvc;
+using Nova.Contracts.Security;
 using Nova.Framework.Web.Responses;
-using Microsoft.AspNetCore.OData.Query;
+using Nova.Framework.Web.Security;
+using System.Reflection;
 
 namespace Nova.Framework.Web.CQRS;
 
@@ -33,7 +33,7 @@ public static class AutoEndpointExtensions
                         if (attr == null) continue;
 
                         var responseType = attr.ResponseType;
-                        
+
                         var methodInfo = typeof(AutoEndpointExtensions).GetMethod(nameof(MapEndpointGeneric), BindingFlags.NonPublic | BindingFlags.Static);
                         if (methodInfo != null)
                         {
@@ -65,7 +65,7 @@ public static class AutoEndpointExtensions
             {
                 try { command = await context.Request.ReadFromJsonAsync<TCommand>(); } catch { }
             }
-            
+
             command ??= Activator.CreateInstance<TCommand>();
 
             // 1. 强行绑定路由参数
@@ -110,8 +110,8 @@ public static class AutoEndpointExtensions
         });
 
         // 3. 针对携带 Body 的请求，显式告知 OpenAPI 期望的 JSON Schema
-        if (method.Equals("POST", StringComparison.OrdinalIgnoreCase) || 
-            method.Equals("PUT", StringComparison.OrdinalIgnoreCase) || 
+        if (method.Equals("POST", StringComparison.OrdinalIgnoreCase) ||
+            method.Equals("PUT", StringComparison.OrdinalIgnoreCase) ||
             method.Equals("PATCH", StringComparison.OrdinalIgnoreCase))
         {
             builder.Accepts<TCommand>("application/json");
@@ -121,19 +121,19 @@ public static class AutoEndpointExtensions
         builder.WithMetadata(new CommandTypeMetadata(typeof(TCommand)));
 
         // 5. 权限验证
-        var requirePermAttr = typeof(TCommand).GetCustomAttribute<Nova.Contracts.Security.RequirePermissionAttribute>();
+        var requirePermAttr = typeof(TCommand).GetCustomAttribute<RequirePermissionAttribute>();
         if (requirePermAttr != null)
         {
             builder.RequireAuthorization();
-            builder.AddEndpointFilter(new Nova.Framework.Web.Security.PermissionFilter(requirePermAttr.Permission));
+            builder.AddEndpointFilter(new PermissionFilter(requirePermAttr.Permission));
         }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);
-        
+
         var operationName = typeof(TCommand).Name;
         if (operationName.EndsWith("Command")) operationName = operationName.Substring(0, operationName.Length - 7);
         else if (operationName.EndsWith("Query")) operationName = operationName.Substring(0, operationName.Length - 5);
-        
+
         builder.WithName(operationName);
 
         if (!string.IsNullOrEmpty(tag))
