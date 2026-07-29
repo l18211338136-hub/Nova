@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Roles.Commands;
 
 [ApiEndpoint("PUT", "/api/identity/roles/{id}", typeof(UpdateRoleResult), "Roles", Summary = "更新角色", Description = "更新一个已存在的角色")]
+[RequirePermission("Identity.Roles.Update")]
 public record UpdateRoleCommand
 {
     [Description("角色 ID")]

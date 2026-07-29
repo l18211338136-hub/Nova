@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { type UserDto as User } from '@/api/model'
 import { useUsersContext } from './users-provider'
+import { usePermissions } from '@/hooks/use-permissions'
 
 type DataTableRowActionsProps = {
   row: Row<User>
@@ -21,6 +22,15 @@ type DataTableRowActionsProps = {
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { t } = useTranslation()
   const { setOpen, setCurrentRow } = useUsersContext()
+  const { hasPermission } = usePermissions()
+
+  const canUpdate = hasPermission('Identity.Users.Update')
+  const canDelete = hasPermission('Identity.Users.Delete')
+
+  if (!canUpdate && !canDelete) {
+    return null
+  }
+
   return (
     <>
       <DropdownMenu modal={false}>
@@ -34,36 +44,42 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-40'>
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('edit')
-            }}
-          >
-            <UserPen className="mr-2 h-4 w-4 text-primary" />
-            {t('Edit')}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('permissions')
-            }}
-          >
-            <ShieldAlert className="mr-2 h-4 w-4 text-emerald-500" />
-            <span className="text-emerald-500">{t('权限分配')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('delete')
-            }}
-            className='text-red-500 focus:text-red-500'
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t('Delete')}
-            <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {canUpdate && (
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original)
+                setOpen('edit')
+              }}
+            >
+              <UserPen className="mr-2 h-4 w-4 text-primary" />
+              {t('Edit')}
+            </DropdownMenuItem>
+          )}
+          {canUpdate && (
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original)
+                setOpen('permissions')
+              }}
+            >
+              <ShieldAlert className="mr-2 h-4 w-4 text-emerald-500" />
+              <span className="text-emerald-500">{t('权限分配')}</span>
+            </DropdownMenuItem>
+          )}
+          {canUpdate && canDelete && <DropdownMenuSeparator />}
+          {canDelete && (
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original)
+                setOpen('delete')
+              }}
+              className='text-red-500 focus:text-red-500'
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t('Delete')}
+              <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

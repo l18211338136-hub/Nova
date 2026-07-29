@@ -9,8 +9,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
+import { usePermissions } from '@/hooks/use-permissions'
 
 interface DataTableRowActionsProps {
   row: Row<Tenant>
@@ -19,6 +21,14 @@ interface DataTableRowActionsProps {
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useTenantsContext()
   const { t } = useTranslation()
+  const { hasPermission } = usePermissions()
+
+  const canUpdate = hasPermission('Multitenancy.Tenants.Update')
+  const canDelete = hasPermission('Multitenancy.Tenants.Delete')
+
+  if (!canUpdate && !canDelete) {
+    return null
+  }
 
   return (
     <DropdownMenu>
@@ -32,24 +42,29 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-[160px]'>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original)
-            setOpen('update')
-          }}
-        >
-          <Edit className='mr-2 h-4 w-4 text-blue-500' />
-          {t('Edit')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original)
-            setOpen('delete')
-          }}
-        >
-          <Trash className='mr-2 h-4 w-4 text-red-500' />
-          {t('Delete')}
-        </DropdownMenuItem>
+        {canUpdate && (
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('update')
+            }}
+          >
+            <Edit className='mr-2 h-4 w-4 text-blue-500' />
+            {t('Edit')}
+          </DropdownMenuItem>
+        )}
+        {canUpdate && canDelete && <DropdownMenuSeparator />}
+        {canDelete && (
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('delete')
+            }}
+          >
+            <Trash className='mr-2 h-4 w-4 text-red-500' />
+            {t('Delete')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
