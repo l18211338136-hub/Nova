@@ -31,7 +31,7 @@ export function MenusDeleteDialog({ open, onOpenChange, currentRow }: Props) {
       { id: currentRow.id! },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['menus'] })
+          queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
           toast.success(t('Menu deleted successfully'))
           onOpenChange(false)
         },

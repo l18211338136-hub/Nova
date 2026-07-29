@@ -42,9 +42,6 @@ export function MenusTable({ search: _search, navigate: _navigate }: MenusTableP
   const [expanded, setExpanded] = useState({})
 
   const { data: apiResponse } = useMenus({
-    query: {
-      queryKey: ['menus'],
-    },
     request: {
       params: {
         $count: true,
@@ -116,6 +113,7 @@ export function MenusTable({ search: _search, navigate: _navigate }: MenusTableP
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getSubRows: row => row.subRows,
+    filterFromLeafRows: true, // 允许子节点匹配时保留父节点
   })
 
   return (

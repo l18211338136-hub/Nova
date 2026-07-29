@@ -88,7 +88,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['menus'] })
+            queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
             form.reset()
             toast.success(t('Menu updated successfully'))
             onOpenChange(false)
@@ -108,7 +108,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['menus'] })
+            queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
             form.reset()
             toast.success(t('Menu created successfully'))
             onOpenChange(false)
