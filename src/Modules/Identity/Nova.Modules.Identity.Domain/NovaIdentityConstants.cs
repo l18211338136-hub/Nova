@@ -6,12 +6,14 @@ public static class NovaIdentityConstants
     {
         public const string RootTenantId = "root";
         public const string RootTenantName = "宿主租户";
+        public const string RetailTenantId = "retail"; // 散户/C端用户的默认隔离租户
     }
 
     public static class Roles
     {
         public const string Root = "Root";
         public const string Admin = "Admin";
+        public const string User = "User"; // 默认普通用户角色
     }
 
     public static class Seed

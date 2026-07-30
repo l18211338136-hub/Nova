@@ -1,5 +1,7 @@
 using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +26,8 @@ public static class MultiTenancyExtensions
         });
 
         services.AddMultiTenant<NovaTenantInfo>()
-            .WithDelegateStrategy(context =>
+            .WithClaimStrategy("tenantId")
+            .WithDelegateStrategy(async context =>
             {
                 if (context is Microsoft.AspNetCore.Http.HttpContext httpContext)
                 {
@@ -32,17 +35,42 @@ public static class MultiTenancyExtensions
                     {
                         var headerValue = headerTenantId.ToString();
                         if (!string.IsNullOrWhiteSpace(headerValue))
-                            return Task.FromResult<string?>(headerValue);
+                            return headerValue;
                     }
                         
                     if (httpContext.Request.Query.TryGetValue("tenantId", out var queryTenantId))
                     {
                         var queryValue = queryTenantId.ToString();
                         if (!string.IsNullOrWhiteSpace(queryValue))
-                            return Task.FromResult<string?>(queryValue);
+                            return queryValue;
                     }
+
+                    // 1. 应对 RefreshToken 等带 Header 却可能因为过期失效的原生 WithClaimStrategy
+                    if (httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                    {
+                        var authValue = authHeader.ToString();
+                        if (authValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var token = authValue.Substring(7);
+                            try
+                            {
+                                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                                if (handler.CanReadToken(token))
+                                {
+                                    var jwtToken = handler.ReadJwtToken(token);
+                                    var tenantClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "tenantId");
+                                    if (tenantClaim != null && !string.IsNullOrWhiteSpace(tenantClaim.Value))
+                                    {
+                                        return tenantClaim.Value;
+                                    }
+                                }
+                            }
+                            catch { /* 忽略解析错误 */ }
+                        }
+                    }
+
                 }
-                return Task.FromResult<string?>(null);
+                return null;
             })
             .WithHostStrategy()
             .WithStore<EFCoreStore<NovaTenantDbContext, NovaTenantInfo>>(ServiceLifetime.Scoped); 

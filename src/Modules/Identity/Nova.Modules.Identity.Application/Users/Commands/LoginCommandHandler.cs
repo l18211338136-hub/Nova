@@ -8,58 +8,105 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Nova.Framework.MultiTenancy;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class LoginCommandHandler : IConsumer<LoginCommand>
 {
-    private readonly UserManager<User> _userManager;
-    private readonly RoleManager<Role> _roleManager;
-    private readonly ITokenService _tokenService;
-    private readonly ITenantInfo? _tenantInfo;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly NovaTenantDbContext _tenantDb;
 
     public LoginCommandHandler(
-        UserManager<User> userManager,
-        RoleManager<Role> roleManager,
-        ITokenService tokenService,
-        ITenantInfo? tenantInfo = null)
+        IServiceScopeFactory scopeFactory,
+        NovaTenantDbContext tenantDb)
     {
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _tokenService = tokenService;
-        _tenantInfo = tenantInfo;
+        _scopeFactory = scopeFactory;
+        _tenantDb = tenantDb;
     }
 
     public async Task Consume(ConsumeContext<LoginCommand> context)
     {
         var request = context.Message;
-        
-        User? user = null;
-        if (request.Account.Contains('@'))
-        {
-            user = await _userManager.FindByEmailAsync(request.Account);
-        }
-        else
-        {
-            user = await _userManager.FindByNameAsync(request.Account);
-        }
+        // 1. 从全局映射表查找该账号归属的所有租户
+        var mappings = await _tenantDb.GlobalUserTenantMappings
+            .Where(m => m.Account == request.Account)
+            .ToListAsync();
 
-        if (user == null)
+        if (!mappings.Any())
         {
             throw new NovaValidationException("账号或密码错误");
         }
 
-        var result = await _userManager.CheckPasswordAsync(user, request.Password);
-        if (!result)
+        // 2. 如果前端明确指定了要登录的租户，就过滤掉其他的
+        if (!string.IsNullOrEmpty(request.TargetTenantId))
+        {
+            mappings = mappings.Where(m => m.TenantId == request.TargetTenantId).ToList();
+            if (!mappings.Any())
+            {
+                throw new NovaValidationException("账号或密码错误");
+            }
+        }
+
+        var validTenants = new List<NovaTenantInfo>();
+
+        // 3. 密码探针：挨个租户尝试密码验证
+        foreach (var mapping in mappings)
+        {
+            var tenantInfo = await _tenantDb.TenantInfo.FirstOrDefaultAsync(t => t.Identifier == mapping.TenantId);
+            if (tenantInfo == null) continue;
+
+            using var scope = _scopeFactory.CreateScope();
+            var setter = scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
+            setter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(tenantInfo);
+
+            var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            User? tempUser = request.Account.Contains('@') 
+                ? await um.FindByEmailAsync(request.Account) 
+                : await um.FindByNameAsync(request.Account);
+
+            if (tempUser != null && await um.CheckPasswordAsync(tempUser, request.Password))
+            {
+                validTenants.Add(tenantInfo);
+            }
+        }
+
+        if (validTenants.Count == 0)
         {
             throw new NovaValidationException("账号或密码错误");
         }
 
-        var tenantId = _tenantInfo?.Identifier;
+        // 4. 如果密码在多个租户下都正确，且前端未指定租户，则返回租户列表让前端选
+        if (validTenants.Count > 1)
+        {
+            await context.RespondAsync(new LoginResult
+            {
+                RequiresTenantSelection = true,
+                AvailableTenants = validTenants.Select(t => new TenantOptionDto { Id = t.Identifier!, Name = t.Name ?? t.Identifier! }).ToList()
+            });
+            return;
+        }
+
+        // 5. 唯一确定的租户，开始生成 Token
+        var targetTenant = validTenants.First();
+        using var finalScope = _scopeFactory.CreateScope();
+        var finalSetter = finalScope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
+        finalSetter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(targetTenant);
+
+        var userManager = finalScope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var roleManager = finalScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+        var tokenService = finalScope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User? user = request.Account.Contains('@') 
+            ? await userManager.FindByEmailAsync(request.Account) 
+            : await userManager.FindByNameAsync(request.Account);
+
+        var tenantId = targetTenant.Identifier;
         
         // 获取用户的角色和权限 Claims
         var claims = new List<Claim>();
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = await userManager.GetRolesAsync(user!);
         foreach (var roleName in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, roleName));
@@ -74,15 +121,13 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
                 continue;
             }
 
-            var role = await _roleManager.FindByNameAsync(roleName);
+            var role = await roleManager.FindByNameAsync(roleName);
             if (role != null)
             {
-                var roleClaims = await _roleManager.GetClaimsAsync(role);
-                // 仅加入 Menu 和 Permission 相关的 Claim 到 Token
+                var roleClaims = await roleManager.GetClaimsAsync(role);
                 var authClaims = roleClaims.Where(c => c.Type == "Permission" || c.Type == "Menu");
                 foreach(var c in authClaims)
                 {
-                    // 防止重复添加同样的权限字符串
                     if (!claims.Any(existing => existing.Type == c.Type && existing.Value == c.Value))
                     {
                         claims.Add(c);
@@ -91,16 +136,13 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
             }
         }
 
-        var tokenResult = _tokenService.GenerateToken(user, tenantId, claims);
+        var tokenResult = tokenService.GenerateToken(user!, tenantId, claims);
 
-        // Generate Refresh Token
         var refreshToken = Guid.NewGuid().ToString("N");
-        // Expires in 7 days
         var refreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(7);
         var storedTokenValue = $"{refreshToken}|{refreshTokenExpiry:O}";
 
-        // Store Refresh Token in AspNetUserTokens
-        await _userManager.SetAuthenticationTokenAsync(user, "NovaApp", "RefreshToken", storedTokenValue);
+        await userManager.SetAuthenticationTokenAsync(user!, "NovaApp", "RefreshToken", storedTokenValue);
 
         await context.RespondAsync(new LoginResult 
         { 

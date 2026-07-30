@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
-import { useLogin, useEmailLogin, useSendEmailLoginCode } from '@/api/endpoints/auth'
+import { useLogin, useEmailLogin, useSendEmailLoginCode, resolveTenant } from '@/api/endpoints/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -52,14 +52,14 @@ export function UserAuthForm({
   const { t } = useTranslation()
   const passwordFormSchema = getPasswordFormSchema(t)
   const codeFormSchema = getCodeFormSchema(t)
-  
+
   const [isLoading, setIsLoading] = useState(false)
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  
+
   const navigate = useNavigate()
   const { auth } = useAuthStore()
-  
+
   const { mutateAsync: login } = useLogin()
   const { mutateAsync: emailLogin } = useEmailLogin()
   const { mutateAsync: sendCode } = useSendEmailLoginCode()
@@ -116,7 +116,7 @@ export function UserAuthForm({
     setIsLoading(true)
     try {
       const response = await login({
-        data: { account: data.email, password: data.password },
+        data: { account: data.email, password: data.password }
       })
       handleLoginSuccess(response)
     } catch (error: any) {
@@ -129,7 +129,7 @@ export function UserAuthForm({
     setIsLoading(true)
     try {
       const response = await emailLogin({
-        data: { email: data.email, code: data.emailCode },
+        data: { email: data.email, code: data.emailCode }
       })
       handleLoginSuccess(response)
     } catch (error: any) {
@@ -146,8 +146,8 @@ export function UserAuthForm({
         auth.setRefreshToken(resData.refreshToken)
       }
       toast.success(`${t('Welcome back')}!`)
-      const targetPath = redirectTo || '/'
-      navigate({ to: targetPath, replace: true })
+      // 强制跳转到首页，忽略之前的重定向路径，避免登录后跳入特定管理页面
+      navigate({ to: '/', replace: true })
     } else {
       toast.error(response.message || t('Error signing in'))
     }
@@ -228,10 +228,10 @@ export function UserAuthForm({
                       <FormControl>
                         <Input placeholder='123456' {...field} />
                       </FormControl>
-                      <Button 
-                        type='button' 
-                        variant='outline' 
-                        disabled={countdown > 0 || isSendingCode} 
+                      <Button
+                        type='button'
+                        variant='outline'
+                        disabled={countdown > 0 || isSendingCode}
                         onClick={handleSendCode}
                       >
                         {countdown > 0 ? `${countdown}s` : (isSendingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Send Code'))}
@@ -249,7 +249,7 @@ export function UserAuthForm({
           </Form>
         </TabsContent>
       </Tabs>
-      
+
       {/* 暂时隐藏的第三方登录按钮，等后端接入 OAuth 后去掉 hidden 即可恢复 */}
       <div className='hidden'>
         <div className='relative my-2'>

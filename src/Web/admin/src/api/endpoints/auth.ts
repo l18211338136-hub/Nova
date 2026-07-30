@@ -5,13 +5,22 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -26,6 +35,7 @@ import type {
   RefreshToken,
   RegisterUser,
   ResetPassword,
+  ResolveTenantParams,
   SendEmailLoginCode,
   SendEmailRegisterCode,
   SendForgotPasswordCode
@@ -38,6 +48,21 @@ import { customInstance } from '../../lib/api-client';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 /**
  * 通过邮箱和收到的验证码直接登录获取 Token
@@ -559,3 +584,97 @@ export const useSendForgotPasswordCode = <TError = unknown,
       > => {
       return useMutation(getSendForgotPasswordCodeMutationOptions(options), queryClient);
     }
+    /**
+ * 返回该账号所属的所有租户 ID 列表。无租户要求即可调用。
+ * @summary 根据账号解析租户 ID 列表
+ */
+export const resolveTenant = (
+    params: ResolveTenantParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/identity/resolve-tenant`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getResolveTenantQueryKey = (params?: ResolveTenantParams,) => {
+    return [
+    `/api/identity/resolve-tenant`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getResolveTenantQueryOptions = <TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getResolveTenantQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof resolveTenant>>> = ({ signal }) => resolveTenant(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ResolveTenantQueryResult = NonNullable<Awaited<ReturnType<typeof resolveTenant>>>
+export type ResolveTenantQueryError = unknown
+
+
+export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
+ params: ResolveTenantParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveTenant>>,
+          TError,
+          Awaited<ReturnType<typeof resolveTenant>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
+ params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof resolveTenant>>,
+          TError,
+          Awaited<ReturnType<typeof resolveTenant>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
+ params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 根据账号解析租户 ID 列表
+ */
+
+export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
+ params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getResolveTenantQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

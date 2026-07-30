@@ -2,16 +2,25 @@ using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Exceptions;
 using Nova.Modules.Identity.Domain.Users;
+using Nova.Framework.MultiTenancy;
+using Finbuckle.MultiTenant.Abstractions;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
 {
     private readonly UserManager<User> _userManager;
+    private readonly NovaTenantDbContext _tenantDbContext;
+    private readonly ITenantInfo? _tenantInfo;
 
-    public CreateUserCommandHandler(UserManager<User> userManager)
+    public CreateUserCommandHandler(
+        UserManager<User> userManager,
+        NovaTenantDbContext tenantDbContext,
+        ITenantInfo? tenantInfo = null)
     {
         _userManager = userManager;
+        _tenantDbContext = tenantDbContext;
+        _tenantInfo = tenantInfo;
     }
 
     public async Task Consume(ConsumeContext<CreateUserCommand> context)
@@ -62,6 +71,16 @@ public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
                 var errors = string.Join(", ", claimsResult.Errors.Select(e => e.Description));
                 throw new NovaValidationException($"用户直接权限分配失败: {errors}");
             }
+        }
+
+        if (_tenantInfo != null)
+        {
+            _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+            {
+                Account = user.Email,
+                TenantId = _tenantInfo.Identifier!
+            });
+            await _tenantDbContext.SaveChangesAsync();
         }
 
         await context.RespondAsync(new CreateUserResult { UserId = user.Id });

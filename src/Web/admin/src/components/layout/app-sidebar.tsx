@@ -12,7 +12,7 @@ import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
 import { TeamSwitcher } from './team-switcher'
 import { useAuthStore } from '@/stores/auth-store'
-import { useMenus } from '@/api/endpoints/menus'
+import { useGetMyMenus } from '@/api/endpoints/menus'
 import * as Icons from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -22,39 +22,39 @@ export function AppSidebar() {
 
   const nameClaim = user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user?.name || 'User'
   const email = nameClaim.includes('@') ? nameClaim : `${nameClaim}@nova.com`
-  
+
   const activeUser = user ? {
     name: nameClaim,
     email: email,
     avatar: '/avatars/shadcn.jpg',
   } : sidebarData.user
 
-  const { data: apiResponse } = useMenus({
+  const { data: apiResponse } = useGetMyMenus({
     query: {
-      queryKey: ['sidebar-menus'],
-    },
-    request: {
-      params: {
-        $count: true,
-        $top: 1000,
-        $orderby: 'Sort asc',
-        $filter: 'IsEnabled eq true'
-      }
+      queryKey: ['sidebar-menus', user?.email],
     }
   })
 
   const dynamicGroups = useMemo(() => {
-    const rawMenus = (apiResponse?.data?.items || []) as any[]
+    // 我们的新接口直接返回 list，不用去获取 items
+    const rawMenus = (apiResponse?.data || []) as any[]
     const map = new Map<string, any>()
     const roots: any[] = []
 
+    // 既然接口已经帮我们把用户的专属菜单查出来了（且包含保底的 Dashboard）
+    // 前端直接放心大胆地渲染即可，不需要再对照 JWT 里的权限二次过滤了
     rawMenus.forEach(item => {
-      if (item.id) map.set(item.id, { ...item, subRows: [] })
+      if (item.id) {
+        map.set(item.id, { ...item, subRows: [] })
+      }
     })
 
     rawMenus.forEach(item => {
       if (!item.id) return
-      const node = map.get(item.id)!
+
+      const node = map.get(item.id)
+      if (!node) return // 如果该菜单在第一遍扫描时因无权限被剔除了，这里直接跳过
+
       if (item.parentId && map.has(item.parentId)) {
         map.get(item.parentId)!.subRows.push(node)
       } else {
@@ -86,7 +86,7 @@ export function AppSidebar() {
       title: root.name,
       items: mapToNavItems(root.subRows)
     }))
-  }, [apiResponse?.data?.items])
+  }, [apiResponse?.data])
 
   const allNavGroups = [...dynamicGroups] // ...sidebarData.navGroups (Hidden for now as requested)
 

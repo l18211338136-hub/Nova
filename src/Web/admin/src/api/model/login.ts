@@ -10,4 +10,9 @@ export interface Login {
   account?: string;
   /** 密码 */
   password?: string;
+  /**
+     * 当拥有多个企业时，需指定要登录的目标租户ID
+     * @nullable
+     */
+  targetTenantId?: string | null;
 }

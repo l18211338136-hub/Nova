@@ -31,11 +31,6 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    // 优先从 localStorage 获取 tenant，如果没有则默认使用 'root'
-    if (config.headers && !config.headers['X-Tenant-Id']) {
-      const storedTenant = localStorage.getItem('tenant');
-      config.headers['X-Tenant-Id'] = storedTenant || 'root';
-    }
     return config;
   },
   (error) => {
@@ -78,17 +73,11 @@ apiClient.interceptors.response.use(
 
       try {
         const accessToken = useAuthStore.getState().auth.accessToken;
-        const storedTenant = localStorage.getItem('tenant') || 'root';
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_URL || ''}/api/identity/refresh`,
           {
             accessToken: accessToken,
             refreshToken: refreshToken
-          },
-          {
-            headers: {
-              'X-Tenant-Id': storedTenant
-            }
           }
         );
 

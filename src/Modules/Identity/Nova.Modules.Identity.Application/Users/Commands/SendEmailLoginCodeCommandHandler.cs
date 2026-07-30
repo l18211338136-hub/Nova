@@ -6,18 +6,26 @@ using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;
 using Nova.Framework.Application.Extensions;
 using Nova.Modules.Identity.Domain.Users;
+using Microsoft.EntityFrameworkCore;
+using Nova.Framework.MultiTenancy;
+using Microsoft.Extensions.DependencyInjection;
+using Finbuckle.MultiTenant.Abstractions;
+using Nova.Modules.Identity.Domain;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeCommand>
 {
-    private readonly UserManager<User> _userManager;
+    private readonly NovaTenantDbContext _tenantDb;
     private readonly IMediator _mediator;
     private readonly INovaCache _cache;
 
-    public SendEmailLoginCodeCommandHandler(UserManager<User> userManager, IMediator mediator, INovaCache cache)
+    public SendEmailLoginCodeCommandHandler(
+        NovaTenantDbContext tenantDb,
+        IMediator mediator,
+        INovaCache cache)
     {
-        _userManager = userManager;
+        _tenantDb = tenantDb;
         _mediator = mediator;
         _cache = cache;
     }
@@ -26,22 +34,22 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
     {
         var request = context.Message;
 
-        var cacheKey = $"RateLimit:SendCode:{request.Email}";
-        await _cache.EnsureRateLimitAsync(cacheKey);
-        
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null)
+        var isEmailValid = await _tenantDb.GlobalUserTenantMappings.AnyAsync(m => m.Account == request.Email);
+        if (!isEmailValid)
         {
-            // 为防止用户枚举攻击，即使用户不存在也不应该返回报错
-            // 可以直接抛出一个通用异常或者返回成功。此处选择直接返回
+            // 防止枚举攻击
             await context.RespondAsync(new SendEmailLoginCodeResult { Success = true });
             return;
         }
 
-        // 使用 Identity 自带的 DefaultEmailProvider (基于 TOTP 算法) 生成 6 位数验证码
-        var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+        var cacheKey = $"RateLimit:SendCode:{request.Email}";
+        await _cache.EnsureRateLimitAsync(cacheKey);
 
-        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for user '{user.Email}'");
+        // 使用自定义的 6 位随机验证码放入全局缓存，不绑定特定的租户 User 记录
+        var code = Random.Shared.Next(100000, 1000000).ToString();
+        await _cache.SetAsync($"LoginCode:{request.Email}", code, TimeSpan.FromMinutes(3));
+
+        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for user '{request.Email}'");
 
         var emailBody = $@"
             <h3>安全登录验证码</h3>

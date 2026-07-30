@@ -17,6 +17,15 @@ public record LoginCommand
     /// </summary>
     [Description("密码")]
     public string Password { get; init; } = default!;
+
+    [Description("当拥有多个企业时，需指定要登录的目标租户ID")]
+    public string? TargetTenantId { get; init; }
+}
+
+public record TenantOptionDto
+{
+    public string Id { get; init; } = default!;
+    public string Name { get; init; } = default!;
 }
 
 public record LoginResult
@@ -38,4 +47,10 @@ public record LoginResult
     /// </summary>
     [Description("访问令牌的过期时间（单位：秒）")]
     public int ExpiresIn { get; init; }
+
+    [Description("是否需要选择租户（当密码能在多个租户匹配成功时返回 true）")]
+    public bool RequiresTenantSelection { get; init; }
+
+    [Description("可选的租户列表")]
+    public List<TenantOptionDto>? AvailableTenants { get; init; }
 }

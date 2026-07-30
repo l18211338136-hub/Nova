@@ -162,6 +162,40 @@ public static class IdentityODataEndpoints
         .WithSummary("获取菜单列表")
         .WithDescription("获取分页的菜单列表数据");
 
+        endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken) =>
+        {
+            var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse<List<MenuDto>>.Success(new List<MenuDto>());
+            }
+
+            var menuClaims = httpContext.User.Claims
+                .Where(c => c.Type == "Menu" || c.Type == "menu" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/menu")
+                .Select(c => c.Value)
+                .ToList();
+            
+            var query = db.Menus.AsQueryable();
+
+            if (menuClaims.Any())
+            {
+                var menuIds = menuClaims.Select(id => Guid.TryParse(id, out var parsed) ? parsed : Guid.Empty).Where(id => id != Guid.Empty).ToList();
+                query = query.Where(m => menuIds.Contains(m.Id) || m.Path == "/");
+            }
+            else
+            {
+                query = query.Where(m => m.Path == "/");
+            }
+
+            var menus = await query.OrderBy(m => m.Sort).ProjectToType<MenuDto>().ToListAsync(cancellationToken);
+            return ApiResponse<List<MenuDto>>.Success(menus);
+        })
+        .Produces<ApiResponse<List<MenuDto>>>(200)
+        .RequireAuthorization()
+        .WithTags("Menus")
+        .WithSummary("获取当前登录用户拥有权限的菜单")
+        .WithName("GetMyMenus");
+
         endpoints.MapGet("/api/identity/permissions/all", () =>
         {
             var apiPermissions = new HashSet<string>();

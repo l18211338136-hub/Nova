@@ -1,9 +1,9 @@
-using System.Reflection;
+using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Nova.Modules.Identity.Domain;
 using Nova.Framework.MultiTenancy;
-using Finbuckle.MultiTenant.Abstractions;
+using Nova.Modules.Identity.Domain;
+using System.Reflection;
 
 namespace Nova.WebApi.Extensions;
 
@@ -12,7 +12,7 @@ public static class DatabaseExtensions
     public static async Task ApplyDatabaseMigrationsAsync(this IApplicationBuilder app)
     {
         Console.WriteLine("[Nova.Database] Starting automatic migrations...");
-        
+
         // Ensure all Nova assemblies are loaded into the AppDomain
         var directory = AppDomain.CurrentDomain.BaseDirectory;
         var dllFiles = Directory.GetFiles(directory, "Nova.*.dll");
@@ -24,7 +24,7 @@ public static class DatabaseExtensions
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         var factoryTypes = assemblies
             .SelectMany(a => a.GetTypes())
-            .Where(t => !t.IsAbstract && !t.IsInterface && 
+            .Where(t => !t.IsAbstract && !t.IsInterface &&
                         t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDesignTimeDbContextFactory<>)))
             .ToList();
 
@@ -55,7 +55,7 @@ public static class DatabaseExtensions
                 Console.WriteLine($"[Nova.Database] Failed to migrate using {factoryType.Name}: {ex.Message}");
             }
         }
-        
+
         Console.WriteLine("[Nova.Database] Automatic migrations completed.");
 
         // === Execute Data Initializers for Root Tenant ===
@@ -64,7 +64,7 @@ public static class DatabaseExtensions
         {
             using var scope = app.ApplicationServices.CreateScope();
             var tenantStore = scope.ServiceProvider.GetRequiredService<IMultiTenantStore<NovaTenantInfo>>();
-            
+
             var rootTenantId = NovaIdentityConstants.Tenants.RootTenantId;
             var rootTenant = await tenantStore.GetAsync(rootTenantId);
             if (rootTenant == null)

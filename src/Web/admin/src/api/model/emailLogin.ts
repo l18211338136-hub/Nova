@@ -10,4 +10,9 @@ export interface EmailLogin {
   email?: string;
   /** 6 位数验证码 */
   code?: string;
+  /**
+     * 当拥有多个企业时，需指定要登录的目标租户ID
+     * @nullable
+     */
+  targetTenantId?: string | null;
 }

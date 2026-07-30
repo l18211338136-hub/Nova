@@ -5,21 +5,26 @@ using Nova.Contracts.Caching;
 using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;
 using Nova.Framework.Application.Extensions;
-using Nova.Modules.Identity.Domain.Users;
+using Nova.Framework.MultiTenancy;
+using Microsoft.EntityFrameworkCore;
+using Nova.Modules.Identity.Domain;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCodeCommand>
 {
-    private readonly UserManager<User> _userManager;
     private readonly IMediator _mediator;
     private readonly INovaCache _cache;
+    private readonly NovaTenantDbContext _tenantDbContext;
 
-    public SendEmailRegisterCodeCommandHandler(UserManager<User> userManager, IMediator mediator, INovaCache cache)
+    public SendEmailRegisterCodeCommandHandler(
+        IMediator mediator, 
+        INovaCache cache,
+        NovaTenantDbContext tenantDbContext)
     {
-        _userManager = userManager;
         _mediator = mediator;
         _cache = cache;
+        _tenantDbContext = tenantDbContext;
     }
 
     public async Task Consume(ConsumeContext<SendEmailRegisterCodeCommand> context)
@@ -29,8 +34,12 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
         var cacheKey = $"RateLimit:SendCode:{request.Email}";
         await _cache.EnsureRateLimitAsync(cacheKey);
         
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user != null)
+        // 校验全局映射表，确保该邮箱在【散户隔离库】中未被注册（允许该邮箱存在于其他 B2B 租户中）
+        var targetTenantId = NovaIdentityConstants.Tenants.RetailTenantId;
+        var isEmailTaken = await _tenantDbContext.GlobalUserTenantMappings
+            .AnyAsync(m => m.Account == request.Email && m.TenantId == targetTenantId);
+            
+        if (isEmailTaken)
         {
             // 提示用户该邮箱已被注册
             throw new NovaValidationException("该邮箱已被注册，请直接前往登录。");
@@ -38,6 +47,8 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
 
         // 生成 6 位随机验证码
         var code = Random.Shared.Next(100000, 1000000).ToString();
+        
+        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for registration user '{request.Email}'");
 
         // 存入缓存，有效期 5 分钟
         await _cache.SetAsync($"RegisterCode:{request.Email}", code, TimeSpan.FromMinutes(5));

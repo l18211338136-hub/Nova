@@ -11,4 +11,7 @@ public record EmailLoginCommand
 
     [Description("6 位数验证码")]
     public string Code { get; init; } = default!;
+
+    [Description("当拥有多个企业时，需指定要登录的目标租户ID")]
+    public string? TargetTenantId { get; init; }
 }

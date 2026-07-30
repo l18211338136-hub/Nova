@@ -26,6 +26,7 @@ import type {
 import type {
   ApiResponseOfCreateMenuResult,
   ApiResponseOfDeleteMenuResult,
+  ApiResponseOfListOfMenuDto,
   ApiResponseOfPagedResultOfMenuDto,
   ApiResponseOfUpdateMenuResult,
   CreateMenu,
@@ -342,3 +343,95 @@ export const useUpdateMenu = <TError = unknown,
       > => {
       return useMutation(getUpdateMenuMutationOptions(options), queryClient);
     }
+    /**
+ * @summary 获取当前登录用户拥有权限的菜单
+ */
+export const getMyMenus = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfListOfMenuDto>(
+      {url: `/api/identity/menus/me`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetMyMenusQueryKey = () => {
+    return [
+    `/api/identity/menus/me`
+    ] as const;
+    }
+
+
+export const getGetMyMenusQueryOptions = <TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyMenusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyMenus>>> = ({ signal }) => getMyMenus(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyMenusQueryResult = NonNullable<Awaited<ReturnType<typeof getMyMenus>>>
+export type GetMyMenusQueryError = unknown
+
+
+export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyMenus>>,
+          TError,
+          Awaited<ReturnType<typeof getMyMenus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyMenus>>,
+          TError,
+          Awaited<ReturnType<typeof getMyMenus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 获取当前登录用户拥有权限的菜单
+ */
+
+export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyMenusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

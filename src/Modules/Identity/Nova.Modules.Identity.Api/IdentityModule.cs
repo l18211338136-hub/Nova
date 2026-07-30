@@ -59,6 +59,21 @@ public class IdentityModule : IModule
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapIdentityODataEndpoints();
+
+        endpoints.MapGet("/api/identity/resolve-tenant", async (string account, NovaTenantDbContext tenantDb) =>
+        {
+            var mappings = await tenantDb.GlobalUserTenantMappings
+                .Where(m => m.Account == account)
+                .Select(m => m.TenantId)
+                .ToListAsync();
+
+            return Results.Ok(new { TenantIds = mappings });
+        })
+        .WithName("ResolveTenant")
+        .WithTags("Auth")
+        .WithSummary("根据账号解析租户 ID 列表")
+        .WithDescription("返回该账号所属的所有租户 ID 列表。无租户要求即可调用。")
+        .AllowAnonymous();
     }
 }
 

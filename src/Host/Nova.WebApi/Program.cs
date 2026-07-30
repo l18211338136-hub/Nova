@@ -44,10 +44,12 @@ app.UseHttpsRedirection();
 app.UseNovaCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 必须在 Hangfire (UseNovaJobs) 之前执行，否则 Hangfire 连不上不存在的库
+await app.ApplyDatabaseMigrationsAsync();
+
 app.UseNovaJobs(requireAuth: false); // 开发阶段暂不限制，生产环境改为 true
 app.UseNovaMultiTenancy();
-
-await app.ApplyDatabaseMigrationsAsync();
 
 app.Run();
 

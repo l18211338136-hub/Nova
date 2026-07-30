@@ -2,13 +2,14 @@ using MassTransit.Mediator;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Nova.Contracts.DependencyInjection;
+using Nova.Contracts.Security;
 using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Domain;
+using Nova.Modules.Identity.Domain.Menus;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
-using Nova.Modules.Identity.Domain.Menus;
-using System.Security.Claims;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Nova.Modules.Identity.Infrastructure;
@@ -19,13 +20,20 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
     private readonly IMediator _mediator;
+    private readonly NovaTenantDbContext _tenantDbContext;
 
-    public IdentityDbInitializer(IdentityDbContext dbContext, UserManager<User> userManager, RoleManager<Role> roleManager, IMediator mediator)
+    public IdentityDbInitializer(
+        IdentityDbContext dbContext, 
+        UserManager<User> userManager, 
+        RoleManager<Role> roleManager, 
+        IMediator mediator,
+        NovaTenantDbContext tenantDbContext)
     {
         _dbContext = dbContext;
         _userManager = userManager;
         _roleManager = roleManager;
         _mediator = mediator;
+        _tenantDbContext = tenantDbContext;
     }
 
     public async Task MigrateAsync(CancellationToken cancellationToken)
@@ -55,6 +63,12 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.Admin, "系统管理", "系统租户管理员角色，拥有当前租户下的所有权限。", 1));
         }
 
+        // User 角色对所有租户都需要，作为普通用户的默认权限
+        if (await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.User) == null)
+        {
+            await _roleManager.CreateAsync(Role.Create(NovaIdentityConstants.Roles.User, "普通用户", "普通注册用户，拥有系统基础使用权限。", 2));
+        }
+
         // Root 角色仅为宿主租户创建
         if (isRootTenant && await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root) == null)
         {
@@ -78,6 +92,17 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                 {
                     await _userManager.AddToRoleAsync(rootUser, NovaIdentityConstants.Roles.Root);
                     await _userManager.AddToRoleAsync(rootUser, NovaIdentityConstants.Roles.Admin);
+                    
+                    if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == rootUser.Email && m.TenantId == tenantInfo.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = rootUser.Email,
+                            TenantId = tenantInfo.Identifier
+                        });
+                        await _tenantDbContext.SaveChangesAsync(cancellationToken);
+                    }
                 }
                 else
                 {
@@ -108,6 +133,17 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                 {
                     await _userManager.AddToRoleAsync(adminUser, NovaIdentityConstants.Roles.Admin);
                     
+                    if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == adminUser.Email && m.TenantId == tenantInfo!.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = adminUser.Email,
+                            TenantId = tenantInfo!.Identifier
+                        });
+                        await _tenantDbContext.SaveChangesAsync(cancellationToken);
+                    }
+
                     Console.WriteLine($"[Nova.Database] Successfully created admin user '{adminEmail}' for tenant '{tenantInfo?.Name ?? "root"}' with password: {defaultPassword}");
 
                     // 使用注入的 MassTransit IMediator 发送欢迎邮件命令
@@ -157,7 +193,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
 
         var jsonContent = await File.ReadAllTextAsync(jsonPath, cancellationToken);
         var seedMenus = JsonSerializer.Deserialize<List<MenuSeedDto>>(jsonContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         if (seedMenus == null) return;
 
         var tenantInfoEarly = _dbContext.TenantInfo as NovaTenantInfo;
@@ -215,9 +251,9 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         foreach (var role in new[] { rootRole, adminRole })
         {
             if (role == null) continue;
-            
+
             var existingClaims = await _roleManager.GetClaimsAsync(role);
-            
+
             // 分配菜单访问权限（非宿主租户跳过仅宿主菜单）
             foreach (var menu in dbMenus)
             {
@@ -249,7 +285,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             var adminClaims = await _roleManager.GetClaimsAsync(adminRole);
             var apiPermissions = new HashSet<string>();
             var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
-            
+
             foreach (var file in dllFiles)
             {
                 try
@@ -258,7 +294,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                     var types = assembly.GetTypes();
                     foreach (var type in types)
                     {
-                        var attr = type.GetCustomAttribute<Nova.Contracts.Security.RequirePermissionAttribute>();
+                        var attr = type.GetCustomAttribute<RequirePermissionAttribute>();
                         if (attr != null)
                         {
                             apiPermissions.Add(attr.Permission);
