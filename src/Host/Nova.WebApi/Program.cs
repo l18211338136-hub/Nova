@@ -1,14 +1,15 @@
-using Scalar.AspNetCore;
-using Nova.Framework.Web.OpenApi;
+using Nova.Framework.Infrastructure.Extensions;
+using Nova.Framework.Jobs;
 using Nova.Framework.MultiTenancy;
-using Nova.Framework.Web.Modular;
 using Nova.Framework.Web.Authentication;
 using Nova.Framework.Web.Cors;
-using Nova.Framework.Web.Extensions;
-using Nova.WebApi.Extensions;
-using Nova.Framework.Infrastructure.Extensions;
 using Nova.Framework.Web.CQRS;
-using Nova.Framework.Jobs;
+using Nova.Framework.Web.Extensions;
+using Nova.Framework.Web.Middlewares;
+using Nova.Framework.Web.Modular;
+using Nova.Framework.Web.OpenApi;
+using Nova.WebApi.Extensions;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,15 +32,15 @@ builder.Services.AddNovaJobs(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseMiddleware<Nova.Framework.Web.Middlewares.GlobalExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
+if (app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-    app.MapModuleEndpoints();
 }
 
+app.MapModuleEndpoints();
 app.UseHttpsRedirection();
 app.UseNovaCors();
 app.UseAuthentication();
@@ -48,7 +49,7 @@ app.UseAuthorization();
 // 必须在 Hangfire (UseNovaJobs) 之前执行，否则 Hangfire 连不上不存在的库
 await app.ApplyDatabaseMigrationsAsync();
 
-app.UseNovaJobs(requireAuth: false); // 开发阶段暂不限制，生产环境改为 true
+app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization")); // 开发阶段暂不限制，生产环境改为 true
 app.UseNovaMultiTenancy();
 
 app.Run();
