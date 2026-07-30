@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,10 +24,47 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import * as Icons from 'lucide-react'
 import { MenuDto } from './menus-provider'
 import { useTranslation } from 'react-i18next'
-import { useCreateMenu, useUpdateMenu, getMenusQueryKey } from '@/api/endpoints/menus'
+import { useCreateMenu, useUpdateMenu, getMenusQueryKey, getGetMyMenusQueryKey } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
+
+const predefinedIcons = [
+  // 核心导航/页面
+  'LayoutDashboard', 'Home', 'Compass', 'Layout', 'Layers', 'LayoutGrid', 'Grid', 'Menu', 'MoreHorizontal', 'MoreVertical',
+  // 系统设置/权限
+  'Settings', 'Sliders', 'Wrench', 'Tool', 'Shield', 'ShieldCheck', 'ShieldAlert', 'Lock', 'Unlock', 'Key', 
+  // 用户/角色
+  'Users', 'User', 'UserCheck', 'UserPlus', 'UserMinus', 'UserCog', 'Badge', 'Building', 'Briefcase', 'Contact',
+  // 财务/数据/统计
+  'BarChart', 'PieChart', 'LineChart', 'TrendingUp', 'TrendingDown', 'Activity', 'DollarSign', 'CreditCard', 'Wallet', 'Banknote', 'Receipt',
+  // 文档/列表
+  'List', 'ListTodo', 'ListOrdered', 'FileText', 'File', 'Files', 'Folder', 'FolderOpen', 'Archive', 'Clipboard', 'ClipboardList',
+  // 电商/产品
+  'ShoppingCart', 'ShoppingBag', 'ShoppingBasket', 'Tag', 'Package', 'Box', 'Truck', 'Gift',
+  // 通讯/消息
+  'Mail', 'MessageSquare', 'MessageCircle', 'Bell', 'BellRing', 'Send', 'Share', 'Share2',
+  // 媒体/设备
+  'Image', 'Camera', 'Video', 'Mic', 'Headphones', 'Monitor', 'Smartphone', 'Laptop', 'Tablet', 'HardDrive', 'Server',
+  // 时间/日期
+  'Calendar', 'Clock', 'History', 'Timer',
+  // 状态/其他
+  'CheckCircle', 'XCircle', 'AlertCircle', 'Info', 'HelpCircle', 'Star', 'Heart', 'Bookmark', 'Flag', 'MapPin', 'Globe', 'Cloud', 'Zap', 'Lightbulb', 'Search'
+]
 
 const getFormSchema = (t: (arg: string) => string) => z.object({
   name: z.string().min(1, { message: t('Name is required.') }),
@@ -53,18 +92,12 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
   const queryClient = useQueryClient()
   const createMenuMutation = useCreateMenu()
   const updateMenuMutation = useUpdateMenu()
+  
+  const [iconOpen, setIconOpen] = useState(false)
 
   const form = useForm<MenusForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: isEdit ? {
-      name: currentRow?.name ?? '',
-      path: currentRow?.path ?? '',
-      component: currentRow?.component ?? '',
-      icon: currentRow?.icon ?? '',
-      sort: currentRow?.sort ?? 0,
-      isEnabled: currentRow?.isEnabled ?? true,
-      remarks: currentRow?.remarks ?? '',
-    } : {
+    defaultValues: {
       name: '',
       path: '',
       component: '',
@@ -74,6 +107,28 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
       remarks: '',
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      form.reset(isEdit ? {
+        name: currentRow?.name ?? '',
+        path: currentRow?.path ?? '',
+        component: currentRow?.component ?? '',
+        icon: currentRow?.icon ?? '',
+        sort: currentRow?.sort ?? 0,
+        isEnabled: currentRow?.isEnabled ?? true,
+        remarks: currentRow?.remarks ?? '',
+      } : {
+        name: '',
+        path: '',
+        component: '',
+        icon: '',
+        sort: 0,
+        isEnabled: true,
+        remarks: '',
+      })
+    }
+  }, [open, isEdit, currentRow, form])
 
   const onSubmit = (values: MenusForm) => {
     if (isEdit && currentRow) {
@@ -89,7 +144,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
-            form.reset()
+            queryClient.invalidateQueries({ queryKey: getGetMyMenusQueryKey() })
             toast.success(t('Menu updated successfully'))
             onOpenChange(false)
           },
@@ -109,7 +164,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
-            form.reset()
+            queryClient.invalidateQueries({ queryKey: getGetMyMenusQueryKey() })
             toast.success(t('Menu created successfully'))
             onOpenChange(false)
           },
@@ -124,10 +179,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
   return (
     <Dialog
       open={open}
-      onOpenChange={(state) => {
-        form.reset()
-        onOpenChange(state)
-      }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-left'>
@@ -188,9 +240,68 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>{t('Icon')}</FormLabel>
-                    <FormControl>
-                      <Input placeholder='e.g. Users' className='col-span-4' {...field} value={field.value || ''} />
-                    </FormControl>
+                    <Popover open={iconOpen} onOpenChange={setIconOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant='outline'
+                            role='combobox'
+                            aria-expanded={iconOpen}
+                            className={cn(
+                              'col-span-4 w-full justify-between',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              <div className='flex items-center gap-2'>
+                                {(() => {
+                                  const IconComp = (Icons as any)[field.value]
+                                  return IconComp ? <IconComp className='h-4 w-4' /> : null
+                                })()}
+                                <span>{field.value}</span>
+                              </div>
+                            ) : (
+                              t('Select an icon')
+                            )}
+                            <Icons.ChevronsUpDown className='ms-2 h-4 w-4 shrink-0 opacity-50' />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className='w-[280px] p-0' align='start'>
+                        <Command>
+                          <CommandInput placeholder={t('Search icon...')} />
+                          <CommandList>
+                            <CommandEmpty>{t('No icon found.')}</CommandEmpty>
+                            <CommandGroup>
+                              {predefinedIcons.map((iconName) => {
+                                const IconComp = (Icons as any)[iconName]
+                                return (
+                                  <CommandItem
+                                    value={iconName}
+                                    key={iconName}
+                                    onSelect={() => {
+                                      form.setValue('icon', iconName)
+                                      setIconOpen(false)
+                                    }}
+                                  >
+                                    <div className='flex items-center gap-2'>
+                                      {IconComp && <IconComp className='h-4 w-4' />}
+                                      <span>{iconName}</span>
+                                    </div>
+                                    <Icons.CheckIcon
+                                      className={cn(
+                                        'ms-auto h-4 w-4',
+                                        iconName === field.value ? 'opacity-100' : 'opacity-0'
+                                      )}
+                                    />
+                                  </CommandItem>
+                                )
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage className='col-span-4 col-start-3' />
                   </FormItem>
                 )}

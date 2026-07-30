@@ -63,7 +63,6 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<UserDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Identity.Users.Read"))
         .WithTags("Users")
         .WithSummary("获取用户列表")
         .WithDescription("获取分页的用户列表数据");
@@ -110,7 +109,6 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<RoleDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Identity.Roles.Read"))
         .WithTags("Roles")
         .WithSummary("获取角色列表")
         .WithDescription("获取分页的角色列表数据");
@@ -157,12 +155,11 @@ public static class IdentityODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<MenuDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Identity.Menus.Read"))
         .WithTags("Menus")
         .WithSummary("获取菜单列表")
         .WithDescription("获取分页的菜单列表数据");
 
-        endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken) =>
+        endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken, UserManager<User> userManager, RoleManager<Role> roleManager) =>
         {
             var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -170,10 +167,30 @@ public static class IdentityODataEndpoints
                 return ApiResponse<List<MenuDto>>.Success(new List<MenuDto>());
             }
 
-            var menuClaims = httpContext.User.Claims
+            var menuClaims = new List<string>();
+            var user = await userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                var claims = await userManager.GetClaimsAsync(user);
+                menuClaims.AddRange(claims.Where(c => c.Type == "Menu").Select(c => c.Value));
+
+                var roles = await userManager.GetRolesAsync(user);
+                foreach (var roleName in roles)
+                {
+                    var role = await roleManager.FindByNameAsync(roleName);
+                    if (role != null)
+                    {
+                        var roleClaims = await roleManager.GetClaimsAsync(role);
+                        menuClaims.AddRange(roleClaims.Where(c => c.Type == "Menu").Select(c => c.Value));
+                    }
+                }
+            }
+
+            menuClaims.AddRange(httpContext.User.Claims
                 .Where(c => c.Type == "Menu" || c.Type == "menu" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/menu")
-                .Select(c => c.Value)
-                .ToList();
+                .Select(c => c.Value));
+
+            menuClaims = menuClaims.Distinct().ToList();
             
             var query = db.Menus.AsQueryable();
 
@@ -266,17 +283,22 @@ public static class IdentityODataEndpoints
         endpoints.MapGet("/api/identity/roles/{id}/permissions", async (string id, RoleManager<Role> roleManager) =>
         {
             var role = await roleManager.FindByIdAsync(id);
-            if (role == null) return ApiResponse<List<string>>.Success(new List<string>());
+            if (role == null) return ApiResponse<RolePermissionsDto>.Success(new RolePermissionsDto());
 
             var claims = await roleManager.GetClaimsAsync(role);
             var permissions = claims.Where(c => c.Type == "Permission").Select(c => c.Value).ToList();
+            var menus = claims.Where(c => c.Type == "Menu").Select(c => c.Value).ToList();
 
-            return ApiResponse<List<string>>.Success(permissions);
+            return ApiResponse<RolePermissionsDto>.Success(new RolePermissionsDto 
+            { 
+                Permissions = permissions, 
+                Menus = menus 
+            });
         })
-        .Produces<ApiResponse<List<string>>>(200)
+        .Produces<ApiResponse<RolePermissionsDto>>(200)
         .RequireAuthorization()
         .WithTags("Roles")
-        .WithSummary("获取某个角色的所有权限")
+        .WithSummary("获取某个角色的所有权限和菜单")
         .WithName("GetRolePermissions");
 
         endpoints.MapGet("/api/identity/users/{id}/roles", async (string id, UserManager<User> userManager) =>

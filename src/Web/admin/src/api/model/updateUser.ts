@@ -33,4 +33,9 @@ export interface UpdateUser {
      * @nullable
      */
   permissions?: string[] | null;
+  /**
+     * 直接分配的菜单标识列表
+     * @nullable
+     */
+  menus?: string[] | null;
 }

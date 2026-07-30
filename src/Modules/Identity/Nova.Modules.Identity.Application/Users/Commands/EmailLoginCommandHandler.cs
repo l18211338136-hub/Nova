@@ -106,6 +106,12 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         var tenantId = targetTenant.Identifier;
         
         var claims = new List<Claim>();
+
+        // 1. 获取用户直接分配的独立 Claims
+        var userClaims = await userManager.GetClaimsAsync(user!);
+        claims.AddRange(userClaims.Where(c => c.Type == "Permission" || c.Type == "Menu"));
+
+        // 2. 获取用户角色带来的 Claims
         var roles = await userManager.GetRolesAsync(user);
         foreach (var roleName in roles)
         {

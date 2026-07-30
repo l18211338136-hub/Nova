@@ -28,6 +28,9 @@ public record UpdateRoleCommand
 
     [Description("权限标识列表")]
     public List<string>? Permissions { get; init; }
+
+    [Description("菜单标识列表")]
+    public List<string>? Menus { get; init; }
 }
 
 public record UpdateRoleResult

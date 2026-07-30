@@ -25,6 +25,7 @@ import { type UserDto as User } from '@/api/model'
 import { useUpdateUser, useGetUserRoles, useGetUserPermissions, getGetUserRolesQueryKey, getGetUserPermissionsQueryKey } from '@/api/endpoints/users'
 import { useRoles } from '@/api/endpoints/roles'
 import { useGetAllPermissions, useGetPermissionGroups } from '@/api/endpoints/permissions'
+import { useMenus } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 import React, { useEffect } from 'react'
 
@@ -87,6 +88,19 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
     },
   })
 
+  // Fetch all menus for deduction
+  const { data: menusResponse } = useMenus({
+    request: {
+      params: {
+        $top: 1000,
+        $orderby: 'Sort asc, CreatedAt asc'
+      }
+    },
+    query: {
+      enabled: open,
+    }
+  })
+
   // Fetch current user roles
   const { data: currentRoles } = useGetUserRoles(
     currentRow?.id ?? '',
@@ -140,6 +154,32 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
 
   const onSubmit = (values: PermissionsForm) => {
     if (currentRow?.id) {
+      // 自动推导所需菜单
+      const allMenus = menusResponse?.data?.items || []
+      const selectedMenuIds = new Set<string>()
+
+      if (values.permissions && permissionGroups?.data) {
+        values.permissions.forEach(perm => {
+          const group = perm.split('.').slice(0, 2).join('.')
+          const groupName = permissionGroups?.data?.[group]
+
+          if (groupName) {
+            const matchingMenu = allMenus.find(m => m.name === groupName)
+            if (matchingMenu && matchingMenu.id) {
+              selectedMenuIds.add(matchingMenu.id)
+              
+              // 递归添加父节点
+              let parentId = matchingMenu.parentId
+              while (parentId) {
+                selectedMenuIds.add(parentId)
+                const parentMenu = allMenus.find(m => m.id === parentId)
+                parentId = parentMenu?.parentId
+              }
+            }
+          }
+        })
+      }
+
       updateMutation.mutate({
         id: currentRow.id,
         data: {
@@ -149,6 +189,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
           isEnabled: currentRow.isEnabled ?? true,
           roles: values.roles,
           permissions: values.permissions,
+          menus: Array.from(selectedMenuIds),
         },
       })
     }

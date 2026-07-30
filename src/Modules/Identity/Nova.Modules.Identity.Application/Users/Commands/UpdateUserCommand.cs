@@ -30,6 +30,9 @@ public record UpdateUserCommand
 
     [Description("直接分配的权限标识列表")]
     public List<string>? Permissions { get; init; }
+
+    [Description("直接分配的菜单标识列表")]
+    public List<string>? Menus { get; init; }
 }
 
 public record UpdateUserResult

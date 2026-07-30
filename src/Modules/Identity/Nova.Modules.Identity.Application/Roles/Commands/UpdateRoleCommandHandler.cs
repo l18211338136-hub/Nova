@@ -70,6 +70,31 @@ public class UpdateRoleCommandHandler : IConsumer<UpdateRoleCommand>
             }
         }
 
+        if (command.Menus != null)
+        {
+            var existingClaims = await _roleManager.GetClaimsAsync(role);
+            var menuClaims = existingClaims.Where(c => c.Type == "Menu").ToList();
+            
+            // Remove obsolete menus
+            foreach (var claim in menuClaims)
+            {
+                if (!command.Menus.Contains(claim.Value))
+                {
+                    await _roleManager.RemoveClaimAsync(role, claim);
+                }
+            }
+
+            // Add new menus
+            var existingMenuVals = menuClaims.Select(c => c.Value).ToHashSet();
+            foreach (var menu in command.Menus)
+            {
+                if (!existingMenuVals.Contains(menu))
+                {
+                    await _roleManager.AddClaimAsync(role, new System.Security.Claims.Claim("Menu", menu));
+                }
+            }
+        }
+
         await context.RespondAsync(new UpdateRoleResult { Success = true });
     }
 }

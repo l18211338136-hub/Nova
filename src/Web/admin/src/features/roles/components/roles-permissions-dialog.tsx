@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+
 import {
   Form,
   FormField,
@@ -23,6 +24,7 @@ import {
 import { type RoleDto as Role } from '@/api/model'
 import { useUpdateRole, useGetRolePermissions, getGetRolePermissionsQueryKey } from '@/api/endpoints/roles'
 import { useGetAllPermissions, useGetPermissionGroups } from '@/api/endpoints/permissions'
+import { useMenus } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 import React, { useEffect } from 'react'
 
@@ -35,6 +37,7 @@ const ACTION_MAP: Record<string, string> = {
 
 const formSchema = z.object({
   permissions: z.array(z.string()).optional(),
+  menus: z.array(z.string()).optional(),
 })
 
 type PermissionsForm = z.infer<typeof formSchema>
@@ -53,6 +56,7 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
     resolver: zodResolver(formSchema),
     defaultValues: {
       permissions: [],
+      menus: [],
     },
   })
 
@@ -70,6 +74,19 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
     },
   })
 
+  // Fetch all menus (without specific permission requirement)
+  const { data: menusResponse } = useMenus({
+    request: {
+      params: {
+        $top: 1000,
+        $orderby: 'Sort asc, CreatedAt asc'
+      }
+    },
+    query: {
+      enabled: open,
+    }
+  })
+
   // Fetch current role permissions
   const { data: currentPermissions } = useGetRolePermissions(
     currentRow?.id ?? '',
@@ -83,7 +100,8 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
   // Sync current permissions to form when data is loaded
   useEffect(() => {
     if (currentPermissions?.data) {
-      form.setValue('permissions', currentPermissions.data)
+      form.setValue('permissions', currentPermissions.data.permissions || [])
+      form.setValue('menus', currentPermissions.data.menus || [])
     }
   }, [currentPermissions?.data, form])
 
@@ -107,7 +125,32 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
 
   const onSubmit = (values: PermissionsForm) => {
     if (currentRow?.id) {
-      // Need to pass existing role properties because it's a full update
+      // 自动推导所需菜单
+      const allMenus = menusResponse?.data?.items || []
+      const selectedMenuIds = new Set<string>()
+
+      if (values.permissions && permissionGroups?.data) {
+        values.permissions.forEach(perm => {
+          const group = perm.split('.').slice(0, 2).join('.')
+          const groupName = permissionGroups?.data?.[group]
+
+          if (groupName) {
+            const matchingMenu = allMenus.find(m => m.name === groupName)
+            if (matchingMenu && matchingMenu.id) {
+              selectedMenuIds.add(matchingMenu.id)
+              
+              // 递归添加父节点
+              let parentId = matchingMenu.parentId
+              while (parentId) {
+                selectedMenuIds.add(parentId)
+                const parentMenu = allMenus.find(m => m.id === parentId)
+                parentId = parentMenu?.parentId
+              }
+            }
+          }
+        })
+      }
+
       updateMutation.mutate({
         id: currentRow.id,
         data: {
@@ -117,6 +160,7 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
           isEnabled: currentRow.isEnabled ?? true,
           remarks: currentRow.remarks,
           permissions: values.permissions,
+          menus: Array.from(selectedMenuIds),
         },
       })
     }
@@ -134,6 +178,8 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
       return acc
     }, {} as Record<string, string[]>)
   }, [allPermissions?.data])
+
+
 
   return (
     <Dialog

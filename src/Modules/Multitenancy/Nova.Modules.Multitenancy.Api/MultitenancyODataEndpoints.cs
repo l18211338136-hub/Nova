@@ -58,7 +58,6 @@ public static class MultitenancyODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<TenantDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Multitenancy.Tenants.Read"))
         .WithTags("Tenants")
         .WithSummary("获取租户列表")
         .WithDescription("获取分页的租户列表数据");

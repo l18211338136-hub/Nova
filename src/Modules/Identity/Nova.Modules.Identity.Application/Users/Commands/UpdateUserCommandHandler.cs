@@ -100,6 +100,26 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
             }
         }
 
+        if (command.Menus != null)
+        {
+            var existingClaims = await _userManager.GetClaimsAsync(user);
+            var menuClaims = existingClaims.Where(c => c.Type == "Menu").ToList();
+            
+            var menusToRemove = menuClaims.Where(c => !command.Menus.Contains(c.Value)).ToList();
+            if (menusToRemove.Any())
+            {
+                await _userManager.RemoveClaimsAsync(user, menusToRemove);
+            }
+
+            var existingMenuValues = menuClaims.Select(c => c.Value).ToHashSet();
+            var menusToAdd = command.Menus.Where(m => !existingMenuValues.Contains(m))
+                .Select(m => new System.Security.Claims.Claim("Menu", m)).ToList();
+            if (menusToAdd.Any())
+            {
+                await _userManager.AddClaimsAsync(user, menusToAdd);
+            }
+        }
+
         await context.RespondAsync(new UpdateUserResult { Success = true });
     }
 }

@@ -26,8 +26,8 @@ import type {
 import type {
   ApiResponseOfCreateRoleResult,
   ApiResponseOfDeleteRoleResult,
-  ApiResponseOfListOfstring,
   ApiResponseOfPagedResultOfRoleDto,
+  ApiResponseOfRolePermissionsDto,
   ApiResponseOfUpdateRoleResult,
   CreateRole,
   UpdateRole
@@ -344,7 +344,7 @@ export const useUpdateRole = <TError = unknown,
       return useMutation(getUpdateRoleMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取某个角色的所有权限
+ * @summary 获取某个角色的所有权限和菜单
  */
 export const getRolePermissions = (
     id: string,
@@ -352,7 +352,7 @@ export const getRolePermissions = (
 ) => {
 
 
-      return customInstance<ApiResponseOfListOfstring>(
+      return customInstance<ApiResponseOfRolePermissionsDto>(
       {url: `/api/identity/roles/${id}/permissions`, method: 'GET', signal
     },
       options);
@@ -415,7 +415,7 @@ export function useGetRolePermissions<TData = Awaited<ReturnType<typeof getRoleP
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取某个角色的所有权限
+ * @summary 获取某个角色的所有权限和菜单
  */
 
 export function useGetRolePermissions<TData = Awaited<ReturnType<typeof getRolePermissions>>, TError = unknown>(

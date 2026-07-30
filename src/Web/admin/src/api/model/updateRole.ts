@@ -26,4 +26,9 @@ export interface UpdateRole {
      * @nullable
      */
   permissions?: string[] | null;
+  /**
+     * 菜单标识列表
+     * @nullable
+     */
+  menus?: string[] | null;
 }
