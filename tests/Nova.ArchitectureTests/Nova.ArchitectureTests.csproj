@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -17,5 +16,16 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- 引用宿主项目，由通配符引用自动把所有模块 DLL 带入测试输出目录，供架构扫描使用 -->
+    <ProjectReference Include="..\..\src\Host\Nova.WebApi\Nova.WebApi.csproj" />
+  </ItemGroup>
+
+  <Target Name="DisableMsCoverageMapping" BeforeTargets="MsCoverageReferencedPathMaps">
+    <PropertyGroup>
+      <_msCoverageSourceRootTargetName>__none__</_msCoverageSourceRootTargetName>
+    </PropertyGroup>
+  </Target>
 
 </Project>

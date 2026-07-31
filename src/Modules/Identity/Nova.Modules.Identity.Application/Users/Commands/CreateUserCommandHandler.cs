@@ -34,11 +34,6 @@ public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
         if (existingUsername != null) throw new NovaValidationException("该用户名已经被使用");
 
         var user = User.Create(command.UserName, command.Email);
-        
-        if (!string.IsNullOrWhiteSpace(command.PhoneNumber))
-        {
-            await _userManager.SetPhoneNumberAsync(user, command.PhoneNumber);
-        }
 
         if (!command.IsEnabled)
         {
@@ -50,6 +45,18 @@ public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
             throw new NovaValidationException($"用户创建失败: {errors}");
+        }
+
+        // 必须在 CreateAsync 之后设置手机号：此时 user 才被 EF 跟踪，
+        // 否则 Finbuckle EnforceMultiTenant() 会在 SaveChanges 时因 TenantId 未设置而抛异常。
+        if (!string.IsNullOrWhiteSpace(command.PhoneNumber))
+        {
+            var phoneResult = await _userManager.SetPhoneNumberAsync(user, command.PhoneNumber);
+            if (!phoneResult.Succeeded)
+            {
+                var errors = string.Join(", ", phoneResult.Errors.Select(e => e.Description));
+                throw new NovaValidationException($"用户手机号设置失败: {errors}");
+            }
         }
 
         if (command.Roles != null && command.Roles.Any())

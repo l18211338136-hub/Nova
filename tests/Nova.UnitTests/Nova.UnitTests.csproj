@@ -8,14 +8,39 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Finbuckle.MultiTenant" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Framework\Nova.Framework.Domain\Nova.Framework.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\..\src\Shared\Nova.Contracts\Nova.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Nova.Modules.Identity.Domain\Nova.Modules.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Nova.Modules.Identity.Application\Nova.Modules.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Nova.Modules.Identity.Infrastructure\Nova.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Multitenancy\Nova.Modules.Multitenancy.Application\Nova.Modules.Multitenancy.Application.csproj" />
+  </ItemGroup>
+
+  <!-- 该环境无法写入 Microsoft.CodeCoverage 生成的源映射文件，这里在覆盖率目标执行前
+       将其依赖的源路径映射目标置为不存在值，使映射为空从而跳过文件写入。 -->
+  <Target Name="DisableMsCoverageMapping" BeforeTargets="MsCoverageReferencedPathMaps">
+    <PropertyGroup>
+      <_msCoverageSourceRootTargetName>__none__</_msCoverageSourceRootTargetName>
+    </PropertyGroup>
+  </Target>
 
 </Project>
