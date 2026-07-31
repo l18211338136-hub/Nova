@@ -22,6 +22,18 @@ public class TokenService : ITokenService, ITransientDependency
         var jwtSettings = _configuration.GetSection("Jwt");
         var secretKey = jwtSettings["SecretKey"];
 
+        // 密钥治理：优先 User Secrets / appsettings，缺失时回退到环境变量（适用于生产环境）
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            secretKey = Environment.GetEnvironmentVariable("NOVA_JWT_SECRET");
+        }
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            throw new InvalidOperationException(
+                "JWT SecretKey 未配置：请在 User Secrets 或环境变量 NOVA_JWT_SECRET 中设置。");
+        }
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

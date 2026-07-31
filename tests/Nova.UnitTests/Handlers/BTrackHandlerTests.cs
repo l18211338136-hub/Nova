@@ -7,8 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;
+using Nova.Framework.Domain.SeedWork;
 using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Application.Roles.Commands;
+using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Application.Services;
 using Nova.Modules.Identity.Application.Users.Commands;
 using Nova.Modules.Identity.Domain;
@@ -60,7 +62,14 @@ public class BTrackHandlerTests
         {
             throw new InvalidOperationException("SeedUser failed: " + string.Join(", ", cr.Errors.Select(e => e.Description)));
         }
-        await um.SetAuthenticationTokenAsync(user, "NovaApp", "RefreshToken", $"{refreshToken}|{DateTimeOffset.UtcNow.AddDays(7):O}");
+        // 新格式：可撤销刷新令牌列表（支持多端、登出吊销、刷新轮换）
+        await RefreshTokenStore.AddAsync(um, user, new RefreshTokenEntry
+        {
+            Token = refreshToken,
+            ExpiryUtc = DateTimeOffset.UtcNow.AddDays(7),
+            Revoked = false,
+            CreatedUtc = DateTimeOffset.UtcNow
+        });
         var ts = scope.ServiceProvider.GetRequiredService<ITokenService>();
         var accessToken = ts.GenerateToken(user, tenant.Identifier).Token;
         return (user, accessToken);
@@ -332,7 +341,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb);
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "nobody@test.com",
@@ -356,7 +365,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb);
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "user@test.com",
@@ -389,7 +398,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb);
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "multi@test.com",
@@ -413,7 +422,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb);
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = "not-a-jwt",
@@ -438,7 +447,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb);
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -464,7 +473,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb);
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -683,6 +692,258 @@ public class BTrackHandlerTests
         harness.SetTenant(check.ServiceProvider, newTenant);
         var um = check.ServiceProvider.GetRequiredService<UserManager<User>>();
         Assert.NotNull(await um.FindByEmailAsync("newbie@test.com"));
+    }
+
+    #endregion
+
+    #region ① 登录锁定 / ② 刷新令牌吊销 / ⑤ 改密码 / ⑪ 审计事件
+
+    [Fact]
+    public async Task Login_Lockout_AfterMaxFailedAttempts_ThrowsLocked()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        await SeedMappingAsync(harness, "lockme@test.com", tenant.Identifier);
+        await SeedUserAsync(harness, tenant, "lockme@test.com", "lockme@test.com", DefaultPassword);
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+
+        // 前 3 次错误密码：仅提示"账号或密码错误"
+        for (var i = 0; i < 3; i++)
+        {
+            var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
+            {
+                Account = "lockme@test.com",
+                Password = "wrong-password"
+            });
+            var ex = await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(ctx));
+            Assert.DoesNotContain("锁定", ex.Message);
+        }
+
+        // 第 4 次：账号已锁定
+        var lockedCtx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
+        {
+            Account = "lockme@test.com",
+            Password = "wrong-password"
+        });
+        var lockedEx = await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(lockedCtx));
+        Assert.Contains("锁定", lockedEx.Message);
+    }
+
+    [Fact]
+    public async Task Login_Success_ResetsAccessFailedCount()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        await SeedMappingAsync(harness, "reset@test.com", tenant.Identifier);
+        await SeedUserAsync(harness, tenant, "reset@test.com", "reset@test.com", DefaultPassword);
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+
+        // 两次错误密码
+        for (var i = 0; i < 2; i++)
+        {
+            await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(
+                HandlerTestHarness.CreateConsumeContext(new LoginCommand { Account = "reset@test.com", Password = "bad" })));
+        }
+
+        // 一次正确密码 -> 登录成功且重置失败计数，不会被锁定
+        await handler.Consume(HandlerTestHarness.CreateConsumeContext(new LoginCommand
+        {
+            Account = "reset@test.com",
+            Password = DefaultPassword
+        }));
+        var resp = IdentityIntegrationHarness.GetResponded<LoginResult>(
+            HandlerTestHarness.CreateConsumeContext(new LoginCommand { Account = "reset@test.com", Password = DefaultPassword }));
+        // 再登一次确认未锁定
+        var ctx2 = HandlerTestHarness.CreateConsumeContext(new LoginCommand { Account = "reset@test.com", Password = DefaultPassword });
+        await handler.Consume(ctx2);
+        var resp2 = IdentityIntegrationHarness.GetResponded<LoginResult>(ctx2);
+        Assert.NotNull(resp2);
+        Assert.False(string.IsNullOrEmpty(resp2!.Token));
+    }
+
+    [Fact]
+    public async Task Logout_RevokesRefreshToken_ThenRefreshFails()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        var (user, accessToken) = await SeedUserWithRefreshTokenAsync(
+            harness, tenant, "logout@test.com", "logout@test.com", DefaultPassword, "rt-logout");
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        // 登出：吊销该刷新令牌
+        var logoutHandler = new LogoutCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var logoutCtx = HandlerTestHarness.CreateConsumeContext(new LogoutCommand
+        {
+            AccessToken = accessToken,
+            RefreshToken = "rt-logout"
+        });
+        await logoutHandler.Consume(logoutCtx);
+        var logoutResp = IdentityIntegrationHarness.GetResponded<LogoutResult>(logoutCtx);
+        Assert.NotNull(logoutResp);
+        Assert.True(logoutResp!.Success);
+
+        // 用已吊销的刷新令牌刷新 -> 应失败
+        var refreshHandler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher);
+        await Assert.ThrowsAsync<NovaValidationException>(() => refreshHandler.Consume(
+            HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
+            {
+                AccessToken = accessToken,
+                RefreshToken = "rt-logout"
+            })));
+    }
+
+    [Fact]
+    public async Task ChangePassword_Success()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        await SeedMappingAsync(harness, "chg@test.com", tenant.Identifier);
+        var user = await SeedUserAsync(harness, tenant, "chg@test.com", "chg@test.com", DefaultPassword);
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var chgCtx = HandlerTestHarness.CreateConsumeContext(new ChangePasswordCommand
+        {
+            CurrentUserId = user.Id,
+            CurrentTenantId = tenant.Identifier,
+            OldPassword = DefaultPassword,
+            NewPassword = "NewPass@456"
+        });
+        await handler.Consume(chgCtx);
+        var resp = IdentityIntegrationHarness.GetResponded<ChangePasswordResult>(chgCtx);
+        Assert.NotNull(resp);
+        Assert.True(resp!.Success);
+
+        // 旧密码已失效，新密码可登录
+        var loginHandler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var loginCtx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
+        {
+            Account = "chg@test.com",
+            Password = "NewPass@456"
+        });
+        await loginHandler.Consume(loginCtx);
+        var loginResp = IdentityIntegrationHarness.GetResponded<LoginResult>(loginCtx);
+        Assert.NotNull(loginResp);
+        Assert.False(string.IsNullOrEmpty(loginResp!.Token));
+    }
+
+    [Fact]
+    public async Task ChangePassword_WrongOldPassword_Throws()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        await SeedMappingAsync(harness, "chg2@test.com", tenant.Identifier);
+        var user = await SeedUserAsync(harness, tenant, "chg2@test.com", "chg2@test.com", DefaultPassword);
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher);
+        await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(
+            HandlerTestHarness.CreateConsumeContext(new ChangePasswordCommand
+            {
+                CurrentUserId = user.Id,
+                CurrentTenantId = tenant.Identifier,
+                OldPassword = "wrong-old",
+                NewPassword = "NewPass@456"
+            })));
+    }
+
+    [Fact]
+    public async Task AuthAuditEvent_Published_OnLoginSuccess()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        await SeedMappingAsync(harness, "audit@test.com", tenant.Identifier);
+        await SeedUserAsync(harness, tenant, "audit@test.com", "audit@test.com", DefaultPassword);
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+        await handler.Consume(HandlerTestHarness.CreateConsumeContext(new LoginCommand
+        {
+            Account = "audit@test.com",
+            Password = DefaultPassword
+        }));
+
+        // 应至少发布了一次登录成功审计事件
+        await dispatcher.Received().PublishAsync(
+            Arg.Any<AuthAuditEvent>(),
+            Arg.Any<CancellationToken>());
+        await dispatcher.Received().PublishAsync(
+            Arg.Is<AuthAuditEvent>(e => e.EventType == AuthAuditEventType.LoginSuccess),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RefreshToken_RotationRevokesOldToken()
+    {
+        var harness = IdentityIntegrationHarness.Create();
+        var tenant = harness.CurrentTenant;
+        await SeedTenantInfoAsync(harness, tenant);
+        var (_, accessToken) = await SeedUserWithRefreshTokenAsync(
+            harness, tenant, "rot@test.com", "rot@test.com", DefaultPassword, "rt-old");
+
+        var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
+        using var outer = harness.CreateScope();
+        harness.SetTenant(outer.ServiceProvider);
+        var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
+        var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
+
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var rotCtx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
+        {
+            AccessToken = accessToken,
+            RefreshToken = "rt-old"
+        });
+        await handler.Consume(rotCtx);
+        var resp = IdentityIntegrationHarness.GetResponded<LoginResult>(rotCtx);
+        Assert.NotNull(resp);
+        Assert.NotEqual("rt-old", resp!.RefreshToken);
+
+        // 旧刷新令牌应已被吊销 -> 再次使用失败
+        await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(
+            HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
+            {
+                AccessToken = accessToken,
+                RefreshToken = "rt-old"
+            })));
     }
 
     #endregion

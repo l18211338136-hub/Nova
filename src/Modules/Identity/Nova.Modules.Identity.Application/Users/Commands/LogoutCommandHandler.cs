@@ -15,13 +15,13 @@ using System.Security.Claims;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
+public class LogoutCommandHandler : IConsumer<LogoutCommand>
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
 
-    public RefreshTokenCommandHandler(
+    public LogoutCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
         IDomainEventDispatcher dispatcher)
@@ -31,11 +31,10 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
         _dispatcher = dispatcher;
     }
 
-    public async Task Consume(ConsumeContext<RefreshTokenCommand> context)
+    public async Task Consume(ConsumeContext<LogoutCommand> context)
     {
         var request = context.Message;
 
-        // 1. Read the old access token to extract user ID
         var handler = new JwtSecurityTokenHandler();
         if (!handler.CanReadToken(request.AccessToken))
         {
@@ -55,55 +54,33 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
         var tenantInfo = await _tenantDb.TenantInfo.FirstOrDefaultAsync(t => t.Identifier == targetTenantId);
         if (tenantInfo == null) throw new NovaValidationException("刷新令牌已失效，请重新登录");
 
-        // 开辟新 Scope 并配置租户上下文
         using var scope = _scopeFactory.CreateScope();
         var setter = scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
         setter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(tenantInfo);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user == null)
         {
             throw new NovaValidationException("用户不存在");
         }
 
-        // 2. 在可撤销令牌列表中查找匹配的、未吊销、未过期的令牌
+        // 吊销该刷新令牌（不影响该用户的其他会话）
         var tokens = await RefreshTokenStore.GetAllAsync(userManager, user);
-        var matched = tokens.FirstOrDefault(t =>
-            !t.Revoked && t.Token == request.RefreshToken && t.ExpiryUtc > DateTimeOffset.UtcNow);
-
-        if (matched == null)
+        var matched = tokens.FirstOrDefault(t => !t.Revoked && t.Token == request.RefreshToken);
+        if (matched != null)
+        {
+            matched.Revoked = true;
+            await RefreshTokenStore.SetAllAsync(userManager, user, tokens);
+            await _dispatcher.PublishAsync(new AuthAuditEvent(
+                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, true));
+        }
+        else
         {
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.TokenRefreshed, targetTenantId, user.Email, user.Id, false, "刷新令牌不匹配或已失效"));
-            throw new NovaValidationException("刷新令牌不匹配或已失效，请重新登录");
+                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, false, "刷新令牌不存在或已吊销"));
         }
 
-        // 3. Token Rotation：吊销旧令牌，签发新令牌
-        matched.Revoked = true;
-        var newRefreshToken = Guid.NewGuid().ToString("N");
-        var newRefreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(7);
-        tokens.Add(new RefreshTokenEntry
-        {
-            Token = newRefreshToken,
-            ExpiryUtc = newRefreshTokenExpiry,
-            Revoked = false,
-            CreatedUtc = DateTimeOffset.UtcNow
-        });
-        await RefreshTokenStore.SetAllAsync(userManager, user, tokens);
-
-        var tokenResult = tokenService.GenerateToken(user, tenantInfo.Identifier);
-
-        await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.TokenRefreshed, tenantInfo.Identifier, user.Email, user.Id, true));
-
-        await context.RespondAsync(new LoginResult
-        {
-            Token = tokenResult.Token,
-            RefreshToken = newRefreshToken,
-            ExpiresIn = tokenResult.ExpiresIn
-        });
+        await context.RespondAsync(new LogoutResult { Success = true });
     }
 }

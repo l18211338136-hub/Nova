@@ -104,6 +104,30 @@ public static class AutoEndpointExtensions
                 }
             }
 
+            // 3b. 若已认证，自动把当前用户/租户标识注入到命令的 CurrentUserId / CurrentTenantId 属性（若存在）
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var nameId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (Guid.TryParse(nameId, out var currentUserId))
+                {
+                    var userIdProp = typeof(TCommand).GetProperty("CurrentUserId", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (userIdProp != null && userIdProp.CanWrite && userIdProp.PropertyType == typeof(Guid))
+                    {
+                        userIdProp.SetValue(command, currentUserId);
+                    }
+                }
+
+                var tenantId = context.User.FindFirst("tenantId")?.Value;
+                if (!string.IsNullOrWhiteSpace(tenantId))
+                {
+                    var tenantProp = typeof(TCommand).GetProperty("CurrentTenantId", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (tenantProp != null && tenantProp.CanWrite && tenantProp.PropertyType == typeof(string))
+                    {
+                        tenantProp.SetValue(command, tenantId);
+                    }
+                }
+            }
+
             var client = mediator.CreateRequestClient<TCommand>();
             var response = await client.GetResponse<TResponse>(command!);
             return Results.Ok(ApiResponse<TResponse>.Success(response.Message));

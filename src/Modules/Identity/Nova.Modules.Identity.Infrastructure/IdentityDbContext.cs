@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
 using Nova.Modules.Identity.Application.Database;
+using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Menus;
@@ -20,6 +21,8 @@ public class IdentityDbContext : IdentityDbContext<User, Role, Guid>, IIdentityD
     public TenantNotSetMode TenantNotSetMode { get; set; } = TenantNotSetMode.Throw;
 
     public DbSet<Menu> Menus { get; set; }
+
+    public DbSet<AuthAuditLog> AuthAuditLogs { get; set; }
 
     public IdentityDbContext(ITenantInfo tenantInfo, DbContextOptions<IdentityDbContext> options)
         : base(options)

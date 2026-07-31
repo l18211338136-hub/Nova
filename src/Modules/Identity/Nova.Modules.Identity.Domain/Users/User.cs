@@ -39,7 +39,10 @@ public class User : IdentityUser<Guid>, IFullAuditedEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(userName, nameof(userName));
         ArgumentException.ThrowIfNullOrWhiteSpace(email, nameof(email));
 
-        return new User(userName, email);
+        var user = new User(userName, email);
+        // 启用账号锁定，使登录失败计数 / 防暴力破解生效
+        user.LockoutEnabled = true;
+        return user;
     }
 
     public void Enable()

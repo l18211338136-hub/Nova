@@ -7,6 +7,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Nova.Modules.Identity.Application.Database;
+using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Menus;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
@@ -24,12 +25,14 @@ public class TestIdentityDbContext : DbContext, IIdentityDbContext
     public DbSet<User> Users { get; set; } = default!;
     public DbSet<Role> Roles { get; set; } = default!;
     public DbSet<Menu> Menus { get; set; } = default!;
+    public DbSet<AuthAuditLog> AuthAuditLogs { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // User/Role 由 ASP.NET Identity 管理，A 档 Menu 测试不需要，忽略以免引入复杂导航建模
         modelBuilder.Ignore<User>();
         modelBuilder.Ignore<Role>();
+        modelBuilder.Ignore<AuthAuditLog>();
 
         modelBuilder.Entity<Menu>(b =>
         {

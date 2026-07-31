@@ -227,7 +227,13 @@ public class IdentityIntegrationHarness
             new TestTenantDbContext(sp.GetRequiredService<DbContextOptions<NovaTenantDbContext>>()));
         services.AddDbContext<IdentityDbContext>(options => options.UseInMemoryDatabase($"tenant-{tenantId}-{dbSuffix}"));
 
-        services.AddIdentityCore<User>(o => o.Password.RequireUppercase = false)
+        services.AddIdentityCore<User>(o =>
+            {
+                o.Password.RequireUppercase = false;
+                // 启用账号锁定（防暴力破解）：测试中用较小阈值以便验证
+                o.Lockout.AllowedForNewUsers = true;
+                o.Lockout.MaxFailedAccessAttempts = 3;
+            })
             .AddRoles<Role>()
             .AddEntityFrameworkStores<IdentityDbContext>()
             .AddDefaultTokenProviders();
@@ -236,6 +242,10 @@ public class IdentityIntegrationHarness
         services.AddScoped<INovaCache, FakeNovaCache>();
         services.AddScoped<IDbInitializer, FakeDbInitializer>();
         services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider, NoopDataProtectionProvider>();
+
+        // 领域事件分发器（EventBus）：用 NSubstitute 桩记录发布，便于断言审计事件已触发
+        var dispatcher = Substitute.For<Nova.Framework.Domain.SeedWork.IDomainEventDispatcher>();
+        services.AddSingleton<Nova.Framework.Domain.SeedWork.IDomainEventDispatcher>(dispatcher);
 
         var config = Substitute.For<IConfiguration>();
         config.GetConnectionString("RetailConnection").Returns("DataSource=:memory:");

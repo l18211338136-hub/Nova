@@ -1,5 +1,6 @@
 using MassTransit.Mediator;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Nova.Contracts.DependencyInjection;
 using Nova.Contracts.Security;
@@ -21,19 +22,22 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
     private readonly RoleManager<Role> _roleManager;
     private readonly IMediator _mediator;
     private readonly NovaTenantDbContext _tenantDbContext;
+    private readonly IConfiguration _configuration;
 
     public IdentityDbInitializer(
         IdentityDbContext dbContext, 
         UserManager<User> userManager, 
         RoleManager<Role> roleManager, 
         IMediator mediator,
-        NovaTenantDbContext tenantDbContext)
+        NovaTenantDbContext tenantDbContext,
+        IConfiguration configuration)
     {
         _dbContext = dbContext;
         _userManager = userManager;
         _roleManager = roleManager;
         _mediator = mediator;
         _tenantDbContext = tenantDbContext;
+        _configuration = configuration;
     }
 
     public async Task MigrateAsync(CancellationToken cancellationToken)
@@ -87,7 +91,9 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
             {
                 var rootUser = User.Create(NovaIdentityConstants.Seed.RootUserName, NovaIdentityConstants.Seed.RootEmail);
 
-                var result = await _userManager.CreateAsync(rootUser, NovaIdentityConstants.Seed.RootPassword);
+                // 密钥治理：优先从配置（User Secrets / 环境变量）读取，缺失时回退到常量
+                var rootPassword = _configuration["Identity:Seed:RootPassword"] ?? NovaIdentityConstants.Seed.RootPassword;
+                var result = await _userManager.CreateAsync(rootUser, rootPassword);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(rootUser, NovaIdentityConstants.Roles.Root);
@@ -98,7 +104,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                         _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
                         {
                             Id = Guid.NewGuid(),
-                            Account = rootUser.Email,
+                            Account = rootUser.Email!,
                             TenantId = tenantInfo.Identifier
                         });
                         await _tenantDbContext.SaveChangesAsync(cancellationToken);
@@ -138,7 +144,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                         _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
                         {
                             Id = Guid.NewGuid(),
-                            Account = adminUser.Email,
+                            Account = adminUser.Email!,
                             TenantId = tenantInfo!.Identifier
                         });
                         await _tenantDbContext.SaveChangesAsync(cancellationToken);
