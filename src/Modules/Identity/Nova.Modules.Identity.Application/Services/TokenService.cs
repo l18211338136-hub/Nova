@@ -20,7 +20,7 @@ public class TokenService : ITokenService, ITransientDependency
     public (string Token, int ExpiresIn) GenerateToken(User user, string? tenantId, IEnumerable<Claim>? additionalClaims = null)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
-        var secretKey = jwtSettings["SecretKey"] ?? "super-secret-key-for-nova-application-development";
+        var secretKey = jwtSettings["SecretKey"];
 
         var claims = new List<Claim>
         {
@@ -38,11 +38,11 @@ public class TokenService : ITokenService, ITransientDependency
             claims.AddRange(additionalClaims);
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var expiresStr = jwtSettings["ExpiresInMinutes"];
-        var expires = int.TryParse(expiresStr, out var e) ? e : 120; // Default to 120 minutes (2 hours)
+        var expires = int.TryParse(expiresStr, out var e) ? e : 120;
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],

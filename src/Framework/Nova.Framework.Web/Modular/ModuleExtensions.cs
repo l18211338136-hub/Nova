@@ -29,20 +29,13 @@ public static class ModuleExtensions
             { 
                 var asm = Assembly.LoadFrom(file);
                 assemblies.Add(asm); 
-                // 关键修复：将动态加载的程序集注册到 MVC 的 ApplicationPart 中
-                // 这样底层的 ApiExplorer 和 OpenAPI 生成器就能自动发现并读取对应的 .xml 注释文件了
                 mvcBuilder.AddApplicationPart(asm);
             } 
             catch { }
         }
 
-        // 1. Global Auto Dependency Injection (IScopedDependency, etc.)
         services.AddAutoDependencyInjection(assemblies.ToArray());
-
-        // 2. Register FluentValidation validators
         services.AddValidatorsFromAssemblies(assemblies);
-
-        // 3. Global MassTransit Mediator for all modules
         services.AddMediator(cfg =>
         {
             cfg.AddConsumers(assemblies.ToArray());

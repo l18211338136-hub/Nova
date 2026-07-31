@@ -1,7 +1,4 @@
-using System;
-
 using System.ComponentModel;
-
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Users.Queries;

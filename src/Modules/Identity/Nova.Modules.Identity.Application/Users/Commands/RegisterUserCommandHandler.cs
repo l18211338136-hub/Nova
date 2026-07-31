@@ -1,10 +1,8 @@
 using Nova.Contracts.Exceptions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Caching;
 using Nova.Modules.Identity.Domain.Users;
-using Nova.Modules.Identity.Domain;
 using Nova.Framework.MultiTenancy;
 using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.EntityFrameworkCore;

@@ -1,6 +1,5 @@
 using MassTransit;
 using MassTransit.Mediator;
-using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Caching;
 using Nova.Contracts.Commands;
 using Nova.Contracts.Exceptions;

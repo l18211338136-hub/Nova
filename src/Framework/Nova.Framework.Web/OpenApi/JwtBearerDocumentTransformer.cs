@@ -9,7 +9,6 @@ public class JwtBearerDocumentTransformer : IOpenApiDocumentTransformer
     {
         document.Components ??= new OpenApiComponents();
         
-        // Define the Security Scheme
         var scheme = new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.Http,

@@ -1,15 +1,16 @@
-using Nova.Contracts.Exceptions;
 using Finbuckle.MultiTenant.Abstractions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Nova.Modules.Identity.Application.Services;
-using Nova.Modules.Identity.Domain.Users;
-using Nova.Modules.Identity.Domain.Roles;
-using Nova.Modules.Identity.Domain;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Nova.Framework.MultiTenancy;
 using Microsoft.Extensions.DependencyInjection;
+using Nova.Contracts.Caching;
+using Nova.Contracts.Exceptions;
+using Nova.Framework.MultiTenancy;
+using Nova.Modules.Identity.Application.Services;
+using Nova.Modules.Identity.Domain;
+using Nova.Modules.Identity.Domain.Roles;
+using Nova.Modules.Identity.Domain.Users;
+using System.Security.Claims;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
@@ -17,12 +18,12 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
-    private readonly Nova.Contracts.Caching.INovaCache _cache;
+    private readonly INovaCache _cache;
 
     public EmailLoginCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        Nova.Contracts.Caching.INovaCache cache)
+        INovaCache cache)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
@@ -32,7 +33,7 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
     public async Task Consume(ConsumeContext<EmailLoginCommand> context)
     {
         var request = context.Message;
-        
+
         // 1. 全局校验验证码
         var cachedCode = await _cache.GetAsync<string>($"LoginCode:{request.Email}");
         if (string.IsNullOrEmpty(cachedCode) || cachedCode != request.Code?.Trim())
@@ -104,7 +105,7 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         }
 
         var tenantId = targetTenant.Identifier;
-        
+
         var claims = new List<Claim>();
 
         // 1. 获取用户直接分配的独立 Claims
@@ -152,8 +153,8 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         // Store Refresh Token in AspNetUserTokens
         await userManager.SetAuthenticationTokenAsync(user, "NovaApp", "RefreshToken", storedTokenValue);
 
-        await context.RespondAsync(new LoginResult 
-        { 
+        await context.RespondAsync(new LoginResult
+        {
             Token = tokenResult.Token,
             RefreshToken = refreshToken,
             ExpiresIn = tokenResult.ExpiresIn

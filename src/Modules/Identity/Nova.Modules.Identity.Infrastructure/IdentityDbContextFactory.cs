@@ -1,4 +1,3 @@
-using Finbuckle.MultiTenant;
 using Microsoft.EntityFrameworkCore;
 using Nova.Framework.MultiTenancy;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;

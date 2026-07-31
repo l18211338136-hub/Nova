@@ -14,4 +14,8 @@
     <ProjectReference Include="..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Contexts\" />
+  </ItemGroup>
+
 </Project>

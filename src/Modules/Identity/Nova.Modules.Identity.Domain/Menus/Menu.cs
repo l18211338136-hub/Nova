@@ -1,4 +1,3 @@
-using System;
 using Nova.Framework.Domain.Auditing;
 
 namespace Nova.Modules.Identity.Domain.Menus;

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using MassTransit;
 using Nova.Contracts.Exceptions;
 using Nova.Modules.Identity.Domain.Menus;

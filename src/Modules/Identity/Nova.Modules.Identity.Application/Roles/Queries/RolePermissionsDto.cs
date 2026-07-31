@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Nova.Modules.Identity.Application.Roles.Queries;
 
 public record RolePermissionsDto

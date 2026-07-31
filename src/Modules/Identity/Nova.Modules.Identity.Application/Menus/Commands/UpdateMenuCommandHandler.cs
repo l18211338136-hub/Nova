@@ -20,13 +20,13 @@ public class UpdateMenuCommandHandler : IConsumer<UpdateMenuCommand>
     {
         var command = context.Message;
 
-        var menu = await _db.Menus.FirstOrDefaultAsync(m => m.Id == command.Id && !m.IsDeleted, context.CancellationToken);
+        var menu = await _db.Menus.FirstOrDefaultAsync(m => m.Id == command.Id, context.CancellationToken);
         if (menu == null)
         {
             throw new NovaValidationException($"菜单 {command.Id} 不存在");
         }
 
-        var pathConflict = await _db.Menus.AnyAsync(m => m.Path == command.Path && m.Id != command.Id && !m.IsDeleted, context.CancellationToken);
+        var pathConflict = await _db.Menus.AnyAsync(m => m.Path == command.Path && m.Id != command.Id, context.CancellationToken);
         if (pathConflict)
         {
             throw new NovaValidationException($"菜单路由 '{command.Path}' 已被其他菜单使用");

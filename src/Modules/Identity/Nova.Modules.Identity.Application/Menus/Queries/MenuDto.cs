@@ -1,11 +1,10 @@
-using System;
-
 using Nova.Contracts.Security;
+using System.ComponentModel;
 
 namespace Nova.Modules.Identity.Application.Menus.Queries;
 
 [RequirePermission("Identity.Menus.Read")]
-[System.ComponentModel.Description("菜单管理")]
+[Description("菜单管理")]
 public record MenuDto
 {
     public Guid Id { get; init; }

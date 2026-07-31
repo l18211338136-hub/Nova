@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Nova.Contracts.CQRS;

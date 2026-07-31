@@ -3,7 +3,6 @@ using MassTransit.Mediator;
 using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Caching;
 using Nova.Contracts.Commands;
-using Nova.Contracts.Exceptions;
 using Nova.Framework.Application.Extensions;
 using Nova.Modules.Identity.Domain.Users;
 

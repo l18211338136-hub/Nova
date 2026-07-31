@@ -1,5 +1,4 @@
 using Finbuckle.MultiTenant.Abstractions;
-using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -9,7 +8,6 @@ using Nova.Framework.Web.Modular;
 using Nova.Modules.Identity.Application.Database;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
-using Nova.Modules.Identity.Domain.Menus;
 using Nova.Modules.Identity.Infrastructure;
 using Nova.Framework.Persistence.Interceptors;
 
@@ -21,10 +19,8 @@ public class IdentityModule : IModule
 
     public void RegisterServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Required for CurrentUser to access HttpContext since AddIdentityCore doesn't register it automatically
         services.AddHttpContextAccessor();
 
-        // Add EF Core PostgreSQL with dynamic tenant connection string
         services.AddDbContext<IdentityDbContext>((sp, options) =>
         {
             var tenantInfo = sp.GetRequiredService<IMultiTenantContextAccessor>().MultiTenantContext?.TenantInfo as NovaTenantInfo;
@@ -42,10 +38,8 @@ public class IdentityModule : IModule
             }
         });
 
-        // Register the IIdentityDbContext to resolve to IdentityDbContext
         services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<IdentityDbContext>());
 
-        // Register ASP.NET Core Identity without Cookie Authentication
         services.AddIdentityCore<User>(options =>
         {
             options.Password.RequireUppercase = false; 
