@@ -33,6 +33,15 @@ public class User : IdentityUser<Guid>, IFullAuditedEntity
     public int Sort { get; private set; }
     public bool IsEnabled { get; private set; } = true;
 
+    /// <summary>昵称／对外显示名。为空时前端回退显示 UserName。</summary>
+    public string? NickName { get; private set; }
+
+    /// <summary>头像地址（URL 或存储对象键）。</summary>
+    public string? AvatarUrl { get; private set; }
+
+    /// <summary>个人简介。</summary>
+    public string? Bio { get; private set; }
+
     // Factory method
     public static User Create(string userName, string email)
     {
@@ -44,6 +53,19 @@ public class User : IdentityUser<Guid>, IFullAuditedEntity
         user.LockoutEnabled = true;
         return user;
     }
+
+    /// <summary>
+    /// 更新本人可自助维护的资料字段。空白字符串一律规范化为 null，避免库里出现 "" 与 null 两种空值。
+    /// </summary>
+    public void UpdateProfile(string? nickName, string? bio, string? avatarUrl)
+    {
+        NickName = Normalize(nickName);
+        Bio = Normalize(bio);
+        AvatarUrl = Normalize(avatarUrl);
+    }
+
+    private static string? Normalize(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     public void Enable()
     {

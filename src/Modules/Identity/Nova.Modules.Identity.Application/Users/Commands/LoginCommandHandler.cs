@@ -57,6 +57,20 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
         var validTenants = new List<NovaTenantInfo>();
         var accountLocked = false;
 
+        // 根据输入判定用户标识类型：邮箱 / 手机号 / 用户名，分别用对应的 UserManager 查找方法
+        static bool IsPhoneNumber(string account)
+            => System.Text.RegularExpressions.Regex.IsMatch(account, @"^\+?\d{6,15}$");
+
+        static async Task<User?> FindUserByIdentifierAsync(UserManager<User> um, string account)
+        {
+            if (account.Contains('@'))
+                return await um.FindByEmailAsync(account);
+            if (IsPhoneNumber(account))
+                return await um.Users.FirstOrDefaultAsync(u => u.PhoneNumber == account);
+            return await um.FindByNameAsync(account);
+        }
+
+
         // 3. 密码探针：挨个租户尝试密码验证（并应用账号锁定策略）
         foreach (var mapping in mappings)
         {
@@ -68,9 +82,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
             setter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(tenantInfo);
 
             var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-            User? tempUser = request.Account.Contains('@')
-                ? await um.FindByEmailAsync(request.Account)
-                : await um.FindByNameAsync(request.Account);
+            User? tempUser = await FindUserByIdentifierAsync(um, request.Account);
 
             if (tempUser == null) continue;
 
@@ -125,9 +137,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
         var roleManager = finalScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
         var tokenService = finalScope.ServiceProvider.GetRequiredService<ITokenService>();
 
-        User? user = request.Account.Contains('@')
-            ? await userManager.FindByEmailAsync(request.Account)
-            : await userManager.FindByNameAsync(request.Account);
+        User? user = await FindUserByIdentifierAsync(userManager, request.Account);
 
         var tenantId = targetTenant.Identifier;
 
@@ -180,7 +190,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
         });
 
         await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.LoginSuccess, tenantId, request.Account, user!.Id, true));
+            AuthAuditEventType.LoginSuccess, tenantId, request.Account, user!.Id, true, "密码登录"));
 
         await context.RespondAsync(new LoginResult
         {

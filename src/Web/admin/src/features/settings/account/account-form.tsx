@@ -1,10 +1,11 @@
+import { useEffect } from 'react'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/lib/show-submitted-data'
 import { cn } from '@/lib/utils'
+import { usePreferences, useSavePreferences } from '@/hooks/use-preferences'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -23,91 +24,92 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { DatePicker } from '@/components/date-picker'
+import { Skeleton } from '@/components/ui/skeleton'
 
+/**
+ * 目前项目只提供了 zh-CN / en-US 两套翻译文件，
+ * 列出没有翻译的语言只会得到一个界面语言没变的假开关，所以这里只暴露真正支持的语言。
+ */
 const languages = [
-  { label: 'English', value: 'en' },
-  { label: 'French', value: 'fr' },
-  { label: 'German', value: 'de' },
-  { label: 'Spanish', value: 'es' },
-  { label: 'Portuguese', value: 'pt' },
-  { label: 'Russian', value: 'ru' },
-  { label: 'Japanese', value: 'ja' },
-  { label: 'Korean', value: 'ko' },
-  { label: 'Chinese', value: 'zh' },
+  { label: '简体中文', value: 'zh-CN' },
+  { label: 'English', value: 'en-US' },
 ] as const
 
-const getAccountFormSchema = (t: (arg: string) => string) => z.object({
-  name: z
-    .string()
-    .min(1, t('Please enter your name.'))
-    .min(2, t('Name must be at least 2 characters.'))
-    .max(30, t('Name must not be longer than 30 characters.')),
-  dob: z.date({ message: t('Please select your date of birth.') }),
-  language: z.string({ message: t('Please select a language.') }),
-})
+/** 常用时区，覆盖国内与主要海外协作时区。 */
+const timeZones = [
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Taipei',
+  'Asia/Tokyo',
+  'Asia/Singapore',
+  'Asia/Dubai',
+  'Europe/London',
+  'Europe/Berlin',
+  'America/New_York',
+  'America/Los_Angeles',
+  'UTC',
+] as const
+
+const getAccountFormSchema = (t: (arg: string) => string) =>
+  z.object({
+    language: z.string().min(1, t('Please select a language.')),
+    timeZone: z.string().min(1, t('Please select a timezone.')),
+  })
 
 type AccountFormValues = z.infer<ReturnType<typeof getAccountFormSchema>>
 
-// This can come from your database or API.
-const defaultValues: Partial<AccountFormValues> = {
-  name: '',
+/** 浏览器时区可能不在候选列表里，此时回落到 UTC，避免出现选不中的空态。 */
+function detectTimeZone(): string {
+  const guess = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return timeZones.includes(guess as (typeof timeZones)[number]) ? guess : 'UTC'
 }
 
 export function AccountForm() {
   const { t, i18n } = useTranslation()
-  const accountFormSchema = getAccountFormSchema(t)
-  const form = useForm<AccountFormValues>({
-    resolver: zodResolver(accountFormSchema),
-    defaultValues: {
-      ...defaultValues,
-      language: i18n.language,
-    },
+  const { preferences, isLoading } = usePreferences()
+  const { save, isPending } = useSavePreferences({
+    successMessage: t('Account settings updated.'),
   })
 
-  function onSubmit(data: AccountFormValues) {
-    showSubmittedData(data)
+  const form = useForm<AccountFormValues>({
+    resolver: zodResolver(getAccountFormSchema(t)),
+    defaultValues: { language: i18n.language, timeZone: detectTimeZone() },
+  })
+
+  useEffect(() => {
+    if (isLoading) return
+    form.reset({
+      language: preferences.language || i18n.language,
+      timeZone: preferences.timeZone || detectTimeZone(),
+    })
+  }, [isLoading, preferences.language, preferences.timeZone, form, i18n.language])
+
+  function onSubmit(values: AccountFormValues) {
+    // 立即应用界面语言，不必等待请求返回
+    if (values.language !== i18n.language) {
+      i18n.changeLanguage(values.language)
+      localStorage.setItem('i18nextLng', values.language)
+    }
+    save({ language: values.language, timeZone: values.timeZone })
+  }
+
+  if (isLoading) {
+    return (
+      <div className='space-y-6'>
+        <Skeleton className='h-10 w-50' />
+        <Skeleton className='h-10 w-50' />
+      </div>
+    )
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Name')}</FormLabel>
-              <FormControl>
-                <Input placeholder={t('Your name')} {...field} />
-              </FormControl>
-              <FormDescription>
-                {t('This is the name that will be displayed on your profile and in emails.')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='dob'
-          render={({ field }) => (
-            <FormItem className='flex flex-col'>
-              <FormLabel>{t('Date of birth')}</FormLabel>
-              <DatePicker selected={field.value} onSelect={field.onChange} />
-              <FormDescription>
-                {t('Your date of birth is used to calculate your age.')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name='language'
@@ -125,11 +127,8 @@ export function AccountForm() {
                         !field.value && 'text-muted-foreground'
                       )}
                     >
-                      {field.value
-                        ? t(languages.find(
-                            (language) => language.value === field.value
-                          )?.label ?? '')
-                        : t('Select language')}
+                      {languages.find((l) => l.value === field.value)?.label ??
+                        t('Select language')}
                       <CaretSortIcon className='ms-2 h-4 w-4 shrink-0 opacity-50' />
                     </Button>
                   </FormControl>
@@ -142,13 +141,13 @@ export function AccountForm() {
                       <CommandList>
                         {languages.map((language) => (
                           <CommandItem
-                            value={t(language.label)}
+                            value={language.label}
                             key={language.value}
-                            onSelect={() => {
-                              form.setValue('language', language.value)
-                              i18n.changeLanguage(language.value)
-                              localStorage.setItem('i18nextLng', language.value)
-                            }}
+                            onSelect={() =>
+                              form.setValue('language', language.value, {
+                                shouldDirty: true,
+                              })
+                            }
                           >
                             <CheckIcon
                               className={cn(
@@ -158,7 +157,7 @@ export function AccountForm() {
                                   : 'opacity-0'
                               )}
                             />
-                            {t(language.label)}
+                            {language.label}
                           </CommandItem>
                         ))}
                       </CommandList>
@@ -173,7 +172,70 @@ export function AccountForm() {
             </FormItem>
           )}
         />
-        <Button type='submit'>{t('Update account')}</Button>
+
+        <FormField
+          control={form.control}
+          name='timeZone'
+          render={({ field }) => (
+            <FormItem className='flex flex-col'>
+              <FormLabel>{t('Timezone')}</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant='outline'
+                      role='combobox'
+                      className={cn(
+                        'w-64 justify-between',
+                        !field.value && 'text-muted-foreground'
+                      )}
+                    >
+                      {field.value || t('Select timezone')}
+                      <CaretSortIcon className='ms-2 h-4 w-4 shrink-0 opacity-50' />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className='w-64 p-0'>
+                  <Command>
+                    <CommandInput placeholder={t('Search timezone...')} />
+                    <CommandEmpty>{t('No timezone found.')}</CommandEmpty>
+                    <CommandGroup>
+                      <CommandList>
+                        {timeZones.map((tz) => (
+                          <CommandItem
+                            value={tz}
+                            key={tz}
+                            onSelect={() =>
+                              form.setValue('timeZone', tz, {
+                                shouldDirty: true,
+                              })
+                            }
+                          >
+                            <CheckIcon
+                              className={cn(
+                                'size-4',
+                                tz === field.value ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            {tz}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                {t('Dates and times will be displayed in this timezone.')}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type='submit' disabled={isPending}>
+          {isPending ? t('Updating...') : t('Update account')}
+        </Button>
       </form>
     </Form>
   )

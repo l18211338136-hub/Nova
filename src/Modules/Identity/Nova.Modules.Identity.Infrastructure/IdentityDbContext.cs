@@ -24,6 +24,8 @@ public class IdentityDbContext : IdentityDbContext<User, Role, Guid>, IIdentityD
 
     public DbSet<AuthAuditLog> AuthAuditLogs { get; set; }
 
+    public DbSet<UserPreference> UserPreferences { get; set; }
+
     public IdentityDbContext(ITenantInfo tenantInfo, DbContextOptions<IdentityDbContext> options)
         : base(options)
     {
@@ -109,7 +111,40 @@ public class IdentityDbContext : IdentityDbContext<User, Role, Guid>, IIdentityD
             // 多租户
             b.IsMultiTenant();
         });
-        
+
+        // 审计日志配置：显式多租户隔离，确保迁移生成 TenantId 列（阴影属性，与 Menu 一致）。
+        // ApplyTenantIsolationByDefault 的反射式 IsMultiTenant<T> 未能为 AuthAuditLog 生成该列，故此处显式注册。
+        builder.Entity<AuthAuditLog>(b =>
+        {
+            b.ToTable("AuthAuditLogs");
+            b.HasKey(a => a.Id);
+            b.IsMultiTenant();
+        });
+
+        // 用户资料扩展字段长度约束
+        builder.Entity<User>(b =>
+        {
+            b.Property(u => u.NickName).HasMaxLength(50);
+            b.Property(u => u.AvatarUrl).HasMaxLength(500);
+            b.Property(u => u.Bio).HasMaxLength(160);
+        });
+
+        // 用户偏好：与 AuthAuditLog 同理，需显式 IsMultiTenant 才能生成 TenantId 列。
+        builder.Entity<UserPreference>(b =>
+        {
+            b.ToTable("UserPreferences");
+            b.HasKey(p => p.Id);
+            b.Property(p => p.Theme).IsRequired().HasMaxLength(20);
+            b.Property(p => p.Font).IsRequired().HasMaxLength(50);
+            b.Property(p => p.Language).IsRequired().HasMaxLength(20);
+            b.Property(p => p.TimeZone).HasMaxLength(64);
+            b.Property(p => p.NotifyType).IsRequired().HasMaxLength(20);
+            b.Property(p => p.HiddenSidebarItems).HasMaxLength(2000);
+            // 一个用户一行；租户内唯一即可（TenantId 为阴影属性，已由全局过滤器隔离）
+            b.HasIndex(p => p.UserId);
+            b.IsMultiTenant();
+        });
+
         // 自动应用所有实现了 IFullAuditedEntity 接口的实体的软删除全局过滤 (IsDeleted == false)
         builder.ApplySoftDeleteQueryFilter();
     }

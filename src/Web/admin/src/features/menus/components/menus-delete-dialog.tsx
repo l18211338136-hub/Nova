@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { MenuDto } from './menus-provider'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
-import { useDeleteMenu, getMenusQueryKey } from '@/api/endpoints/menus'
+import { useDeleteMenu, getMenusQueryKey, getGetMyMenusQueryKey } from '@/api/endpoints/menus'
 
 interface Props {
   open: boolean
@@ -32,6 +32,7 @@ export function MenusDeleteDialog({ open, onOpenChange, currentRow }: Props) {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
+          queryClient.invalidateQueries({ queryKey: getGetMyMenusQueryKey() })
           toast.success(t('Menu deleted successfully'))
           onOpenChange(false)
         },

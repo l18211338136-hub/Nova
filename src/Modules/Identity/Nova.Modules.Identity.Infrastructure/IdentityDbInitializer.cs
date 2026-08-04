@@ -107,8 +107,29 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                             Account = rootUser.Email!,
                             TenantId = tenantInfo.Identifier
                         });
-                        await _tenantDbContext.SaveChangesAsync(cancellationToken);
                     }
+                    // 同时写入用户名映射，支持用 UserName 登录（root 用户存量只有 Email 映射，这里补全）
+                    if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == rootUser.UserName && m.TenantId == tenantInfo.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = rootUser.UserName,
+                            TenantId = tenantInfo.Identifier
+                        });
+                    }
+                    // 若 root 用户已设置手机号，也写入手机号映射，支持用手机号登录
+                    if (!string.IsNullOrWhiteSpace(rootUser.PhoneNumber)
+                        && !await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == rootUser.PhoneNumber && m.TenantId == tenantInfo.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = rootUser.PhoneNumber,
+                            TenantId = tenantInfo.Identifier
+                        });
+                    }
+                    await _tenantDbContext.SaveChangesAsync(cancellationToken);
                 }
                 else
                 {
@@ -147,8 +168,29 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                             Account = adminUser.Email!,
                             TenantId = tenantInfo!.Identifier
                         });
-                        await _tenantDbContext.SaveChangesAsync(cancellationToken);
                     }
+                    // 同时写入用户名映射，支持用 UserName 登录
+                    if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == adminUser.UserName && m.TenantId == tenantInfo!.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = adminUser.UserName,
+                            TenantId = tenantInfo!.Identifier
+                        });
+                    }
+                    // 若 admin 用户已设置手机号，也写入手机号映射，支持用手机号登录
+                    if (!string.IsNullOrWhiteSpace(adminUser.PhoneNumber)
+                        && !await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == adminUser.PhoneNumber && m.TenantId == tenantInfo!.Identifier))
+                    {
+                        _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            Account = adminUser.PhoneNumber,
+                            TenantId = tenantInfo!.Identifier
+                        });
+                    }
+                    await _tenantDbContext.SaveChangesAsync(cancellationToken);
 
                     Console.WriteLine($"[Nova.Database] Successfully created admin user '{adminEmail}' for tenant '{tenantInfo?.Name ?? "root"}' with password: {defaultPassword}");
 

@@ -504,7 +504,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache);
+        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new EmailLoginCommand
         {
             Email = "email@test.com",
@@ -531,7 +531,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache);
+        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new EmailLoginCommand
         {
             Email = "email2@test.com",

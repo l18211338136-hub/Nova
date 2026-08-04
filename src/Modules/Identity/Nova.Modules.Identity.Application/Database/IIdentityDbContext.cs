@@ -14,5 +14,6 @@ public interface IIdentityDbContext
     DbSet<Role> Roles { get; }
     DbSet<Menu> Menus { get; }
     DbSet<AuthAuditLog> AuthAuditLogs { get; }
+    DbSet<UserPreference> UserPreferences { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

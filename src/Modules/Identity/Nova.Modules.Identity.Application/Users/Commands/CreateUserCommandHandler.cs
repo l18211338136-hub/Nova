@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Nova.Contracts.Exceptions;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Framework.MultiTenancy;
@@ -82,11 +83,33 @@ public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
 
         if (_tenantInfo != null)
         {
-            _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+            // 同时写入邮箱映射与用户名映射，支持用 UserName 或 Email 两种方式登录
+            if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.Email && m.TenantId == _tenantInfo.Identifier))
             {
-                Account = user.Email,
-                TenantId = _tenantInfo.Identifier!
-            });
+                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                {
+                    Account = user.Email,
+                    TenantId = _tenantInfo.Identifier!
+                });
+            }
+            if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.UserName && m.TenantId == _tenantInfo.Identifier))
+            {
+                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                {
+                    Account = user.UserName,
+                    TenantId = _tenantInfo.Identifier!
+                });
+            }
+            // 若填写了手机号，也写入手机号映射，支持用手机号登录
+            if (!string.IsNullOrWhiteSpace(user.PhoneNumber)
+                && !await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.PhoneNumber && m.TenantId == _tenantInfo.Identifier))
+            {
+                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                {
+                    Account = user.PhoneNumber,
+                    TenantId = _tenantInfo.Identifier!
+                });
+            }
             await _tenantDbContext.SaveChangesAsync();
         }
 

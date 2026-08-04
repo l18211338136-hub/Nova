@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
+import { useLogout } from '@/api/endpoints/auth'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface SignOutDialogProps {
@@ -13,16 +14,30 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const { auth } = useAuthStore()
+  const logoutMutation = useLogout()
 
   const handleSignOut = () => {
-    auth.reset()
-    // Preserve current location for redirect after sign-in
-    const currentPath = location.href
-    navigate({
-      to: '/sign-in',
-      search: { redirect: currentPath },
-      replace: true,
-    })
+    // Revoke the refresh token on the server, then clear local state.
+    logoutMutation.mutate(
+      {
+        data: {
+          accessToken: auth.accessToken,
+          refreshToken: auth.refreshToken,
+        },
+      },
+      {
+        onSettled: () => {
+          auth.reset()
+          // Preserve current location for redirect after sign-in
+          const currentPath = location.href
+          navigate({
+            to: '/sign-in',
+            search: { redirect: currentPath },
+            replace: true,
+          })
+        },
+      }
+    )
   }
 
   return (

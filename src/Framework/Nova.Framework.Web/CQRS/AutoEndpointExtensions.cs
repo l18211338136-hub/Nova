@@ -151,6 +151,13 @@ public static class AutoEndpointExtensions
             builder.RequireAuthorization();
             builder.AddEndpointFilter(new PermissionFilter(requirePermAttr.Permission));
         }
+        else if (typeof(TCommand).GetCustomAttribute<ApiEndpointAttribute>()?.RequireAuthorization == true)
+        {
+            // 仅要求已登录，不校验具体权限点。
+            // 用于「用户操作自己的数据」的端点：权限点只播种给 Admin/Root，
+            // 若这类端点走 PermissionFilter，普通用户将无法读写自己的资料与偏好。
+            builder.RequireAuthorization();
+        }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);
 

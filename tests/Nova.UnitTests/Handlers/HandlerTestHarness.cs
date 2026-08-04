@@ -26,6 +26,7 @@ public class TestIdentityDbContext : DbContext, IIdentityDbContext
     public DbSet<Role> Roles { get; set; } = default!;
     public DbSet<Menu> Menus { get; set; } = default!;
     public DbSet<AuthAuditLog> AuthAuditLogs { get; set; } = default!;
+    public DbSet<UserPreference> UserPreferences { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,9 @@ public class TestIdentityDbContext : DbContext, IIdentityDbContext
         modelBuilder.Ignore<User>();
         modelBuilder.Ignore<Role>();
         modelBuilder.Ignore<AuthAuditLog>();
+
+        // UserPreference 在测试中不依赖 Finbuckle 多租户过滤器，按约定建模 Id 主键即可
+        modelBuilder.Entity<UserPreference>(b => b.HasKey(p => p.Id));
 
         modelBuilder.Entity<Menu>(b =>
         {

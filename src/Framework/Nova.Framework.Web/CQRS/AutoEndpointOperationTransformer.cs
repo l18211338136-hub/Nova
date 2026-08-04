@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
+using Nova.Contracts.CQRS;
 using System.Reflection;
 
 namespace Nova.Framework.Web.CQRS;
@@ -46,6 +47,9 @@ public class AutoEndpointOperationTransformer : IOpenApiOperationTransformer
             foreach (var prop in commandType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (routeParams.Contains(prop.Name)) continue; // 已作为路径参数提取
+
+                // 由框架从 JWT 注入，客户端不需要（也不应）传递，不暴露到契约里
+                if (ServerInjectedProperties.Contains(prop.Name)) continue;
 
                 if (!operation.Parameters.Any(p => p.Name.Equals(prop.Name, StringComparison.OrdinalIgnoreCase) && p.In == ParameterLocation.Query))
                 {

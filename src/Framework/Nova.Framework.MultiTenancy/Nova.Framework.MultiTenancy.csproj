@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Nova.Framework.Domain\Nova.Framework.Domain.csproj" />
+    <ProjectReference Include="..\Nova.Framework.Persistence\Nova.Framework.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
-using Finbuckle.MultiTenant;
 using Finbuckle.MultiTenant.Abstractions;
-using Finbuckle.MultiTenant.EntityFrameworkCore;
 using Finbuckle.MultiTenant.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.DataProtection;
@@ -16,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Nova.Contracts.Caching;
+using Nova.Framework.Domain.SeedWork;
 using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Application.Services;
 using Nova.Modules.Identity.Domain;
@@ -23,6 +16,8 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Infrastructure;
 using NSubstitute;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Nova.UnitTests.Handlers;
 
@@ -228,12 +223,12 @@ public class IdentityIntegrationHarness
         services.AddDbContext<IdentityDbContext>(options => options.UseInMemoryDatabase($"tenant-{tenantId}-{dbSuffix}"));
 
         services.AddIdentityCore<User>(o =>
-            {
-                o.Password.RequireUppercase = false;
-                // 启用账号锁定（防暴力破解）：测试中用较小阈值以便验证
-                o.Lockout.AllowedForNewUsers = true;
-                o.Lockout.MaxFailedAccessAttempts = 3;
-            })
+        {
+            o.Password.RequireUppercase = false;
+            // 启用账号锁定（防暴力破解）：测试中用较小阈值以便验证
+            o.Lockout.AllowedForNewUsers = true;
+            o.Lockout.MaxFailedAccessAttempts = 3;
+        })
             .AddRoles<Role>()
             .AddEntityFrameworkStores<IdentityDbContext>()
             .AddDefaultTokenProviders();
@@ -241,11 +236,11 @@ public class IdentityIntegrationHarness
         services.AddScoped<ITokenService, FakeTokenService>();
         services.AddScoped<INovaCache, FakeNovaCache>();
         services.AddScoped<IDbInitializer, FakeDbInitializer>();
-        services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider, NoopDataProtectionProvider>();
+        services.AddSingleton<IDataProtectionProvider, NoopDataProtectionProvider>();
 
         // 领域事件分发器（EventBus）：用 NSubstitute 桩记录发布，便于断言审计事件已触发
-        var dispatcher = Substitute.For<Nova.Framework.Domain.SeedWork.IDomainEventDispatcher>();
-        services.AddSingleton<Nova.Framework.Domain.SeedWork.IDomainEventDispatcher>(dispatcher);
+        var dispatcher = Substitute.For<IDomainEventDispatcher>();
+        services.AddSingleton<IDomainEventDispatcher>(dispatcher);
 
         var config = Substitute.For<IConfiguration>();
         config.GetConnectionString("RetailConnection").Returns("DataSource=:memory:");

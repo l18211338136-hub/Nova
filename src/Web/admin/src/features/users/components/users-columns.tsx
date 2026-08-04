@@ -54,6 +54,7 @@ export const useUsersColumns = () => {
         'drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]',
         'inset-s-6 ps-0.5 max-md:sticky @4xl/content:table-cell @4xl/content:drop-shadow-none w-[180px]'
       ),
+      filterType: 'text',
     },
     enableHiding: false,
   },
@@ -67,6 +68,7 @@ export const useUsersColumns = () => {
     ),
     meta: {
       className: 'w-[250px]',
+      filterType: 'text',
     },
   },
   {
@@ -77,6 +79,7 @@ export const useUsersColumns = () => {
     cell: ({ row }) => <div>{row.getValue('phoneNumber') || '-'}</div>,
     meta: {
       className: 'w-[150px]',
+      filterType: 'text',
     },
   },
   {

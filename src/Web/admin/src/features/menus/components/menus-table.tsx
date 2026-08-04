@@ -1,6 +1,5 @@
-import { useEffect, useState, Fragment, useMemo } from 'react'
+import { useState, Fragment, useMemo } from 'react'
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -20,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTableToolbar, DataTableColumnFilter } from '@/components/data-table'
+import { DataTableToolbar } from '@/components/data-table'
 import { useTranslation } from 'react-i18next'
 import { useMenusColumns } from './menus-columns'
 import { MenuDto } from './menus-provider'
@@ -147,27 +146,6 @@ export function MenusTable({ search: _search, navigate: _navigate }: MenusTableP
                             header.column.columnDef.header,
                             header.getContext()
                           )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-                {/* 过滤器专属行 */}
-                <TableRow className='group/row border-b shadow-sm'>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={`${header.id}-filter`}
-                        colSpan={header.colSpan}
-                        className={cn(
-                          'bg-muted/30 group-hover/row:bg-muted/50 py-1 align-top',
-                          header.column.columnDef.meta?.className
-                        )}
-                      >
-                        {header.isPlaceholder ? null : (
-                          header.column.getCanFilter() ? (
-                            <DataTableColumnFilter column={header.column} />
-                          ) : null
-                        )}
                       </TableHead>
                     )
                   })}

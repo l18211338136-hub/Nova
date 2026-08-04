@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DateRangePicker, type DateFilterValue } from '@/components/date-range-picker'
+import { NumberRangePicker, type NumberFilterValue } from '@/components/number-range-picker'
 
 export interface DataTableColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>
@@ -37,7 +39,44 @@ export function DataTableColumnFilter<TData, TValue>({ column }: DataTableColumn
     return () => clearTimeout(timeout)
   }, [value, column])
 
+  if (filterType === 'select') {
+    const meta = (column.columnDef.meta as Record<string, any>) ?? {}
+    const options: Array<{ value: string; label: string }> = meta.selectOptions ?? []
+    return (
+      <div className="mt-1">
+        <Select
+          value={value !== undefined && value !== null ? String(value) : "all"}
+          onValueChange={(val) => {
+            if (val === "all") {
+              setValue(undefined)
+              column.setFilterValue(undefined)
+            } else {
+              setValue(val)
+              column.setFilterValue(val)
+            }
+          }}
+        >
+          <SelectTrigger className="h-8 w-full text-xs">
+            <SelectValue placeholder={t('All')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All')}</SelectItem>
+            {options.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
+  }
+
   if (filterType === 'boolean') {
+    const meta = (column.columnDef.meta as Record<string, any>) ?? {}
+    const boolOpts = meta.booleanOptions ?? {}
+    const trueLabel = boolOpts.trueLabel ?? t('Active')
+    const falseLabel = boolOpts.falseLabel ?? t('Inactive')
     return (
       <div className="mt-1">
         <Select
@@ -58,50 +97,43 @@ export function DataTableColumnFilter<TData, TValue>({ column }: DataTableColumn
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('All')}</SelectItem>
-            <SelectItem value="true">{t('Active')}</SelectItem>
-            <SelectItem value="false">{t('Inactive')}</SelectItem>
+            <SelectItem value="true">{trueLabel}</SelectItem>
+            <SelectItem value="false">{falseLabel}</SelectItem>
           </SelectContent>
         </Select>
       </div>
     )
   }
 
-  if (filterType === 'number' || filterType === 'date') {
+  if (filterType === 'number') {
+    // NumberFilterValue: { kind:'number', op:'between'|'after'|'before'|'onOrAfter'|'onOrBefore', from?: number, to?: number }
+    const nf = (value as NumberFilterValue | undefined) ?? {
+      kind: 'number' as const,
+      op: 'between' as const,
+    }
     return (
-      <div className="flex space-x-2 mt-1">
-        <Input
-          type={filterType}
-          value={(value as [any, any])?.[0] ?? ''}
-          onChange={e =>
-            setValue((old: any) => [e.target.value, old?.[1]])
-          }
-          onClick={(e) => {
-            if (filterType === 'date' && 'showPicker' in e.currentTarget) {
-              try {
-                ;(e.currentTarget as any).showPicker()
-              } catch (err) {}
-            }
-          }}
-          placeholder={t('Min')}
-          className="h-8 w-full min-w-[70px] text-xs"
-        />
-        <Input
-          type={filterType}
-          value={(value as [any, any])?.[1] ?? ''}
-          onChange={e =>
-            setValue((old: any) => [old?.[0], e.target.value])
-          }
-          onClick={(e) => {
-            if (filterType === 'date' && 'showPicker' in e.currentTarget) {
-              try {
-                ;(e.currentTarget as any).showPicker()
-              } catch (err) {}
-            }
-          }}
-          placeholder={t('Max')}
-          className="h-8 w-full min-w-[70px] text-xs"
-        />
-      </div>
+      <NumberRangePicker
+        value={nf}
+        onSelect={(v) => {
+          setValue(v)
+          column.setFilterValue(v)
+        }}
+      />
+    )
+  }
+
+  if (filterType === 'date') {
+    // DateFilterValue: { op: 'between'|'after'|'before'|'onOrAfter'|'onOrBefore', from?: string, to?: string }
+    const dfv = (value as DateFilterValue | undefined) ?? { op: 'between' as const }
+
+    return (
+      <DateRangePicker
+        value={dfv}
+        onSelect={(v) => {
+          setValue(v)
+          column.setFilterValue(v)
+        }}
+      />
     )
   }
 
@@ -111,7 +143,7 @@ export function DataTableColumnFilter<TData, TValue>({ column }: DataTableColumn
         type="text"
         value={(value ?? '') as string}
         onChange={e => setValue(e.target.value)}
-        placeholder={t('Filter...')}
+        placeholder={(column.columnDef.meta as Record<string, any>)?.filterPlaceholder ?? t('Filter...')}
         className="h-8 w-full min-w-[100px] text-xs"
       />
     </div>

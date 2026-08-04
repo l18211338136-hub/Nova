@@ -1,7 +1,9 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
 import { type Row } from '@tanstack/react-table'
-import { ShieldAlert, Trash2, UserPen } from 'lucide-react'
+import { KeyRound, ShieldAlert, Trash2, UserPen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { type UserDto as User } from '@/api/model'
 import { useUsersContext } from './users-provider'
+import { customInstance } from '@/lib/api-client'
 import { usePermissions } from '@/hooks/use-permissions'
 
 type DataTableRowActionsProps = {
@@ -26,8 +29,19 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
 
   const canUpdate = hasPermission('Identity.Users.Update')
   const canDelete = hasPermission('Identity.Users.Delete')
+  const canReset = hasPermission('Identity.Users.ResetPassword')
 
-  if (!canUpdate && !canDelete) {
+  const adminResetMutation = useMutation({
+    mutationFn: (id: string) =>
+      customInstance<{ code: number; message: string; data?: { success: boolean; message?: string } }>({
+        url: `/api/identity/users/${id}/reset-password`,
+        method: 'POST',
+      }),
+    onSuccess: () => toast.success(t('Password reset email sent.')),
+    onError: (error: any) => toast.error(error?.response?.data?.message || t('Failed to send password reset email.')),
+  })
+
+  if (!canUpdate && !canDelete && !canReset) {
     return null
   }
 
@@ -64,6 +78,16 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             >
               <ShieldAlert className="mr-2 h-4 w-4 text-emerald-500" />
               <span className="text-emerald-500">{t('权限分配')}</span>
+            </DropdownMenuItem>
+          )}
+          {canReset && (
+            <DropdownMenuItem
+              onClick={() => {
+                if (row.original.id) adminResetMutation.mutate(row.original.id)
+              }}
+            >
+              <KeyRound className="mr-2 h-4 w-4 text-amber-500" />
+              <span className="text-amber-500">{t('Reset Password')}</span>
             </DropdownMenuItem>
           )}
           {canUpdate && canDelete && <DropdownMenuSeparator />}

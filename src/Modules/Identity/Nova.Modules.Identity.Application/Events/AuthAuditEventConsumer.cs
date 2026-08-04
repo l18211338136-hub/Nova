@@ -41,7 +41,6 @@ public class AuthAuditEventConsumer : IConsumer<AuthAuditEvent>
         var db = scope.ServiceProvider.GetRequiredService<IIdentityDbContext>();
         db.AuthAuditLogs.Add(new AuthAuditLog(
             evt.EventType.ToString(),
-            evt.TenantId,
             evt.Account,
             evt.UserId,
             evt.Success,

@@ -35,5 +35,21 @@
         "sort": 4
       }
     ]
+  },
+  {
+    "name": "日志管理",
+    "path": "/logs",
+    "component": "Layout",
+    "icon": "FileText",
+    "sort": 98,
+    "children": [
+      {
+        "name": "审计日志",
+        "path": "/audit",
+        "component": "features/audit",
+        "icon": "ScrollText",
+        "sort": 1
+      }
+    ]
   }
 ]

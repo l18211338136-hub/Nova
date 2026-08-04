@@ -43,22 +43,26 @@ export function useTenantsColumns(): ColumnDef<Tenant>[] {
       cell: ({ row }) => <div className='font-mono'>{row.getValue('id')}</div>,
       meta: {
         className: 'w-[150px]',
+        filterType: 'text',
       },
     },
     {
       accessorKey: 'name',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('Name')} />,
       cell: ({ row }) => <div>{row.getValue('name')}</div>,
+      meta: { filterType: 'text' },
     },
     {
       accessorKey: 'identifier',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('Identifier')} />,
       cell: ({ row }) => <div>{row.getValue('identifier')}</div>,
+      meta: { filterType: 'text' },
     },
     {
       accessorKey: 'adminEmail',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('Admin Email')} />,
       cell: ({ row }) => <div>{row.getValue('adminEmail')}</div>,
+      meta: { filterType: 'text' },
     },
     {
       accessorKey: 'isActive',

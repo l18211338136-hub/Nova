@@ -12,6 +12,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 
 import { cn } from '@/lib/utils'
 import { DataTableColumnHeader } from '@/components/data-table'
+import { type NumberFilterValue } from '@/components/number-range-picker'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -135,6 +136,7 @@ export const useMenusColumns = () => {
         'drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]',
         'inset-s-6 ps-0.5 max-md:sticky @4xl/content:table-cell @4xl/content:drop-shadow-none w-[200px]'
       ),
+      filterType: 'text',
     },
     enableHiding: false,
   },
@@ -143,21 +145,41 @@ export const useMenusColumns = () => {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('Path')} />
     ),
-    meta: { className: 'w-[150px]' },
+    meta: { className: 'w-[150px]', filterType: 'text' },
   },
   {
     accessorKey: 'component',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('Component')} />
     ),
-    meta: { className: 'w-[200px]' },
+    meta: { className: 'w-[200px]', filterType: 'text' },
   },
   {
     accessorKey: 'sort',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('Sort')} />
     ),
-    meta: { className: 'w-[100px]' },
+    filterFn: (row, columnId, filterValue: NumberFilterValue) => {
+      if (!filterValue || (filterValue.from == null && filterValue.to == null)) return true
+      const cell = row.getValue<number>(columnId)
+      if (cell == null) return false
+      const { op, from, to } = filterValue
+      switch (op) {
+        case 'between':
+          return (from == null || cell >= from) && (to == null || cell <= to)
+        case 'after':
+          return from == null ? true : cell > from
+        case 'before':
+          return to == null ? true : cell < to
+        case 'onOrAfter':
+          return from == null ? true : cell >= from
+        case 'onOrBefore':
+          return to == null ? true : cell <= to
+        default:
+          return true
+      }
+    },
+    meta: { className: 'w-[100px]', filterType: 'number' },
   },
   {
     accessorKey: 'isEnabled',

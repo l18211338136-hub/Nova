@@ -24,9 +24,9 @@ import { PasswordInput } from '@/components/password-input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const getPasswordFormSchema = (t: (arg: string) => string) => z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? t('Please enter your email.') : undefined),
-  }),
+  account: z
+    .string()
+    .min(1, t('Please enter your username, email or phone.')),
   password: z
     .string()
     .min(1, t('Please enter your password.'))
@@ -75,7 +75,7 @@ export function UserAuthForm({
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),
     defaultValues: {
-      email: '',
+      account: '',
       password: '',
     },
   })
@@ -116,7 +116,7 @@ export function UserAuthForm({
     setIsLoading(true)
     try {
       const response = await login({
-        data: { account: data.email, password: data.password }
+        data: { account: data.account, password: data.password }
       })
       handleLoginSuccess(response)
     } catch (error: any) {
@@ -165,12 +165,12 @@ export function UserAuthForm({
             <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className='grid gap-3 pt-4'>
               <FormField
                 control={passwordForm.control}
-                name='email'
+                name='account'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('Email')}</FormLabel>
+                    <FormLabel>{t('Username / Email / Phone')}</FormLabel>
                     <FormControl>
-                      <Input placeholder='name@example.com' {...field} />
+                      <Input placeholder={t('root or name@example.com or phone')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

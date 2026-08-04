@@ -21,6 +21,7 @@ builder.Services.AddOpenApi("v1", options =>
     options.AddOperationTransformer<JwtBearerOperationTransformer>();
     options.AddOperationTransformer<TenantHeaderOperationTransformer>();
     options.AddOperationTransformer<AutoEndpointOperationTransformer>();
+    options.AddSchemaTransformer<ServerInjectedPropertySchemaTransformer>();
 });
 
 builder.Services.AddNovaCors(builder.Configuration);

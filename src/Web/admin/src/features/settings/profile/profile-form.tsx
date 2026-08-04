@@ -1,10 +1,17 @@
+import { useEffect } from 'react'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { showSubmittedData } from '@/lib/show-submitted-data'
-import { cn } from '@/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  useGetProfile,
+  useUpdateProfile,
+  getGetProfileQueryKey,
+} from '@/api/endpoints/profile'
+import { resolveErrorMessage } from '@/hooks/use-preferences'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -16,109 +23,194 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-const getProfileFormSchema = (t: (arg: string) => string) => z.object({
-  username: z
-    .string({ message: t('Please enter your username.') })
-    .min(2, t('Username must be at least 2 characters.'))
-    .max(30, t('Username must not be longer than 30 characters.')),
-  email: z.email({
-    error: (iss) =>
-      iss.input === undefined
-        ? t('Please select an email to display.')
-        : undefined,
-  }),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.url(t('Please enter a valid URL.')),
-      })
-    )
-    .optional(),
-})
+const getProfileFormSchema = (t: (arg: string) => string) =>
+  z.object({
+    nickName: z
+      .string()
+      .max(50, t('Nickname must not be longer than 50 characters.'))
+      .optional(),
+    bio: z
+      .string()
+      .max(160, t('Bio must not be longer than 160 characters.'))
+      .optional(),
+    avatarUrl: z
+      .union([z.url(t('Please enter a valid URL.')), z.literal('')])
+      .optional(),
+    phoneNumber: z
+      .union([
+        z.string().regex(/^1[3-9]\d{9}$/, t('Please enter a valid phone number.')),
+        z.literal(''),
+      ])
+      .optional(),
+  })
 
 type ProfileFormValues = z.infer<ReturnType<typeof getProfileFormSchema>>
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
+const EMPTY_VALUES: ProfileFormValues = {
+  nickName: '',
+  bio: '',
+  avatarUrl: '',
+  phoneNumber: '',
 }
 
 export function ProfileForm() {
   const { t } = useTranslation()
-  const profileFormSchema = getProfileFormSchema(t)
+  const queryClient = useQueryClient()
+
+  const { data, isLoading } = useGetProfile()
+  const profile = data?.data
+
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    resolver: zodResolver(getProfileFormSchema(t)),
+    defaultValues: EMPTY_VALUES,
     mode: 'onChange',
   })
 
-  const { fields, append } = useFieldArray({
-    name: 'urls',
-    control: form.control,
+  // 资料是异步拉取的，到货后再回填表单（reset 会同时刷新 dirty 基线）
+  useEffect(() => {
+    if (!profile) return
+    form.reset({
+      nickName: profile.nickName ?? '',
+      bio: profile.bio ?? '',
+      avatarUrl: profile.avatarUrl ?? '',
+      phoneNumber: profile.phoneNumber ?? '',
+    })
+  }, [profile, form])
+
+  const updateMutation = useUpdateProfile({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() })
+        toast.success(t('Profile updated.'))
+      },
+      onError: (error: unknown) => {
+        toast.error(resolveErrorMessage(error, t('Failed to update profile.')))
+      },
+    },
   })
+
+  function onSubmit(values: ProfileFormValues) {
+    updateMutation.mutate({
+      data: {
+        // 空字符串代表「清空该项」，统一转成 null 交给后端
+        nickName: values.nickName?.trim() || null,
+        bio: values.bio?.trim() || null,
+        avatarUrl: values.avatarUrl?.trim() || null,
+        phoneNumber: values.phoneNumber?.trim() || null,
+      },
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className='space-y-6'>
+        <Skeleton className='h-16 w-full' />
+        <Skeleton className='h-10 w-full' />
+        <Skeleton className='h-10 w-full' />
+        <Skeleton className='h-24 w-full' />
+      </div>
+    )
+  }
+
+  const avatarPreview = form.watch('avatarUrl')
+  const displayName = profile?.nickName || profile?.userName || ''
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+        {/* 只读的账号概览：这些字段由管理员或注册流程决定，不在此页修改 */}
+        <div className='flex items-center gap-4 rounded-lg border p-4'>
+          <Avatar className='size-14'>
+            <AvatarImage src={avatarPreview || undefined} alt={displayName} />
+            <AvatarFallback>
+              {displayName.slice(0, 2).toUpperCase() || 'NA'}
+            </AvatarFallback>
+          </Avatar>
+          <div className='space-y-1'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <span className='font-medium'>{profile?.userName}</span>
+              {profile?.roles?.map((role) => (
+                <Badge key={role.name} variant='secondary'>
+                  {role.displayName || role.name}
+                </Badge>
+              ))}
+            </div>
+            <div className='text-sm text-muted-foreground'>
+              {profile?.email || t('No email bound')}
+              {profile?.email && !profile.emailConfirmed && (
+                <span className='ms-2 text-amber-600'>{t('Unverified')}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         <FormField
           control={form.control}
-          name='username'
+          name='nickName'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('Username')}</FormLabel>
+              <FormLabel>{t('Nickname')}</FormLabel>
               <FormControl>
-                <Input placeholder='shadcn' {...field} />
+                <Input
+                  placeholder={profile?.userName ?? ''}
+                  {...field}
+                  value={field.value ?? ''}
+                />
               </FormControl>
               <FormDescription>
-                {t('This is your public display name. It can be your real name or a pseudonym. You can only change this once every 30 days.')}
+                {t('This is your public display name. Leave it empty to use your username.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name='email'
+          name='phoneNumber'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('Email')}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('Select a verified email to display')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value='m@example.com'>m@example.com</SelectItem>
-                  <SelectItem value='m@google.com'>m@google.com</SelectItem>
-                  <SelectItem value='m@support.com'>m@support.com</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormLabel>{t('Phone number')}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder='13800000000'
+                  {...field}
+                  value={field.value ?? ''}
+                />
+              </FormControl>
               <FormDescription>
-                {t('You can manage verified email addresses in your')}{' '}
-                <Link to='/'>{t('email settings')}</Link>.
+                {t('Your phone number can be used to sign in and to locate your tenant.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name='avatarUrl'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('Avatar URL')}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder='https://example.com/avatar.png'
+                  {...field}
+                  value={field.value ?? ''}
+                />
+              </FormControl>
+              <FormDescription>
+                {t('Paste an image link to use as your avatar.')}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name='bio'
@@ -130,48 +222,20 @@ export function ProfileForm() {
                   placeholder={t('Tell us a little bit about yourself')}
                   className='resize-none'
                   {...field}
+                  value={field.value ?? ''}
                 />
               </FormControl>
               <FormDescription>
-                {t('You can @mention other users and organizations to link to them.')}
+                {t('Up to 160 characters.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div>
-          {fields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    {t('URLs')}
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    {t('Add links to your website, blog, or social media profiles.')}
-                  </FormDescription>
-                  <FormControl className={cn(index !== 0 && 'mt-1.5')}>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='mt-2'
-            onClick={() => append({ value: '' })}
-          >
-            {t('Add URL')}
-          </Button>
-        </div>
-        <Button type='submit'>{t('Update profile')}</Button>
+
+        <Button type='submit' disabled={updateMutation.isPending}>
+          {updateMutation.isPending ? t('Updating...') : t('Update profile')}
+        </Button>
       </form>
     </Form>
   )

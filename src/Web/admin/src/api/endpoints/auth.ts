@@ -24,14 +24,18 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ApiResponseOfChangePasswordResult,
   ApiResponseOfLoginResult,
+  ApiResponseOfLogoutResult,
   ApiResponseOfRegisterUserResult,
   ApiResponseOfResetPasswordResult,
   ApiResponseOfSendEmailLoginCodeResult,
   ApiResponseOfSendEmailRegisterCodeResult,
   ApiResponseOfSendForgotPasswordCodeResult,
+  ChangePassword,
   EmailLogin,
   Login,
+  Logout,
   RefreshToken,
   RegisterUser,
   ResetPassword,
@@ -65,6 +69,71 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
+ * 登录态下凭旧密码修改新密码
+ * @summary 修改密码
+ */
+export const changePassword = (
+    changePassword: ChangePassword,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfChangePasswordResult>(
+      {url: `/api/identity/change-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: changePassword, signal
+    },
+      options);
+    }
+
+
+
+
+export const getChangePasswordMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePassword}, TContext> => {
+
+const mutationKey = ['changePassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changePassword>>, {data: ChangePassword}> = (props) => {
+          const {data} = props ?? {};
+
+          return  changePassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>
+    export type ChangePasswordMutationBody = ChangePassword
+    export type ChangePasswordMutationError = unknown
+
+    /**
+ * @summary 修改密码
+ */
+export const useChangePassword = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof changePassword>>,
+        TError,
+        {data: ChangePassword},
+        TContext
+      > => {
+      return useMutation(getChangePasswordMutationOptions(options), queryClient);
+    }
+    /**
  * 通过邮箱和收到的验证码直接登录获取 Token
  * @summary 邮箱验证码登录
  */
@@ -193,6 +262,71 @@ export const useLogin = <TError = unknown,
         TContext
       > => {
       return useMutation(getLoginMutationOptions(options), queryClient);
+    }
+    /**
+ * 吊销当前刷新令牌，使其无法再用于获取新的 AccessToken
+ * @summary 登出（吊销刷新令牌）
+ */
+export const logout = (
+    logout: Logout,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfLogoutResult>(
+      {url: `/api/identity/logout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: logout, signal
+    },
+      options);
+    }
+
+
+
+
+export const getLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,{data: Logout}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,{data: Logout}, TContext> => {
+
+const mutationKey = ['logout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logout>>, {data: Logout}> = (props) => {
+          const {data} = props ?? {};
+
+          return  logout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
+    export type LogoutMutationBody = Logout
+    export type LogoutMutationError = unknown
+
+    /**
+ * @summary 登出（吊销刷新令牌）
+ */
+export const useLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,{data: Logout}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logout>>,
+        TError,
+        {data: Logout},
+        TContext
+      > => {
+      return useMutation(getLogoutMutationOptions(options), queryClient);
     }
     /**
  * 使用 RefreshToken 获取新的 AccessToken

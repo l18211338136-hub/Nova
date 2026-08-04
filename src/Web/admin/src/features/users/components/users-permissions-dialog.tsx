@@ -34,6 +34,8 @@ const ACTION_MAP: Record<string, string> = {
   'Create': '新增',
   'Update': '编辑',
   'Delete': '删除',
+  'ChangePassword': '修改密码',
+  'ResetPassword': '重置密码',
 }
 
 const formSchema = z.object({

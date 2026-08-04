@@ -1,11 +1,9 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
-using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/change-password", typeof(ChangePasswordResult), "Auth", Summary = "修改密码", Description = "登录态下凭旧密码修改新密码")]
-[RequirePermission("Identity.Users.ChangePassword")]
+[ApiEndpoint("POST", "/api/identity/change-password", typeof(ChangePasswordResult), "Auth", Summary = "修改密码", Description = "登录态下凭旧密码修改新密码", RequireAuthorization = true)]
 public record ChangePasswordCommand
 {
     /// <summary>

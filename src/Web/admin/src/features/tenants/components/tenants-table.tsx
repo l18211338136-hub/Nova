@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar, DataTableColumnFilter } from '@/components/data-table'
+import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { type TenantDto as Tenant } from '@/api/model'
 import { useTenants } from '@/api/endpoints/tenants'
 import { useTenantsColumns } from './tenants-columns'
@@ -151,27 +151,6 @@ export function TenantsTable({ search, navigate }: DataTableProps) {
                         {header.isPlaceholder ? null : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
-                        )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-                {/* 过滤器专属行 */}
-                <TableRow className='group/row border-b shadow-sm'>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={`${header.id}-filter`}
-                        colSpan={header.colSpan}
-                        className={cn(
-                          'bg-muted/30 group-hover/row:bg-muted/50 py-1 align-top',
-                          header.column.columnDef.meta?.className
-                        )}
-                      >
-                        {header.isPlaceholder ? null : (
-                          header.column.getCanFilter() ? (
-                            <DataTableColumnFilter column={header.column} />
-                          ) : null
                         )}
                       </TableHead>
                     )

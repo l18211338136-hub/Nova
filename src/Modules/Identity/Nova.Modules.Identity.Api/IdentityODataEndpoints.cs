@@ -7,6 +7,7 @@ using Nova.Contracts.Security;
 using Nova.Framework.Web.Responses;
 using Nova.Framework.Web.Security;
 using Nova.Modules.Identity.Application.Database;
+using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Application.Menus.Queries;
 using Nova.Modules.Identity.Application.Roles.Queries;
 using Nova.Modules.Identity.Application.Users.Queries;
@@ -159,6 +160,67 @@ public static class IdentityODataEndpoints
         .WithSummary("获取菜单列表")
         .WithDescription("获取分页的菜单列表数据");
 
+        endpoints.MapGet("/api/identity/auth-audit-logs", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
+        {
+            var query = db.AuthAuditLogs
+                .OrderByDescending(l => l.OccurredOn)
+                .Select(l => new AuthAuditLogDto
+                {
+                    Id = l.Id,
+                    EventType = l.EventType,
+                    Account = l.Account,
+                    UserId = l.UserId,
+                    Success = l.Success,
+                    Reason = l.Reason,
+                    IpAddress = l.IpAddress,
+                    OccurredOn = l.OccurredOn,
+                    CreatedAt = l.CreatedAt
+                });
+
+            var builder = new ODataConventionModelBuilder();
+            builder.EntitySet<AuthAuditLogDto>("AuthAuditLogs");
+            var edmModel = builder.GetEdmModel();
+
+            var odataContext = new ODataQueryContext(edmModel, typeof(AuthAuditLogDto), null);
+            var odataQuery = new ODataQueryOptions<AuthAuditLogDto>(odataContext, request);
+
+            // 应用 $filter / $orderby / $count（忽略 Top/Skip，由下方手动分页）
+            var filteredQuery = (IQueryable<AuthAuditLogDto>)odataQuery.ApplyTo(query, ignoreQueryOptions: AllowedQueryOptions.Top | AllowedQueryOptions.Skip);
+
+            long totalCount = await filteredQuery.LongCountAsync(cancellationToken);
+
+            if (odataQuery.Skip != null)
+            {
+                filteredQuery = filteredQuery.Skip(odataQuery.Skip.Value);
+            }
+            if (odataQuery.Top != null)
+            {
+                filteredQuery = filteredQuery.Take(odataQuery.Top.Value);
+            }
+
+            var items = await filteredQuery.ToArrayAsync(cancellationToken);
+
+            int? top = odataQuery.Top?.Value;
+            int? skip = odataQuery.Skip?.Value;
+            int? page = (skip.HasValue && top.HasValue && top.Value > 0) ? (skip.Value / top.Value) + 1 : 1;
+
+            var pagedResult = new PagedResult<AuthAuditLogDto>
+            {
+                Total = totalCount,
+                Items = items,
+                Page = page,
+                PageSize = top > 0 ? top : null
+            };
+
+            return ApiResponse<PagedResult<AuthAuditLogDto>>.Success(pagedResult);
+        })
+        .Produces<ApiResponse<PagedResult<AuthAuditLogDto>>>(200)
+        .RequireAuthorization()
+        .AddEndpointFilter(new PermissionFilter("Identity.AuditLogs.Read"))
+        .WithTags("Audit")
+        .WithSummary("获取认证审计日志")
+        .WithDescription("分页获取登录成功/失败、令牌刷新、改密、登出等安全审计日志，支持 OData $filter/$orderby/$top/$skip。按当前租户隔离。");
+
         endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken, UserManager<User> userManager, RoleManager<Role> roleManager) =>
         {
             var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -191,7 +253,7 @@ public static class IdentityODataEndpoints
                 .Select(c => c.Value));
 
             menuClaims = menuClaims.Distinct().ToList();
-            
+
             var query = db.Menus.AsQueryable();
 
             if (menuClaims.Any())
@@ -289,10 +351,10 @@ public static class IdentityODataEndpoints
             var permissions = claims.Where(c => c.Type == "Permission").Select(c => c.Value).ToList();
             var menus = claims.Where(c => c.Type == "Menu").Select(c => c.Value).ToList();
 
-            return ApiResponse<RolePermissionsDto>.Success(new RolePermissionsDto 
-            { 
-                Permissions = permissions, 
-                Menus = menus 
+            return ApiResponse<RolePermissionsDto>.Success(new RolePermissionsDto
+            {
+                Permissions = permissions,
+                Menus = menus
             });
         })
         .Produces<ApiResponse<RolePermissionsDto>>(200)

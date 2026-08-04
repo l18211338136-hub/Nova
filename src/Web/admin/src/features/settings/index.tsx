@@ -1,6 +1,6 @@
 import { Outlet } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Monitor, Bell, Palette, Wrench, UserCog } from 'lucide-react'
+import { Monitor, Bell, Palette, Wrench, UserCog, Lock } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -20,6 +20,11 @@ const sidebarNavItems = [
     title: 'Account',
     href: '/settings/account',
     icon: <Wrench size={18} />,
+  },
+  {
+    title: 'Security',
+    href: '/settings/security',
+    icon: <Lock size={18} />,
   },
   {
     title: 'Appearance',

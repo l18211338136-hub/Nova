@@ -30,7 +30,7 @@ public class DeleteMenuCommandHandler : IConsumer<DeleteMenuCommand>
             throw new NovaValidationException($"该菜单下存在子菜单，请先删除子菜单");
         }
 
-        _db.Menus.Update(menu);
+        _db.Menus.Remove(menu);
         await _db.SaveChangesAsync(context.CancellationToken);
 
         await context.RespondAsync(new DeleteMenuResult { Success = true });

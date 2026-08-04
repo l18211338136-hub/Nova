@@ -4,7 +4,7 @@ namespace Nova.Modules.Identity.Domain;
 
 /// <summary>
 /// 认证审计日志。记录登录成功/失败、令牌刷新、改密、登出等安全相关事件。
-/// 多租户隔离（按 TenantId），并带软删除审计字段。
+/// 多租户隔离由 Finbuckle 通过阴影属性 TenantId 实现（与 User/Role/Menu 一致），并带软删除审计字段。
 /// </summary>
 public class AuthAuditLog : IFullAuditedEntity
 {
@@ -14,7 +14,6 @@ public class AuthAuditLog : IFullAuditedEntity
 
     public AuthAuditLog(
         string eventType,
-        string tenantId,
         string? account,
         Guid? userId,
         bool success,
@@ -22,7 +21,6 @@ public class AuthAuditLog : IFullAuditedEntity
         string? ipAddress = null)
     {
         EventType = eventType;
-        TenantId = tenantId;
         Account = account;
         UserId = userId;
         Success = success;
@@ -35,9 +33,6 @@ public class AuthAuditLog : IFullAuditedEntity
 
     /// <summary>事件类型（AuthAuditEventType 的枚举名）</summary>
     public string EventType { get; set; } = default!;
-
-    /// <summary>所属租户标识（与 Finbuckle 多租户分区一致）</summary>
-    public string TenantId { get; set; } = default!;
 
     public string? Account { get; set; }
     public Guid? UserId { get; set; }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -40,7 +40,7 @@ import {
 import * as Icons from 'lucide-react'
 import { MenuDto } from './menus-provider'
 import { useTranslation } from 'react-i18next'
-import { useCreateMenu, useUpdateMenu, getMenusQueryKey, getGetMyMenusQueryKey } from '@/api/endpoints/menus'
+import { useCreateMenu, useUpdateMenu, useMenus, getMenusQueryKey, getGetMyMenusQueryKey } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 
 const predefinedIcons = [
@@ -71,6 +71,7 @@ const getFormSchema = (t: (arg: string) => string) => z.object({
   path: z.string().min(1, { message: t('Path is required.') }),
   component: z.string().min(1, { message: t('Component is required.') }),
   icon: z.string().nullable().optional(),
+  parentId: z.string().nullable().optional(),
   sort: z.number().min(0),
   isEnabled: z.boolean(),
   remarks: z.string().nullable().optional(),
@@ -94,6 +95,34 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
   const updateMenuMutation = useUpdateMenu()
   
   const [iconOpen, setIconOpen] = useState(false)
+  const [parentOpen, setParentOpen] = useState(false)
+
+  const { data: menusData } = useMenus()
+  const allMenus = (menusData?.data?.items || []) as MenuDto[]
+
+  // 编辑时不能把自己或自己的后代选为父节点，避免循环引用
+  const descendantIds = useMemo(() => {
+    if (!isEdit || !currentRow?.id) return new Set<string>()
+    const ids = new Set<string>()
+    const collect = (parentId: string) => {
+      allMenus
+        .filter((m) => m.parentId === parentId)
+        .forEach((child) => {
+          if (child.id) {
+            ids.add(child.id)
+            collect(child.id)
+          }
+        })
+    }
+    collect(currentRow.id)
+    return ids
+  }, [allMenus, currentRow, isEdit])
+
+  const parentCandidates = useMemo(() => {
+    return allMenus.filter(
+      (m) => m.id && m.id !== currentRow?.id && !descendantIds.has(m.id)
+    )
+  }, [allMenus, currentRow, descendantIds])
 
   const form = useForm<MenusForm>({
     resolver: zodResolver(formSchema),
@@ -102,6 +131,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
       path: '',
       component: '',
       icon: '',
+      parentId: null,
       sort: 0,
       isEnabled: true,
       remarks: '',
@@ -115,20 +145,31 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         path: currentRow?.path ?? '',
         component: currentRow?.component ?? '',
         icon: currentRow?.icon ?? '',
+        parentId: currentRow?.parentId ?? null,
         sort: currentRow?.sort ?? 0,
         isEnabled: currentRow?.isEnabled ?? true,
         remarks: currentRow?.remarks ?? '',
+      } : isSubMenu ? {
+        name: '',
+        path: '',
+        component: '',
+        icon: '',
+        parentId: currentRow?.id ?? null,
+        sort: 0,
+        isEnabled: true,
+        remarks: '',
       } : {
         name: '',
         path: '',
         component: '',
         icon: '',
+        parentId: null,
         sort: 0,
         isEnabled: true,
         remarks: '',
       })
     }
-  }, [open, isEdit, currentRow, form])
+  }, [open, isEdit, isSubMenu, currentRow, form])
 
   const onSubmit = (values: MenusForm) => {
     if (isEdit && currentRow) {
@@ -137,7 +178,6 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
           id: currentRow.id!,
           data: {
             id: currentRow.id!,
-            parentId: currentRow.parentId,
             ...values,
           }
         },
@@ -157,7 +197,6 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
       createMenuMutation.mutate(
         {
           data: {
-            parentId: isSubMenu ? currentRow?.id : null,
             ...values,
           }
         },
@@ -305,6 +344,84 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
                     <FormMessage className='col-span-4 col-start-3' />
                   </FormItem>
                 )}
+              />
+              <FormField
+                control={form.control}
+                name='parentId'
+                render={({ field }) => {
+                  const selectedParent = allMenus.find((m) => m.id === field.value)
+                  return (
+                    <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                      <FormLabel className='col-span-2 text-end'>{t('Parent Menu')}</FormLabel>
+                      <Popover open={parentOpen} onOpenChange={setParentOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant='outline'
+                              role='combobox'
+                              aria-expanded={parentOpen}
+                              className={cn(
+                                'col-span-4 w-full justify-between',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              {selectedParent ? (
+                                <span>{selectedParent.name}</span>
+                              ) : (
+                                t('No parent (top-level menu)')
+                              )}
+                              <Icons.ChevronsUpDown className='ms-2 h-4 w-4 shrink-0 opacity-50' />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-[280px] p-0' align='start'>
+                          <Command>
+                            <CommandInput placeholder={t('Search parent menu...')} />
+                            <CommandList>
+                              <CommandEmpty>{t('No menu found.')}</CommandEmpty>
+                              <CommandGroup>
+                                <CommandItem
+                                  value='__root__'
+                                  onSelect={() => {
+                                    form.setValue('parentId', null)
+                                    setParentOpen(false)
+                                  }}
+                                >
+                                  <span>{t('No parent (top-level menu)')}</span>
+                                  <Icons.CheckIcon
+                                    className={cn(
+                                      'ms-auto h-4 w-4',
+                                      !field.value ? 'opacity-100' : 'opacity-0'
+                                    )}
+                                  />
+                                </CommandItem>
+                                {parentCandidates.map((menu) => (
+                                  <CommandItem
+                                    value={menu.name || menu.id}
+                                    key={menu.id}
+                                    onSelect={() => {
+                                      form.setValue('parentId', menu.id!)
+                                      setParentOpen(false)
+                                    }}
+                                  >
+                                    <span>{menu.name}</span>
+                                    <Icons.CheckIcon
+                                      className={cn(
+                                        'ms-auto h-4 w-4',
+                                        menu.id === field.value ? 'opacity-100' : 'opacity-0'
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage className='col-span-4 col-start-3' />
+                    </FormItem>
+                  )
+                }}
               />
               <FormField
                 control={form.control}

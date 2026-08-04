@@ -10,6 +10,7 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Infrastructure;
 using Nova.Framework.Persistence.Interceptors;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Nova.Modules.Identity.Api;
 
@@ -20,6 +21,9 @@ public class IdentityModule : IModule
     public void RegisterServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
+
+        // 拦截器无状态，注册为单例（框架层可能已注册，这里兜底保证模块可独立工作）
+        services.TryAddSingleton<UtcDateTimeParameterInterceptor>();
 
         services.AddDbContext<IdentityDbContext>((sp, options) =>
         {
@@ -36,6 +40,9 @@ public class IdentityModule : IModule
             {
                 options.AddInterceptors(interceptor);
             }
+
+            // 规范化写入 timestamptz 的本地 DateTime 参数为 UTC（修复 OData 日期筛选报错）
+            options.AddInterceptors(sp.GetRequiredService<UtcDateTimeParameterInterceptor>());
         });
 
         services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<IdentityDbContext>());

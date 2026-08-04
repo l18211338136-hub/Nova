@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nova.Contracts.Caching;
 using Nova.Contracts.Exceptions;
+using Nova.Framework.Domain.SeedWork;
 using Nova.Framework.MultiTenancy;
+using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Application.Services;
 using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Roles;
@@ -19,15 +21,18 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly INovaCache _cache;
+    private readonly IDomainEventDispatcher _dispatcher;
 
     public EmailLoginCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        INovaCache cache)
+        INovaCache cache,
+        IDomainEventDispatcher dispatcher)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _cache = cache;
+        _dispatcher = dispatcher;
     }
 
     public async Task Consume(ConsumeContext<EmailLoginCommand> context)
@@ -90,6 +95,7 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
 
         // 7. 唯一确定的租户，开始生成 Token
         var targetTenant = validTenants.First();
+        var tenantId = targetTenant.Identifier;
         using var scope = _scopeFactory.CreateScope();
         var setter = scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
         setter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(targetTenant);
@@ -101,10 +107,10 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
+            await _dispatcher.PublishAsync(new AuthAuditEvent(
+                AuthAuditEventType.LoginFailed, tenantId, request.Email, null, false, "邮箱对应的用户不存在"));
             throw new NovaValidationException("未找到与该邮箱关联的租户账户");
         }
-
-        var tenantId = targetTenant.Identifier;
 
         var claims = new List<Claim>();
 
@@ -144,14 +150,21 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
 
         var tokenResult = tokenService.GenerateToken(user, tenantId, claims);
 
-        // Generate Refresh Token
-        var refreshToken = Guid.NewGuid().ToString("N");
-        // Expires in 7 days
-        var refreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(7);
-        var storedTokenValue = $"{refreshToken}|{refreshTokenExpiry:O}";
+        // 发布审计事件（邮箱验证码登录成功）
+        await _dispatcher.PublishAsync(new AuthAuditEvent(
+            AuthAuditEventType.LoginSuccess, tenantId, request.Email, user.Id, true, "邮箱登录"));
 
-        // Store Refresh Token in AspNetUserTokens
-        await userManager.SetAuthenticationTokenAsync(user, "NovaApp", "RefreshToken", storedTokenValue);
+        // Generate Refresh Token（与 LoginCommandHandler 保持一致：使用 RefreshTokenStore，
+        // 存储到 ("NovaApp", "RefreshTokens") key，JSON 数组格式，确保登出时能正确查找和吊销）
+        var refreshToken = Guid.NewGuid().ToString("N");
+        var refreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(7);
+        await RefreshTokenStore.AddAsync(userManager, user, new RefreshTokenEntry
+        {
+            Token = refreshToken,
+            ExpiryUtc = refreshTokenExpiry,
+            Revoked = false,
+            CreatedUtc = DateTimeOffset.UtcNow
+        });
 
         await context.RespondAsync(new LoginResult
         {
