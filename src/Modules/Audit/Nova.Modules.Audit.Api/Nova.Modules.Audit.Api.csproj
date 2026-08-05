@@ -9,11 +9,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Nova.Modules.Audit.Domain\Nova.Modules.Audit.Domain.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Audit.Application\Nova.Modules.Audit.Application.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Audit.Infrastructure\Nova.Modules.Audit.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
   </ItemGroup>
 
 </Project>
-

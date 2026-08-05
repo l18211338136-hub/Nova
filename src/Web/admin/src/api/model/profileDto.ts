@@ -4,55 +4,49 @@
  * Nova.WebApi | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { ProfileRoleDto } from './profileRoleDto';
 
 /**
  * @nullable
  */
-export type ProfileRoleDto = {
-  /** 角色名 */
-  name?: string;
-  /** 角色显示名称 */
-  displayName?: string;
-};
-
 export type ProfileDto = {
   /** 用户ID */
   id?: string;
   /** 用户名 */
   userName?: string;
   /**
-   * 邮箱
-   * @nullable
-   */
+     * 邮箱
+     * @nullable
+     */
   email?: string | null;
   /** 邮箱是否已验证 */
   emailConfirmed?: boolean;
   /**
-   * 手机号
-   * @nullable
-   */
+     * 手机号
+     * @nullable
+     */
   phoneNumber?: string | null;
   /**
-   * 昵称
-   * @nullable
-   */
+     * 昵称
+     * @nullable
+     */
   nickName?: string | null;
   /**
-   * 头像地址
-   * @nullable
-   */
+     * 头像地址
+     * @nullable
+     */
   avatarUrl?: string | null;
   /**
-   * 个人简介
-   * @nullable
-   */
+     * 个人简介
+     * @nullable
+     */
   bio?: string | null;
   /** 所属角色 */
   roles?: ProfileRoleDto[];
   /**
-   * 所属租户
-   * @nullable
-   */
+     * 所属租户
+     * @nullable
+     */
   tenantId?: string | null;
   /** 注册时间 */
   createdAt?: string;

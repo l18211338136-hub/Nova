@@ -84,7 +84,7 @@ public static class MultiTenancyExtensions
         services.AddScoped<ITenantInfo>(sp => 
         {
             var accessor = sp.GetRequiredService<IMultiTenantContextAccessor<NovaTenantInfo>>();
-            return accessor.MultiTenantContext?.TenantInfo ?? new NovaTenantInfo { Id = "default", Identifier = "default" };
+            return accessor.MultiTenantContext?.TenantInfo!;
         });
 
         return services;

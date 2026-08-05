@@ -133,9 +133,7 @@ public class MenuCommandHandlersTests
         await handler.Consume(ctx);
         await ctx.Received(1).RespondAsync(Arg.Any<DeleteMenuResult>());
 
-        // 注意：当前 DeleteMenuCommandHandler 仅 Update(menu) 而并未置 IsDeleted，
-        // 因此菜单记录仍然存在。这里断言其未被物理删除，记录现状供后续软删除改造。
-        var stillThere = await db.Menus.SingleAsync(m => m.Id == menu.Id);
-        Assert.False(stillThere.IsDeleted);
+        var deletedMenu = await db.Menus.SingleOrDefaultAsync(m => m.Id == menu.Id);
+        Assert.Null(deletedMenu);
     }
 }

@@ -41,18 +41,20 @@ if (app.Configuration.GetValue<bool>("OpenApi:Enabled"))
     app.MapScalarApiReference();
 }
 
-app.MapModuleEndpoints();
 app.UseHttpsRedirection();
 app.UseNovaCors();
+
+// 多租户与 JWT 认证必须在全局审计日志中间件之前执行，确保 HttpContext 中能够正确提取已解析的 TenantInfo 和 User Claims
+app.UseNovaMultiTenancy();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<GlobalAuditLoggingMiddleware>();
 
 // 必须在 Hangfire (UseNovaJobs) 之前执行，否则 Hangfire 连不上不存在的库
 await app.ApplyDatabaseMigrationsAsync();
 
-app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization")); // 开发阶段暂不限制，生产环境改为 true
-app.UseNovaMultiTenancy();
+app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization"));
+app.MapModuleEndpoints();
 
 app.Run();
-
-

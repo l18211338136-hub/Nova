@@ -20,7 +20,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ApiResponseOfPagedResultOfAuthAuditLogDto
+  ApiResponseOfPagedResultOfAuthAuditLogDto,
+  ApiResponseOfPagedResultOfOperationLogDto,
+  GetOperationLogsParams
 } from '../model';
 
 import { customInstance } from '../../lib/api-client';
@@ -45,6 +47,100 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+/**
+ * 支持按页码、页大小、搜索关键字、HTTP 谓词、状态码、慢日志及脱敏标志过滤操作日志
+ * @summary 获取操作日志列表
+ */
+export const getOperationLogs = (
+    params: GetOperationLogsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfPagedResultOfOperationLogDto>(
+      {url: `/api/v1/audit/operation-logs`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetOperationLogsQueryKey = (params?: GetOperationLogsParams,) => {
+    return [
+    `/api/v1/audit/operation-logs`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetOperationLogsQueryOptions = <TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOperationLogsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOperationLogs>>> = ({ signal }) => getOperationLogs(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOperationLogsQueryResult = NonNullable<Awaited<ReturnType<typeof getOperationLogs>>>
+export type GetOperationLogsQueryError = unknown
+
+
+export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
+ params: GetOperationLogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOperationLogs>>,
+          TError,
+          Awaited<ReturnType<typeof getOperationLogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
+ params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOperationLogs>>,
+          TError,
+          Awaited<ReturnType<typeof getOperationLogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
+ params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 获取操作日志列表
+ */
+
+export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
+ params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOperationLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 /**
  * 分页获取登录成功/失败、令牌刷新、改密、登出等安全审计日志，支持 OData $filter/$orderby/$top/$skip。按当前租户隔离。
@@ -133,6 +229,10 @@ export function useAuthAuditLogs<TData = Awaited<ReturnType<typeof authAuditLogs
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export { useGetOperationLogs as useOperationLogs };
+
+
 
 
 

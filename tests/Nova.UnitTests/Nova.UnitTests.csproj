@@ -33,6 +33,8 @@
     <ProjectReference Include="..\..\src\Modules\Identity\Nova.Modules.Identity.Application\Nova.Modules.Identity.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Nova.Modules.Identity.Infrastructure\Nova.Modules.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Modules\Multitenancy\Nova.Modules.Multitenancy.Application\Nova.Modules.Multitenancy.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Nova.Modules.Audit.Domain\Nova.Modules.Audit.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Audit\Nova.Modules.Audit.Infrastructure\Nova.Modules.Audit.Infrastructure.csproj" />
   </ItemGroup>
 
   <!-- 该环境无法写入 Microsoft.CodeCoverage 生成的源映射文件，这里在覆盖率目标执行前

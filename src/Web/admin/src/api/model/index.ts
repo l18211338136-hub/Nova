@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './adminResetUserPassword';
+export * from './adminResetUserPasswordResult';
+export * from './apiResponseOfAdminResetUserPasswordResult';
 export * from './apiResponseOfChangePasswordResult';
 export * from './apiResponseOfCreateMenuResult';
 export * from './apiResponseOfCreateRoleResult';
@@ -20,6 +23,7 @@ export * from './apiResponseOfLoginResult';
 export * from './apiResponseOfLogoutResult';
 export * from './apiResponseOfPagedResultOfAuthAuditLogDto';
 export * from './apiResponseOfPagedResultOfMenuDto';
+export * from './apiResponseOfPagedResultOfOperationLogDto';
 export * from './apiResponseOfPagedResultOfRoleDto';
 export * from './apiResponseOfPagedResultOfTenantDto';
 export * from './apiResponseOfPagedResultOfUserDto';
@@ -50,17 +54,21 @@ export * from './deleteMenuResult';
 export * from './deleteRoleResult';
 export * from './deleteUserResult';
 export * from './emailLogin';
+export * from './getOperationLogsParams';
 export * from './login';
 export * from './loginResult';
 export * from './logout';
 export * from './logoutResult';
 export * from './menuDto';
+export * from './operationLogDto';
 export * from './pagedResultOfAuthAuditLogDto';
 export * from './pagedResultOfMenuDto';
+export * from './pagedResultOfOperationLogDto';
 export * from './pagedResultOfRoleDto';
 export * from './pagedResultOfTenantDto';
 export * from './pagedResultOfUserDto';
 export * from './profileDto';
+export * from './profileRoleDto';
 export * from './refreshToken';
 export * from './registerUser';
 export * from './registerUserResult';
@@ -69,6 +77,7 @@ export * from './resetPasswordResult';
 export * from './resolveTenantParams';
 export * from './roleDto';
 export * from './rolePermissionsDto';
+export * from './sanitizationDetailDto';
 export * from './sendEmailLoginCode';
 export * from './sendEmailLoginCodeResult';
 export * from './sendEmailRegisterCode';

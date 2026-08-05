@@ -24,6 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminResetUserPassword,
+  ApiResponseOfAdminResetUserPasswordResult,
   ApiResponseOfCreateUserResult,
   ApiResponseOfDeleteUserResult,
   ApiResponseOfListOfstring,
@@ -57,6 +59,72 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
+ * 需要权限；向目标用户邮箱发送密码重置验证码
+ * @summary 重置用户密码
+ */
+export const adminResetUserPassword = (
+    id: string,
+    adminResetUserPassword: AdminResetUserPassword,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfAdminResetUserPasswordResult>(
+      {url: `/api/identity/users/${id}/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminResetUserPassword, signal
+    },
+      options);
+    }
+
+
+
+
+export const getAdminResetUserPasswordMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminResetUserPassword>>, TError,{id: string;data: AdminResetUserPassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminResetUserPassword>>, TError,{id: string;data: AdminResetUserPassword}, TContext> => {
+
+const mutationKey = ['adminResetUserPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminResetUserPassword>>, {id: string;data: AdminResetUserPassword}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminResetUserPassword(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminResetUserPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof adminResetUserPassword>>>
+    export type AdminResetUserPasswordMutationBody = AdminResetUserPassword
+    export type AdminResetUserPasswordMutationError = unknown
+
+    /**
+ * @summary 重置用户密码
+ */
+export const useAdminResetUserPassword = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminResetUserPassword>>, TError,{id: string;data: AdminResetUserPassword}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminResetUserPassword>>,
+        TError,
+        {id: string;data: AdminResetUserPassword},
+        TContext
+      > => {
+      return useMutation(getAdminResetUserPasswordMutationOptions(options), queryClient);
+    }
+    /**
  * 管理员创建一个新用户
  * @summary 创建用户
  */

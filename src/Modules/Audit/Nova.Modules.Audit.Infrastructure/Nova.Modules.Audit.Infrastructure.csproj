@@ -1,9 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Finbuckle.MultiTenant" />
+    <PackageReference Include="Finbuckle.MultiTenant.AspNetCore" />
+    <PackageReference Include="Finbuckle.MultiTenant.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Modules.Audit.Domain\Nova.Modules.Audit.Domain.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Audit.Application\Nova.Modules.Audit.Application.csproj" />
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.MultiTenancy\Nova.Framework.MultiTenancy.csproj" />
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.Persistence\Nova.Framework.Persistence.csproj" />
+  </ItemGroup>
 
 </Project>

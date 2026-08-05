@@ -5,6 +5,7 @@ import {
   EyeNoneIcon,
   MixerHorizontalIcon,
 } from '@radix-ui/react-icons'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type Column } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,7 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
 
   if (!column.getCanSort()) {
     return <div className={cn(className)}>{t(title)}</div>
@@ -48,7 +50,7 @@ export function DataTableColumnHeader<TData, TValue>({
 
   return (
     <div className={cn('flex items-center space-x-2', className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant='ghost'
@@ -68,7 +70,27 @@ export function DataTableColumnHeader<TData, TValue>({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align='start' className='w-64 p-3'>
+        <PopoverContent
+          align='start'
+          className='w-64 p-3'
+          onPointerDownOutside={(e) => {
+            // Prevent closing when clicking inside nested portals (e.g. Select dropdown)
+            const target = e.target as HTMLElement
+            if (target.closest('[data-radix-popper-content-wrapper]')) {
+              e.preventDefault()
+            }
+          }}
+          onInteractOutside={(e) => {
+            const target = e.target as HTMLElement
+            if (target.closest('[data-radix-popper-content-wrapper]')) {
+              e.preventDefault()
+            }
+          }}
+          onFocusOutside={(e) => {
+            // Prevent closing when cmdk CommandItem moves focus to body after selection
+            e.preventDefault()
+          }}
+        >
           <div className='space-y-2'>
             <div className='flex flex-col gap-1'>
               <Button
@@ -121,3 +143,4 @@ export function DataTableColumnHeader<TData, TValue>({
     </div>
   )
 }
+

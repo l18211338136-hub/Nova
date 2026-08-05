@@ -138,6 +138,7 @@ export function useTableUrlState(
     const nextPage = next.pageIndex + 1
     const nextPageSize = next.pageSize
     navigate({
+      replace: true,
       search: (prev) => ({
         ...(prev as SearchRecord),
         [pageKey]: nextPage <= defaultPage ? undefined : nextPage,
@@ -163,6 +164,7 @@ export function useTableUrlState(
           const value = trimGlobal ? next.trim() : next
           setGlobalFilter(value)
           navigate({
+            replace: true,
             search: (prev) => ({
               ...(prev as SearchRecord),
               [pageKey]: undefined,
@@ -199,6 +201,7 @@ export function useTableUrlState(
     }
 
     navigate({
+      replace: true,
       search: (prev) => ({
         ...(prev as SearchRecord),
         [pageKey]: undefined,

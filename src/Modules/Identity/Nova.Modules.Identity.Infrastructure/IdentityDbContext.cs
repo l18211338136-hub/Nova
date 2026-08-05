@@ -17,8 +17,8 @@ namespace Nova.Modules.Identity.Infrastructure;
 public class IdentityDbContext : IdentityDbContext<User, Role, Guid>, IIdentityDbContext, IMultiTenantDbContext
 {
     public ITenantInfo TenantInfo { get; }
-    public TenantMismatchMode TenantMismatchMode { get; set; } = TenantMismatchMode.Throw;
-    public TenantNotSetMode TenantNotSetMode { get; set; } = TenantNotSetMode.Throw;
+    public TenantMismatchMode TenantMismatchMode { get; set; } = TenantMismatchMode.Ignore;
+    public TenantNotSetMode TenantNotSetMode { get; set; } = TenantNotSetMode.Overwrite;
 
     public DbSet<Menu> Menus { get; set; }
 
