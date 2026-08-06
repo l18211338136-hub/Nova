@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.RateLimiting;
 using Nova.Contracts.Security;
+using Nova.Framework.Web.RateLimiting;
 using Nova.Framework.Web.Responses;
 using Nova.Framework.Web.Security;
 using System.Reflection;
@@ -163,6 +165,13 @@ public static class AutoEndpointExtensions
             // 用于「用户操作自己的数据」的端点：权限点只播种给 Admin/Root，
             // 若这类端点走 PermissionFilter，普通用户将无法读写自己的资料与偏好。
             builder.RequireAuthorization();
+        }
+
+        // 分布式限流自动检测与挂载
+        var rateLimitAttr = typeof(TCommand).GetCustomAttribute<DistributedRateLimitAttribute>();
+        if (rateLimitAttr != null)
+        {
+            builder.AddEndpointFilter(new DistributedRateLimitingFilter(rateLimitAttr));
         }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);

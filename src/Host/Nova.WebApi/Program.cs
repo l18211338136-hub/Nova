@@ -30,6 +30,7 @@ builder.Services.AddNovaOData();
 builder.Services.AddModules(builder.Configuration);
 builder.Services.AddNovaMultiTenancy(builder.Configuration);
 builder.Services.AddNovaJobs(builder.Configuration);
+builder.Services.AddNovaHealthChecks(builder.Configuration);
 
 var app = builder.Build();
 
@@ -55,6 +56,7 @@ app.UseMiddleware<GlobalAuditLoggingMiddleware>();
 await app.ApplyDatabaseMigrationsAsync();
 
 app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization"));
+app.UseNovaHealthChecks();
 app.MapModuleEndpoints();
 
 app.Run();
