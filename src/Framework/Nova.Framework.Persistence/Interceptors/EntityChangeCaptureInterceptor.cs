@@ -58,7 +58,7 @@ public class EntityChangeCaptureInterceptor : SaveChangesInterceptor, IScopedDep
         }
         catch { }
 
-        // 使用 [DisableEntityChangeAuditing] 特性实现纯粹声明式过滤
+        // 1. 捕获标准的独立 AuditedEntity 变更
         var entries = context.ChangeTracker.Entries()
             .Where(e => e.Entity is IAuditedEntity &&
                         !e.Entity.GetType().IsDefined(typeof(DisableEntityChangeAuditingAttribute), true) &&
@@ -124,6 +124,77 @@ public class EntityChangeCaptureInterceptor : SaveChangesInterceptor, IScopedDep
                 if (log.PropertyChanges.Count > 0)
                 {
                     _entityChangeChannel.WriteAsync(log);
+                }
+            }
+        }
+
+        // 2. 捕获多表关联/聚合根明细表变动（例如 RoleClaim 权限菜单、UserRole 用户角色分配等）
+        CaptureAggregateRelationChanges(context, tenantId);
+    }
+
+    private void CaptureAggregateRelationChanges(DbContext context, string? tenantId)
+    {
+        var relationEntries = context.ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var entry in relationEntries)
+        {
+            var typeName = entry.Entity.GetType().Name;
+
+            // RoleClaim (角色绑定的权限或菜单)
+            if (typeName.Contains("RoleClaim", StringComparison.OrdinalIgnoreCase))
+            {
+                var roleIdProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals("RoleId", StringComparison.OrdinalIgnoreCase));
+                var claimTypeProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals("ClaimType", StringComparison.OrdinalIgnoreCase));
+                var claimValueProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals("ClaimValue", StringComparison.OrdinalIgnoreCase));
+
+                var roleId = roleIdProp?.CurrentValue?.ToString() ?? roleIdProp?.OriginalValue?.ToString();
+                var claimType = claimTypeProp?.CurrentValue?.ToString() ?? claimTypeProp?.OriginalValue?.ToString() ?? "Claim";
+                var claimValue = claimValueProp?.CurrentValue?.ToString() ?? claimValueProp?.OriginalValue?.ToString();
+
+                if (!string.IsNullOrEmpty(roleId) && !string.IsNullOrEmpty(claimValue))
+                {
+                    var log = EntityChangeLog.Create("Role", roleId, "Modified", _currentUser.Id, _currentUser.Name, tenantId);
+                    var propDisplayName = claimType.Equals("Permission", StringComparison.OrdinalIgnoreCase) ? "权限 (Permission)" :
+                                         claimType.Equals("Menu", StringComparison.OrdinalIgnoreCase) ? "菜单 (Menu)" : claimType;
+
+                    if (entry.State == EntityState.Added)
+                    {
+                        log.AddPropertyChange(claimType, null, claimValue, propDisplayName);
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        log.AddPropertyChange(claimType, claimValue, null, propDisplayName);
+                    }
+
+                    _entityChangeChannel?.WriteAsync(log);
+                }
+            }
+            // UserRole (用户分配的角色)
+            else if (typeName.Contains("UserRole", StringComparison.OrdinalIgnoreCase))
+            {
+                var userIdProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals("UserId", StringComparison.OrdinalIgnoreCase));
+                var roleIdProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals("RoleId", StringComparison.OrdinalIgnoreCase));
+
+                var userId = userIdProp?.CurrentValue?.ToString() ?? userIdProp?.OriginalValue?.ToString();
+                var roleId = roleIdProp?.CurrentValue?.ToString() ?? roleIdProp?.OriginalValue?.ToString();
+
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(roleId))
+                {
+                    var log = EntityChangeLog.Create("User", userId, "Modified", _currentUser.Id, _currentUser.Name, tenantId);
+                    var propDisplayName = "用户角色 (UserRole)";
+
+                    if (entry.State == EntityState.Added)
+                    {
+                        log.AddPropertyChange("UserRole", null, roleId, propDisplayName);
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        log.AddPropertyChange("UserRole", roleId, null, propDisplayName);
+                    }
+
+                    _entityChangeChannel?.WriteAsync(log);
                 }
             }
         }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { History, ArrowRight, User, Calendar, Tag } from 'lucide-react'
+import { History, ArrowRight, User, Calendar, Tag, PlusCircle, MinusCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -169,7 +169,7 @@ export function EntityDiffDialog({
                       <Table className='w-full border-collapse'>
                         <TableHeader className='bg-muted/60 sticky top-0 z-10 shadow-sm'>
                           <TableRow className='hover:bg-transparent'>
-                            <TableHead className='w-[180px] font-bold text-foreground'>{t('变更字段')}</TableHead>
+                            <TableHead className='w-[180px] font-bold text-foreground'>{t('变更字段 / 属性')}</TableHead>
                             <TableHead className='w-[42%] text-rose-600 dark:text-rose-400 font-bold'>{t('修改前 (Original Value)')}</TableHead>
                             <TableHead className='w-[36px] p-0 text-center'></TableHead>
                             <TableHead className='w-[42%] text-emerald-600 dark:text-emerald-400 font-bold'>{t('修改后 (New Value)')}</TableHead>
@@ -177,24 +177,42 @@ export function EntityDiffDialog({
                         </TableHeader>
                         <TableBody>
                           {activeLog.propertyChanges && activeLog.propertyChanges.length > 0 ? (
-                            activeLog.propertyChanges.map((change) => (
-                              <TableRow key={change.id} className='hover:bg-muted/30'>
-                                <TableCell className='font-mono text-xs font-semibold align-top py-3 break-all'>
-                                  {change.propertyDisplayName || change.propertyName}
-                                </TableCell>
-                                <TableCell className='font-mono text-xs bg-rose-500/5 text-rose-700 dark:text-rose-300 border-r align-top py-3 break-all'>
-                                  <span className='line-through opacity-85'>
-                                    {change.originalValue ?? <span className='italic opacity-50 font-normal'>(null)</span>}
-                                  </span>
-                                </TableCell>
-                                <TableCell className='p-0 text-center text-muted-foreground align-top py-3'>
-                                  <ArrowRight className='h-4 w-4 mx-auto text-muted-foreground/70' />
-                                </TableCell>
-                                <TableCell className='font-mono text-xs bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 font-medium align-top py-3 break-all'>
-                                  {change.newValue ?? <span className='italic opacity-50 font-normal'>(null)</span>}
-                                </TableCell>
-                              </TableRow>
-                            ))
+                            activeLog.propertyChanges.map((change) => {
+                              const isPermissionOrMenu = change.propertyName === 'Permission' || change.propertyName === 'Menu' || change.propertyName === 'UserRole'
+
+                              return (
+                                <TableRow key={change.id} className='hover:bg-muted/30'>
+                                  <TableCell className='font-mono text-xs font-semibold align-top py-3 break-all'>
+                                    <div className='flex items-center gap-1.5'>
+                                      {change.propertyDisplayName || change.propertyName}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className='font-mono text-xs bg-rose-500/5 text-rose-700 dark:text-rose-300 border-r align-top py-3 break-all'>
+                                    {change.originalValue ? (
+                                      <span className='line-through opacity-85 inline-flex items-center gap-1'>
+                                        {isPermissionOrMenu && <MinusCircle className='h-3.5 w-3.5 text-rose-500 shrink-0' />}
+                                        {change.originalValue}
+                                      </span>
+                                    ) : (
+                                      <span className='italic opacity-50 font-normal'>(null)</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className='p-0 text-center text-muted-foreground align-top py-3'>
+                                    <ArrowRight className='h-4 w-4 mx-auto text-muted-foreground/70' />
+                                  </TableCell>
+                                  <TableCell className='font-mono text-xs bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 font-medium align-top py-3 break-all'>
+                                    {change.newValue ? (
+                                      <span className='inline-flex items-center gap-1'>
+                                        {isPermissionOrMenu && <PlusCircle className='h-3.5 w-3.5 text-emerald-500 shrink-0' />}
+                                        {change.newValue}
+                                      </span>
+                                    ) : (
+                                      <span className='italic opacity-50 font-normal'>(null)</span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })
                           ) : (
                             <TableRow>
                               <TableCell colSpan={4} className='h-32 text-center text-muted-foreground text-xs'>
