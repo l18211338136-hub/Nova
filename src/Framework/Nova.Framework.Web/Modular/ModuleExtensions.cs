@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Nova.Framework.Web.CQRS;
 using Nova.Contracts.DependencyInjection;
 using MassTransit;
@@ -15,7 +16,10 @@ public static class ModuleExtensions
 
     public static IServiceCollection AddModules(this IServiceCollection services, IConfiguration configuration)
     {
-        var modules = DiscoverModules();
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var logger = loggerFactory.CreateLogger("Nova.Modules");
+
+        var modules = DiscoverModules(logger);
         
         var assemblies = new List<Assembly>();
         var directory = AppDomain.CurrentDomain.BaseDirectory;
@@ -49,7 +53,7 @@ public static class ModuleExtensions
         {
             module.RegisterServices(services, configuration);
             RegisteredModules.Add(module);
-            Console.WriteLine($"[Nova.Modules] Loaded module: {module.Name}");
+            logger.LogInformation("[Nova.Modules] Loaded module: {ModuleName}", module.Name);
         }
 
         return services;
@@ -69,7 +73,7 @@ public static class ModuleExtensions
         return endpoints;
     }
 
-    private static IEnumerable<IModule> DiscoverModules()
+    private static IEnumerable<IModule> DiscoverModules(ILogger logger)
     {
         var modules = new List<IModule>();
         var directory = AppDomain.CurrentDomain.BaseDirectory;
@@ -93,7 +97,7 @@ public static class ModuleExtensions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Nova.Modules] Failed to load assembly {file}: {ex.Message}");
+                logger.LogError(ex, "[Nova.Modules] Failed to load assembly {AssemblyFile}", file);
             }
         }
 

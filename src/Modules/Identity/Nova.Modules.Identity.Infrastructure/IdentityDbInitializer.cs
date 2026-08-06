@@ -2,6 +2,7 @@ using MassTransit.Mediator;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nova.Contracts.DependencyInjection;
 using Nova.Contracts.Security;
 using Nova.Framework.MultiTenancy;
@@ -23,6 +24,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
     private readonly IMediator _mediator;
     private readonly NovaTenantDbContext _tenantDbContext;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<IdentityDbInitializer> _logger;
 
     public IdentityDbInitializer(
         IdentityDbContext dbContext, 
@@ -30,7 +32,8 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         RoleManager<Role> roleManager, 
         IMediator mediator,
         NovaTenantDbContext tenantDbContext,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<IdentityDbInitializer> logger)
     {
         _dbContext = dbContext;
         _userManager = userManager;
@@ -38,6 +41,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         _mediator = mediator;
         _tenantDbContext = tenantDbContext;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task MigrateAsync(CancellationToken cancellationToken)
@@ -133,7 +137,8 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                 }
                 else
                 {
-                    Console.WriteLine($"[Nova.Database] Failed to create root user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    _logger.LogError("[Nova.Database] Failed to create root user: {Errors}",
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
         }
@@ -192,7 +197,9 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                     }
                     await _tenantDbContext.SaveChangesAsync(cancellationToken);
 
-                    Console.WriteLine($"[Nova.Database] Successfully created admin user '{adminEmail}' for tenant '{tenantInfo?.Name ?? "root"}' with password: {defaultPassword}");
+                    _logger.LogInformation(
+                        "[Nova.Database] Successfully created admin user '{AdminEmail}' for tenant '{TenantName}' with password: {DefaultPassword}",
+                        adminEmail, tenantInfo?.Name ?? "root", defaultPassword);
 
                     // 使用注入的 MassTransit IMediator 发送欢迎邮件命令
                     var emailBody = $@"
@@ -214,7 +221,8 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                 }
                 else
                 {
-                    Console.WriteLine($"[Nova.Database] Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    _logger.LogError("[Nova.Database] Failed to create admin user: {Errors}",
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
         }
@@ -235,7 +243,7 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seed_menus.json");
         if (!File.Exists(jsonPath))
         {
-            Console.WriteLine($"[Nova.Database] Menus seed file not found at {jsonPath}. Skipping menu seeding.");
+            _logger.LogWarning("[Nova.Database] Menus seed file not found at {JsonPath}. Skipping menu seeding.", jsonPath);
             return;
         }
 

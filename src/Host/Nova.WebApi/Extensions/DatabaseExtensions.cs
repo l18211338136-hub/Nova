@@ -1,6 +1,7 @@
 using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Logging;
 using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Domain;
 using System.Reflection;
@@ -11,7 +12,10 @@ public static class DatabaseExtensions
 {
     public static async Task ApplyDatabaseMigrationsAsync(this IApplicationBuilder app)
     {
-        Console.WriteLine("[Nova.Database] Starting automatic migrations...");
+        var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Nova.Database");
+
+        logger.LogInformation("[Nova.Database] Starting automatic migrations...");
 
         // Ensure all Nova assemblies are loaded into the AppDomain
         var directory = AppDomain.CurrentDomain.BaseDirectory;
@@ -30,7 +34,7 @@ public static class DatabaseExtensions
 
         if (!factoryTypes.Any())
         {
-            Console.WriteLine("[Nova.Database] No IDesignTimeDbContextFactory found.");
+            logger.LogWarning("[Nova.Database] No IDesignTimeDbContextFactory found.");
             return;
         }
 
@@ -44,7 +48,7 @@ public static class DatabaseExtensions
                 {
                     if (method.Invoke(factory, [Array.Empty<string>()]) is DbContext dbContext)
                     {
-                        Console.WriteLine($"[Nova.Database] Migrating {dbContext.GetType().Name}...");
+                        logger.LogInformation("[Nova.Database] Migrating {DbContextName}...", dbContext.GetType().Name);
                         await dbContext.Database.MigrateAsync();
                         await dbContext.DisposeAsync();
                     }
@@ -52,14 +56,14 @@ public static class DatabaseExtensions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Nova.Database] Failed to migrate using {factoryType.Name}: {ex.Message}");
+                logger.LogError(ex, "[Nova.Database] Failed to migrate using {FactoryName}", factoryType.Name);
             }
         }
 
-        Console.WriteLine("[Nova.Database] Automatic migrations completed.");
+        logger.LogInformation("[Nova.Database] Automatic migrations completed.");
 
         // === Execute Data Initializers for Root Tenant ===
-        Console.WriteLine("[Nova.Database] Checking and seeding Root tenant...");
+        logger.LogInformation("[Nova.Database] Checking and seeding Root tenant...");
         try
         {
             using var scope = app.ApplicationServices.CreateScope();
@@ -79,7 +83,7 @@ public static class DatabaseExtensions
                     ValidUpto = DateTime.UtcNow.AddYears(100)
                 };
                 await tenantStore.AddAsync(rootTenant);
-                Console.WriteLine("[Nova.Database] Root tenant created.");
+                logger.LogInformation("[Nova.Database] Root tenant created.");
             }
 
             var contextSetter = scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
@@ -88,15 +92,15 @@ public static class DatabaseExtensions
             var initializers = scope.ServiceProvider.GetServices<IDbInitializer>();
             foreach (var initializer in initializers)
             {
-                Console.WriteLine($"[Nova.Database] Executing seeders for {initializer.GetType().Name}...");
+                logger.LogInformation("[Nova.Database] Executing seeders for {InitializerName}...", initializer.GetType().Name);
                 await initializer.MigrateAsync(default);
                 await initializer.SeedAsync(default);
             }
-            Console.WriteLine("[Nova.Database] Root tenant seeding completed.");
+            logger.LogInformation("[Nova.Database] Root tenant seeding completed.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Nova.Database] Failed to seed Root tenant: {ex.Message}");
+            logger.LogError(ex, "[Nova.Database] Failed to seed Root tenant");
         }
     }
 }

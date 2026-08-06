@@ -2,6 +2,8 @@ using MassTransit.Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Nova.Contracts.CQRS;
 using Nova.Contracts.Security;
 using Nova.Framework.Web.Responses;
@@ -14,6 +16,10 @@ public static class AutoEndpointExtensions
 {
     public static void MapAutoEndpoints(this IEndpointRouteBuilder endpoints)
     {
+        var logger = endpoints.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Nova.AutoEndpoint");
+
         var directory = AppDomain.CurrentDomain.BaseDirectory;
         var dllFiles = Directory.GetFiles(directory, "Nova.Modules.*.dll");
 
@@ -43,13 +49,13 @@ public static class AutoEndpointExtensions
                     }
                     catch (Exception innerEx)
                     {
-                        Console.WriteLine($"[AutoEndpoint] Failed to map endpoint for {commandType.Name}: {innerEx.Message}");
+                        logger.LogError(innerEx, "[AutoEndpoint] Failed to map endpoint for {CommandName}", commandType.Name);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AutoEndpoint] Failed to scan assembly {file}: {ex.Message}");
+                logger.LogError(ex, "[AutoEndpoint] Failed to scan assembly {AssemblyFile}", file);
             }
         }
     }

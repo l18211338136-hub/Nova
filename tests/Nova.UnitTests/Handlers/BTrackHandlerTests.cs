@@ -561,7 +561,7 @@ public class BTrackHandlerTests
         var mediator = Substitute.For<IMediator>();
         var cache = new FakeNovaCache();
 
-        var handler = new SendEmailLoginCodeCommandHandler(tenantDb, mediator, cache);
+        var handler = new SendEmailLoginCodeCommandHandler(tenantDb, mediator, cache, Microsoft.Extensions.Logging.Abstractions.NullLogger<SendEmailLoginCodeCommandHandler>.Instance);
         var ctx = HandlerTestHarness.CreateConsumeContext(new SendEmailLoginCodeCommand { Email = "ghost@test.com" });
 
         await handler.Consume(ctx);
@@ -583,7 +583,7 @@ public class BTrackHandlerTests
         var mediator = Substitute.For<IMediator>();
         var cache = new FakeNovaCache();
 
-        var handler = new SendEmailLoginCodeCommandHandler(tenantDb, mediator, cache);
+        var handler = new SendEmailLoginCodeCommandHandler(tenantDb, mediator, cache, Microsoft.Extensions.Logging.Abstractions.NullLogger<SendEmailLoginCodeCommandHandler>.Instance);
         var ctx = HandlerTestHarness.CreateConsumeContext(new SendEmailLoginCodeCommand { Email = "known@test.com" });
 
         await handler.Consume(ctx);
@@ -606,7 +606,7 @@ public class BTrackHandlerTests
         var mediator = Substitute.For<IMediator>();
         var cache = new FakeNovaCache();
 
-        var handler = new SendEmailRegisterCodeCommandHandler(mediator, cache, tenantDb);
+        var handler = new SendEmailRegisterCodeCommandHandler(mediator, cache, tenantDb, Microsoft.Extensions.Logging.Abstractions.NullLogger<SendEmailRegisterCodeCommandHandler>.Instance);
         var ctx = HandlerTestHarness.CreateConsumeContext(new SendEmailRegisterCodeCommand { Email = "taken@test.com" });
 
         await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(ctx));
@@ -622,7 +622,7 @@ public class BTrackHandlerTests
         var mediator = Substitute.For<IMediator>();
         var cache = new FakeNovaCache();
 
-        var handler = new SendEmailRegisterCodeCommandHandler(mediator, cache, tenantDb);
+        var handler = new SendEmailRegisterCodeCommandHandler(mediator, cache, tenantDb, Microsoft.Extensions.Logging.Abstractions.NullLogger<SendEmailRegisterCodeCommandHandler>.Instance);
         var ctx = HandlerTestHarness.CreateConsumeContext(new SendEmailRegisterCodeCommand { Email = "fresh@test.com" });
 
         await handler.Consume(ctx);

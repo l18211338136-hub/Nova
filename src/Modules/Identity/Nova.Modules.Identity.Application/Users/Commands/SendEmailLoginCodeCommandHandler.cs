@@ -4,6 +4,7 @@ using Nova.Contracts.Caching;
 using Nova.Contracts.Commands;
 using Nova.Framework.Application.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nova.Framework.MultiTenancy;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
@@ -13,15 +14,18 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IMediator _mediator;
     private readonly INovaCache _cache;
+    private readonly ILogger<SendEmailLoginCodeCommandHandler> _logger;
 
     public SendEmailLoginCodeCommandHandler(
         NovaTenantDbContext tenantDb,
         IMediator mediator,
-        INovaCache cache)
+        INovaCache cache,
+        ILogger<SendEmailLoginCodeCommandHandler> logger)
     {
         _tenantDb = tenantDb;
         _mediator = mediator;
         _cache = cache;
+        _logger = logger;
     }
 
     public async Task Consume(ConsumeContext<SendEmailLoginCodeCommand> context)
@@ -43,7 +47,7 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         var code = Random.Shared.Next(100000, 1000000).ToString();
         await _cache.SetAsync($"LoginCode:{request.Email}", code, TimeSpan.FromMinutes(3));
 
-        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for user '{request.Email}'");
+        _logger.LogInformation("[Nova.Auth] Generated OTP verification code '{Code}' for user '{Email}'", code, request.Email);
 
         var emailBody = $@"
             <h3>安全登录验证码</h3>

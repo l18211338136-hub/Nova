@@ -6,6 +6,7 @@ using Nova.Contracts.Exceptions;
 using Nova.Framework.Application.Extensions;
 using Nova.Framework.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Nova.Modules.Identity.Domain;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
@@ -15,15 +16,18 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
     private readonly IMediator _mediator;
     private readonly INovaCache _cache;
     private readonly NovaTenantDbContext _tenantDbContext;
+    private readonly ILogger<SendEmailRegisterCodeCommandHandler> _logger;
 
     public SendEmailRegisterCodeCommandHandler(
         IMediator mediator, 
         INovaCache cache,
-        NovaTenantDbContext tenantDbContext)
+        NovaTenantDbContext tenantDbContext,
+        ILogger<SendEmailRegisterCodeCommandHandler> logger)
     {
         _mediator = mediator;
         _cache = cache;
         _tenantDbContext = tenantDbContext;
+        _logger = logger;
     }
 
     public async Task Consume(ConsumeContext<SendEmailRegisterCodeCommand> context)
@@ -47,7 +51,7 @@ public class SendEmailRegisterCodeCommandHandler : IConsumer<SendEmailRegisterCo
         // 生成 6 位随机验证码
         var code = Random.Shared.Next(100000, 1000000).ToString();
         
-        Console.WriteLine($"[Nova.Auth] Generated OTP verification code '{code}' for registration user '{request.Email}'");
+        _logger.LogInformation("[Nova.Auth] Generated OTP verification code '{Code}' for registration user '{Email}'", code, request.Email);
 
         // 存入缓存，有效期 5 分钟
         await _cache.SetAsync($"RegisterCode:{request.Email}", code, TimeSpan.FromMinutes(5));
