@@ -49,6 +49,13 @@
         "component": "features/audit",
         "icon": "ScrollText",
         "sort": 1
+      },
+      {
+        "name": "数据回收",
+        "path": "/trash-bin",
+        "component": "features/trash-bin",
+        "icon": "RotateCcw",
+        "sort": 2
       }
     ]
   }

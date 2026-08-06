@@ -385,5 +385,57 @@ public static class IdentityODataEndpoints
         .WithTags("Users")
         .WithSummary("用户权限")
         .WithName("GetUserPermissions");
+
+        endpoints.MapGet("/api/identity/trash-bin", async (Nova.Contracts.TrashBin.ITrashBinService trashBinService, HttpRequest request, CancellationToken cancellationToken) =>
+        {
+            var pagedResult = await trashBinService.GetDeletedItemsAsync(
+                page: 1,
+                pageSize: 1000,
+                cancellationToken: cancellationToken);
+
+            var query = pagedResult.Items.AsQueryable();
+
+            var builder = new ODataConventionModelBuilder();
+            builder.EntitySet<Nova.Contracts.TrashBin.TrashBinItemDto>("TrashBinItems");
+            var edmModel = builder.GetEdmModel();
+
+            var odataContext = new ODataQueryContext(edmModel, typeof(Nova.Contracts.TrashBin.TrashBinItemDto), null);
+            var odataQuery = new ODataQueryOptions<Nova.Contracts.TrashBin.TrashBinItemDto>(odataContext, request);
+
+            var filteredQuery = (IQueryable<Nova.Contracts.TrashBin.TrashBinItemDto>)odataQuery.ApplyTo(query, ignoreQueryOptions: AllowedQueryOptions.Top | AllowedQueryOptions.Skip);
+
+            long totalCount = filteredQuery.LongCount();
+
+            if (odataQuery.Skip != null)
+            {
+                filteredQuery = filteredQuery.Skip(odataQuery.Skip.Value);
+            }
+            if (odataQuery.Top != null)
+            {
+                filteredQuery = filteredQuery.Take(odataQuery.Top.Value);
+            }
+
+            var items = filteredQuery.ToArray();
+
+            int? top = odataQuery.Top?.Value;
+            int? skip = odataQuery.Skip?.Value;
+            int? page = (skip.HasValue && top.HasValue && top.Value > 0) ? (skip.Value / top.Value) + 1 : 1;
+
+            var result = new PagedResult<Nova.Contracts.TrashBin.TrashBinItemDto>
+            {
+                Total = totalCount,
+                Items = items,
+                Page = page,
+                PageSize = top > 0 ? top : null
+            };
+
+            return ApiResponse<PagedResult<Nova.Contracts.TrashBin.TrashBinItemDto>>.Success(result);
+        })
+        .Produces<ApiResponse<PagedResult<Nova.Contracts.TrashBin.TrashBinItemDto>>>(200)
+        .RequireAuthorization()
+        .AddEndpointFilter(new PermissionFilter("Identity.TrashBin.Read"))
+        .WithTags("TrashBin")
+        .WithSummary("回收列表")
+        .WithName("GetTrashBinItems");
     }
 }

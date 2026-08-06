@@ -22,6 +22,7 @@ import {
   GalleryVerticalEnd,
   UserCheck,
   Users,
+  RotateCcw,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -73,6 +74,11 @@ export const sidebarData: SidebarData = {
           url: '/chats',
           badge: '3',
           icon: MessagesSquare,
+        },
+        {
+          title: 'Trash Bin',
+          url: '/trash-bin',
+          icon: RotateCcw,
         },
         {
           title: 'Secured by Clerk',
