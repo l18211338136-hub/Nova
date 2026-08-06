@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 [ApiEndpoint("POST", "/api/identity/reset-password", typeof(ResetPasswordResult), "Auth", Summary = "重置密码")]
+[Idempotent(5)]
 public record ResetPasswordCommand
 {
     [Description("邮箱")]

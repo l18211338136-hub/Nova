@@ -1,11 +1,13 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 [ApiEndpoint("POST", "/api/identity/users", typeof(CreateUserResult), "Users", Summary = "创建用户")]
 [RequirePermission("Identity.Users.Create")]
+[Idempotent(5)]
 public record CreateUserCommand
 {
     [Description("用户名")]

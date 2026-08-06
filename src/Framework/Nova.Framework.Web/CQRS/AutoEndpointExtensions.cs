@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 using Nova.Contracts.RateLimiting;
 using Nova.Contracts.Security;
+using Nova.Framework.Web.Idempotency;
 using Nova.Framework.Web.RateLimiting;
 using Nova.Framework.Web.Responses;
 using Nova.Framework.Web.Security;
@@ -172,6 +174,13 @@ public static class AutoEndpointExtensions
         if (rateLimitAttr != null)
         {
             builder.AddEndpointFilter(new DistributedRateLimitingFilter(rateLimitAttr));
+        }
+
+        // 分布式防重/幂等自动检测与挂载
+        var idempotentAttr = typeof(TCommand).GetCustomAttribute<IdempotentAttribute>();
+        if (idempotentAttr != null)
+        {
+            builder.AddEndpointFilter(new IdempotentFilter(idempotentAttr));
         }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);

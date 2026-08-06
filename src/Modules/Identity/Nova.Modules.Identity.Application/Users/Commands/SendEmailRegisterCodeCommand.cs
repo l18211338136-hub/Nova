@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 [ApiEndpoint("POST", "/api/identity/send-register-code", typeof(SendEmailRegisterCodeResult), "Auth", Summary = "发送注册码")]
+[Idempotent(5)]
 public record SendEmailRegisterCodeCommand
 {
     [Description("邮箱")]

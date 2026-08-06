@@ -1,11 +1,13 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Roles.Commands;
 
 [ApiEndpoint("POST", "/api/identity/roles", typeof(CreateRoleResult), "Roles", Summary = "创建角色")]
 [RequirePermission("Identity.Roles.Create")]
+[Idempotent(5)]
 public record CreateRoleCommand
 {
     [Description("角色名称")]

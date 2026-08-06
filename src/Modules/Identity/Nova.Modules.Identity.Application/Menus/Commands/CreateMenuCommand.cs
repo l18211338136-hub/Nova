@@ -1,11 +1,13 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Menus.Commands;
 
 [ApiEndpoint("POST", "/api/identity/menus", typeof(CreateMenuResult), "Menus", Summary = "创建菜单")]
 [RequirePermission("Identity.Menus.Create")]
+[Idempotent(5)]
 public record CreateMenuCommand
 {
     [Description("父级ID")]

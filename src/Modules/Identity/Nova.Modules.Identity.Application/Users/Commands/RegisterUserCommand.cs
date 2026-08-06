@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 [ApiEndpoint("POST", "/api/identity/register", typeof(RegisterUserResult), "Auth", Summary = "用户注册")]
+[Idempotent(5)]
 public record RegisterUserCommand
 {
     [Description("用户名")]

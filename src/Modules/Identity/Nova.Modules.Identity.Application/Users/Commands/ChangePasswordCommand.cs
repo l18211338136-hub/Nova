@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
+using Nova.Contracts.Idempotency;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 [ApiEndpoint("POST", "/api/identity/change-password", typeof(ChangePasswordResult), "Auth", Summary = "修改密码", RequireAuthorization = true)]
+[Idempotent(5)]
 public record ChangePasswordCommand
 {
     public Guid CurrentUserId { get; init; }
