@@ -9,6 +9,6 @@
  * @nullable
  */
 export type RegisterUserResult = {
-  /** 新创建用户的唯一标识 ID */
+  /** 用户ID */
   userId?: string;
 } | null;

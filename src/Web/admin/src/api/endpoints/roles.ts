@@ -57,7 +57,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 创建一个新的角色
  * @summary 创建角色
  */
 export const createRole = (
@@ -122,8 +121,7 @@ export const useCreateRole = <TError = unknown,
       return useMutation(getCreateRoleMutationOptions(options), queryClient);
     }
     /**
- * 获取分页的角色列表数据
- * @summary 获取角色列表
+ * @summary 角色列表
  */
 export const roles = (
 
@@ -194,7 +192,7 @@ export function useRoles<TData = Awaited<ReturnType<typeof roles>>, TError = unk
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取角色列表
+ * @summary 角色列表
  */
 
 export function useRoles<TData = Awaited<ReturnType<typeof roles>>, TError = unknown>(
@@ -215,7 +213,6 @@ export function useRoles<TData = Awaited<ReturnType<typeof roles>>, TError = unk
 
 
 /**
- * 删除一个已存在的角色
  * @summary 删除角色
  */
 export const deleteRole = (
@@ -278,7 +275,6 @@ export const useDeleteRole = <TError = unknown,
       return useMutation(getDeleteRoleMutationOptions(options), queryClient);
     }
     /**
- * 更新一个已存在的角色
  * @summary 更新角色
  */
 export const updateRole = (
@@ -344,7 +340,7 @@ export const useUpdateRole = <TError = unknown,
       return useMutation(getUpdateRoleMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取某个角色的所有权限和菜单
+ * @summary 角色权限
  */
 export const getRolePermissions = (
     id: string,
@@ -415,7 +411,7 @@ export function useGetRolePermissions<TData = Awaited<ReturnType<typeof getRoleP
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取某个角色的所有权限和菜单
+ * @summary 角色权限
  */
 
 export function useGetRolePermissions<TData = Awaited<ReturnType<typeof getRolePermissions>>, TError = unknown>(

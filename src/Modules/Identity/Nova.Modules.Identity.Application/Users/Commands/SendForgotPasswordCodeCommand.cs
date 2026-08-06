@@ -3,15 +3,15 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/send-forgot-password-code", typeof(SendForgotPasswordCodeResult), "Auth", Summary = "发送忘记密码验证码", Description = "通过邮箱发送用于重置密码的 6 位数验证码")]
+[ApiEndpoint("POST", "/api/identity/send-forgot-password-code", typeof(SendForgotPasswordCodeResult), "Auth", Summary = "发送重置码")]
 public record SendForgotPasswordCodeCommand
 {
-    [Description("注册邮箱")]
+    [Description("邮箱")]
     public string Email { get; init; } = default!;
 }
 
 public record SendForgotPasswordCodeResult
 {
-    [Description("发送结果")]
+    [Description("是否成功")]
     public bool Success { get; init; } = true;
 }

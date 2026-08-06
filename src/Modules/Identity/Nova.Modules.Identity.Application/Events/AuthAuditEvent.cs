@@ -11,10 +11,7 @@ public enum AuthAuditEventType
     Logout
 }
 
-/// <summary>
-/// 认证审计领域事件。由登录/刷新/改密/登出等 Handler 通过 IDomainEventDispatcher 发布，
-/// 由 AuthAuditEventConsumer 持久化到 AuthAuditLog。
-/// </summary>
+// 认证审计领域事件，由 Handler 通过 IDomainEventDispatcher 发布，由 AuthAuditEventConsumer 持久化
 public class AuthAuditEvent : IDomainEvent
 {
     public AuthAuditEvent(

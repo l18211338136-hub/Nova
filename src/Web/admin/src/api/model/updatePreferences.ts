@@ -7,52 +7,52 @@
 
 export interface UpdatePreferences {
   /**
-     * 主题：light / dark / system
+     * 主题
      * @nullable
      */
   theme?: string | null;
   /**
-     * 界面字体
+     * 字体
      * @nullable
      */
   font?: string | null;
   /**
-     * 界面语言
+     * 语言
      * @nullable
      */
   language?: string | null;
   /**
-     * 时区（IANA 名称）
+     * 时区
      * @nullable
      */
   timeZone?: string | null;
   /**
-     * 推送范围：all / mentions / none
+     * 通知范围
      * @nullable
      */
   notifyType?: string | null;
   /**
-     * 接收账户活动邮件
+     * 账户邮件
      * @nullable
      */
   communicationEmails?: boolean | null;
   /**
-     * 接收产品营销邮件
+     * 营销邮件
      * @nullable
      */
   marketingEmails?: boolean | null;
   /**
-     * 接收社交动态邮件
+     * 社交邮件
      * @nullable
      */
   socialEmails?: boolean | null;
   /**
-     * 移动端使用独立通知设置
+     * 移动通知
      * @nullable
      */
   mobileNotifications?: boolean | null;
   /**
-     * 在侧边栏中被隐藏的菜单项（菜单 url 集合）
+     * 隐藏菜单
      * @nullable
      */
   hiddenSidebarItems?: string[] | null;

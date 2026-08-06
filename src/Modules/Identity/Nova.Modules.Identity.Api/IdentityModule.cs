@@ -72,8 +72,7 @@ public class IdentityModule : IModule
         })
         .WithName("ResolveTenant")
         .WithTags("Auth")
-        .WithSummary("根据账号解析租户 ID 列表")
-        .WithDescription("返回该账号所属的所有租户 ID 列表。无租户要求即可调用。")
+        .WithSummary("解析租户")
         .AllowAnonymous();
     }
 }

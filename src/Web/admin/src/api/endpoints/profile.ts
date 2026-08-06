@@ -56,8 +56,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 获取当前登录用户的外观、通知与显示偏好设置
- * @summary 获取个人偏好
+ * @summary 个人偏好
  */
 export const getPreferences = (
 
@@ -128,7 +127,7 @@ export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferenc
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取个人偏好
+ * @summary 个人偏好
  */
 
 export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>(
@@ -149,8 +148,7 @@ export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferenc
 
 
 /**
- * 局部更新当前登录用户的外观、通知与显示偏好（null 字段保持不变）
- * @summary 更新个人偏好
+ * @summary 修改偏好
  */
 export const updatePreferences = (
     updatePreferences: UpdatePreferences,
@@ -201,7 +199,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdatePreferencesMutationError = unknown
 
     /**
- * @summary 更新个人偏好
+ * @summary 修改偏好
  */
 export const useUpdatePreferences = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePreferences>>, TError,{data: UpdatePreferences}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -214,8 +212,7 @@ export const useUpdatePreferences = <TError = unknown,
       return useMutation(getUpdatePreferencesMutationOptions(options), queryClient);
     }
     /**
- * 获取当前登录用户本人的资料信息
- * @summary 获取个人资料
+ * @summary 个人资料
  */
 export const getProfile = (
 
@@ -286,7 +283,7 @@ export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TE
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取个人资料
+ * @summary 个人资料
  */
 
 export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>(
@@ -307,8 +304,7 @@ export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TE
 
 
 /**
- * 更新当前登录用户的昵称、简介、头像与手机号
- * @summary 更新个人资料
+ * @summary 修改资料
  */
 export const updateProfile = (
     updateProfile: UpdateProfile,
@@ -359,7 +355,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateProfileMutationError = unknown
 
     /**
- * @summary 更新个人资料
+ * @summary 修改资料
  */
 export const useUpdateProfile = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfile}, TContext>, request?: SecondParameter<typeof customInstance>}

@@ -19,7 +19,7 @@ export type ProfileDto = {
      * @nullable
      */
   email?: string | null;
-  /** 邮箱是否已验证 */
+  /** 邮箱已验证 */
   emailConfirmed?: boolean;
   /**
      * 手机号
@@ -37,7 +37,7 @@ export type ProfileDto = {
      */
   avatarUrl?: string | null;
   /**
-     * 个人简介
+     * 简介
      * @nullable
      */
   bio?: string | null;

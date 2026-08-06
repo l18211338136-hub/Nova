@@ -1,12 +1,11 @@
 using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Nova.Contracts.CQRS;
-
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Menus.Commands;
 
-[ApiEndpoint("DELETE", "/api/identity/menus/{id}", typeof(DeleteMenuResult), "Menus", Summary = "删除菜单", Description = "软删除指定的系统菜单")]
+[ApiEndpoint("DELETE", "/api/identity/menus/{id}", typeof(DeleteMenuResult), "Menus", Summary = "删除菜单")]
 [RequirePermission("Identity.Menus.Delete")]
 public record DeleteMenuCommand
 {

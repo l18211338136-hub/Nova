@@ -48,7 +48,12 @@ export function OperationLogDetailDialog({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2 text-lg font-bold'>
             <span>{log.httpMethod}</span>
-            <span className='font-mono text-muted-foreground'>{log.requestPath}</span>
+            {log.actionName && (
+              <Badge variant='secondary' className='bg-primary/10 text-primary border border-primary/20 text-sm px-2 py-0.5 font-semibold'>
+                {log.actionName}
+              </Badge>
+            )}
+            <span className='font-mono text-muted-foreground text-sm ms-1'>{log.requestPath}</span>
             {log.hasSanitizedData && (
               <Badge variant='outline' className='bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 gap-1 ms-auto'>
                 <ShieldAlert className='h-3.5 w-3.5' />

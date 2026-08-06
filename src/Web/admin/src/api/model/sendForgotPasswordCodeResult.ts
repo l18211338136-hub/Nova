@@ -9,6 +9,6 @@
  * @nullable
  */
 export type SendForgotPasswordCodeResult = {
-  /** 发送结果 */
+  /** 是否成功 */
   success?: boolean;
 } | null;

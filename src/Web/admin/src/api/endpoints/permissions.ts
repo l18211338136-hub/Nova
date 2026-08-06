@@ -48,7 +48,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary 获取系统所有可用权限
+ * @summary 可用权限
  */
 export const getAllPermissions = (
 
@@ -119,7 +119,7 @@ export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPer
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取系统所有可用权限
+ * @summary 可用权限
  */
 
 export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>(
@@ -140,7 +140,7 @@ export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPer
 
 
 /**
- * @summary 获取权限分组名称映射表
+ * @summary 权限映射
  */
 export const getPermissionGroups = (
 
@@ -211,7 +211,7 @@ export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPerm
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取权限分组名称映射表
+ * @summary 权限映射
  */
 
 export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>(

@@ -11,7 +11,7 @@ export interface CreateRole {
   /** 显示名称 */
   displayName?: string;
   /**
-     * 角色备注
+     * 备注
      * @nullable
      */
   remarks?: string | null;
@@ -20,7 +20,7 @@ export interface CreateRole {
   /** 是否启用 */
   isEnabled?: boolean;
   /**
-     * 权限标识列表
+     * 权限列表
      * @nullable
      */
   permissions?: string[] | null;

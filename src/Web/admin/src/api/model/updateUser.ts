@@ -9,10 +9,10 @@ export interface UpdateUser {
   id?: string;
   /** 用户名 */
   userName?: string;
-  /** 用户邮箱 */
+  /** 邮箱 */
   email?: string;
   /**
-     * 密码（留空则不修改）
+     * 密码
      * @nullable
      */
   password?: string | null;
@@ -24,17 +24,17 @@ export interface UpdateUser {
   /** 是否启用 */
   isEnabled?: boolean;
   /**
-     * 角色名称列表
+     * 角色列表
      * @nullable
      */
   roles?: string[] | null;
   /**
-     * 直接分配的权限标识列表
+     * 权限列表
      * @nullable
      */
   permissions?: string[] | null;
   /**
-     * 直接分配的菜单标识列表
+     * 菜单列表
      * @nullable
      */
   menus?: string[] | null;

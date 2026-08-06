@@ -3,9 +3,7 @@ using Nova.Modules.Audit.Domain.Services;
 
 namespace Nova.Modules.Audit.Domain.OperationLogs;
 
-/// <summary>
-/// 操作日志聚合根（DDD 充血模型，所有字段支持 Nullable，由 Finbuckle 隐式 Shadow Property 管理）
-/// </summary>
+// 操作日志聚合根（DDD 充血模型，所有字段支持 Nullable）
 public class OperationLog : Entity<Guid>
 {
     public string? TraceId { get; private set; }
@@ -59,9 +57,7 @@ public class OperationLog : Entity<Guid>
         };
     }
 
-    /// <summary>
-    /// 充血方法：设置并自动脱敏 RequestPayload，记录脱敏明细
-    /// </summary>
+    // 设置并自动脱敏 RequestPayload，记录脱敏明细
     public void SetAndSanitizeRequestPayload(string? rawPayload, ISanitizerEngine? sanitizerEngine)
     {
         if (string.IsNullOrWhiteSpace(rawPayload))
@@ -89,9 +85,7 @@ public class OperationLog : Entity<Guid>
         }
     }
 
-    /// <summary>
-    /// 充血方法：设置并自动脱敏 ResponsePayload
-    /// </summary>
+    // 设置并自动脱敏 ResponsePayload
     public void SetAndSanitizeResponsePayload(string? rawPayload, ISanitizerEngine? sanitizerEngine)
     {
         if (string.IsNullOrWhiteSpace(rawPayload))
@@ -119,9 +113,6 @@ public class OperationLog : Entity<Guid>
         }
     }
 
-    /// <summary>
-    /// 充血方法：标记请求成功完成
-    /// </summary>
     public void MarkAsSuccess(int? statusCode, long? elapsedMs, long slowThresholdMs = 500)
     {
         StatusCode = statusCode;
@@ -130,9 +121,6 @@ public class OperationLog : Entity<Guid>
         IsSlowRequest = elapsedMs.HasValue && elapsedMs.Value >= slowThresholdMs;
     }
 
-    /// <summary>
-    /// 充血方法：标记请求失败并记录异常堆栈
-    /// </summary>
     public void MarkAsFailed(Exception? exception, int? statusCode = 500)
     {
         StatusCode = statusCode;

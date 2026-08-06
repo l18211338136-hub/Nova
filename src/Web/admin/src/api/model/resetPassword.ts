@@ -6,7 +6,7 @@
  */
 
 export interface ResetPassword {
-  /** 注册邮箱 */
+  /** 邮箱 */
   email?: string;
   /** 验证码 */
   code?: string;

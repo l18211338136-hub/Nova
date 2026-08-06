@@ -59,7 +59,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 需要权限；向目标用户邮箱发送密码重置验证码
  * @summary 重置用户密码
  */
 export const adminResetUserPassword = (
@@ -125,7 +124,6 @@ export const useAdminResetUserPassword = <TError = unknown,
       return useMutation(getAdminResetUserPasswordMutationOptions(options), queryClient);
     }
     /**
- * 管理员创建一个新用户
  * @summary 创建用户
  */
 export const createUser = (
@@ -190,8 +188,7 @@ export const useCreateUser = <TError = unknown,
       return useMutation(getCreateUserMutationOptions(options), queryClient);
     }
     /**
- * 获取分页的用户列表数据
- * @summary 获取用户列表
+ * @summary 用户列表
  */
 export const users = (
 
@@ -262,7 +259,7 @@ export function useUsers<TData = Awaited<ReturnType<typeof users>>, TError = unk
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取用户列表
+ * @summary 用户列表
  */
 
 export function useUsers<TData = Awaited<ReturnType<typeof users>>, TError = unknown>(
@@ -283,7 +280,6 @@ export function useUsers<TData = Awaited<ReturnType<typeof users>>, TError = unk
 
 
 /**
- * 管理员删除指定用户
  * @summary 删除用户
  */
 export const deleteUser = (
@@ -346,7 +342,6 @@ export const useDeleteUser = <TError = unknown,
       return useMutation(getDeleteUserMutationOptions(options), queryClient);
     }
     /**
- * 管理员更新用户基础信息
  * @summary 更新用户
  */
 export const updateUser = (
@@ -412,7 +407,7 @@ export const useUpdateUser = <TError = unknown,
       return useMutation(getUpdateUserMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取某个用户关联的角色列表
+ * @summary 用户角色
  */
 export const getUserRoles = (
     id: string,
@@ -483,7 +478,7 @@ export function useGetUserRoles<TData = Awaited<ReturnType<typeof getUserRoles>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取某个用户关联的角色列表
+ * @summary 用户角色
  */
 
 export function useGetUserRoles<TData = Awaited<ReturnType<typeof getUserRoles>>, TError = unknown>(
@@ -504,7 +499,7 @@ export function useGetUserRoles<TData = Awaited<ReturnType<typeof getUserRoles>>
 
 
 /**
- * @summary 获取某个用户直接关联的权限列表
+ * @summary 用户权限
  */
 export const getUserPermissions = (
     id: string,
@@ -575,7 +570,7 @@ export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserP
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取某个用户直接关联的权限列表
+ * @summary 用户权限
  */
 
 export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = unknown>(

@@ -4,11 +4,11 @@ using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Roles.Commands;
 
-[ApiEndpoint("DELETE", "/api/identity/roles/{id}", typeof(DeleteRoleResult), "Roles", Summary = "删除角色", Description = "删除一个已存在的角色")]
+[ApiEndpoint("DELETE", "/api/identity/roles/{id}", typeof(DeleteRoleResult), "Roles", Summary = "删除角色")]
 [RequirePermission("Identity.Roles.Delete")]
 public record DeleteRoleCommand
 {
-    [Description("角色 ID")]
+    [Description("角色ID")]
     public Guid Id { get; init; }
 }
 

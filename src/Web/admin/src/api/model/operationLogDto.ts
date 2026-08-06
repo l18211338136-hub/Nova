@@ -7,88 +7,88 @@
 import type { SanitizationDetailDto } from './sanitizationDetailDto';
 
 export interface OperationLogDto {
-  /** 日志主键 ID */
+  /** ID */
   id?: string;
   /**
-     * 链路追踪 Trace ID
+     * TraceId
      * @nullable
      */
   traceId?: string | null;
   /**
-     * 操作用户 ID
+     * 用户ID
      * @nullable
      */
   userId?: string | null;
   /**
-     * 客户端 IP 地址
+     * 客户端IP
      * @nullable
      */
   clientIp?: string | null;
   /**
-     * HTTP 请求谓词
+     * 请求方法
      * @nullable
      */
   httpMethod?: string | null;
   /**
-     * HTTP 请求路径
+     * 请求路径
      * @nullable
      */
   requestPath?: string | null;
   /**
-     * 操作/动作名称
+     * 操作名称
      * @nullable
      */
   actionName?: string | null;
   /**
-     * 脱敏后的请求载荷 JSON
+     * 请求体
      * @nullable
      */
   requestPayload?: string | null;
   /**
-     * 响应载荷 JSON
+     * 响应体
      * @nullable
      */
   responsePayload?: string | null;
   /**
-     * HTTP 状态码
+     * 状态码
      * @nullable
      */
   statusCode?: number | null;
   /**
-     * 执行耗时 (毫秒)
+     * 耗时(ms)
      * @nullable
      */
   elapsedMs?: number | null;
   /**
-     * 执行状态 (InProgress / Success / Failed)
+     * 执行状态
      * @nullable
      */
   status?: string | null;
   /**
-     * 是否为慢请求
+     * 是否慢请求
      * @nullable
      */
   isSlowRequest?: boolean | null;
   /**
-     * 是否包含脱敏数据
+     * 含脱敏数据
      * @nullable
      */
   hasSanitizedData?: boolean | null;
   /**
-     * 错误信息 (仅失败时存在)
+     * 错误信息
      * @nullable
      */
   errorMessage?: string | null;
   /**
-     * 异常堆栈轨迹
+     * 异常堆栈
      * @nullable
      */
   exceptionStackTrace?: string | null;
   /**
-     * 日志记录时间
+     * 记录时间
      * @nullable
      */
   createdAt?: string | null;
-  /** 敏感数据脱敏明细列表 */
+  /** 脱敏明细 */
   sanitizationDetails?: SanitizationDetailDto[];
 }

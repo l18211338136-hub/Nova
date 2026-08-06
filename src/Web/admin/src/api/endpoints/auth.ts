@@ -69,7 +69,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 登录态下凭旧密码修改新密码
  * @summary 修改密码
  */
 export const changePassword = (
@@ -134,8 +133,7 @@ export const useChangePassword = <TError = unknown,
       return useMutation(getChangePasswordMutationOptions(options), queryClient);
     }
     /**
- * 通过邮箱和收到的验证码直接登录获取 Token
- * @summary 邮箱验证码登录
+ * @summary 验证码登录
  */
 export const emailLogin = (
     emailLogin: EmailLogin,
@@ -186,7 +184,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EmailLoginMutationError = unknown
 
     /**
- * @summary 邮箱验证码登录
+ * @summary 验证码登录
  */
 export const useEmailLogin = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailLogin>>, TError,{data: EmailLogin}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -199,7 +197,6 @@ export const useEmailLogin = <TError = unknown,
       return useMutation(getEmailLoginMutationOptions(options), queryClient);
     }
     /**
- * 通过用户名和密码获取身份认证 Token
  * @summary 用户登录
  */
 export const login = (
@@ -264,8 +261,7 @@ export const useLogin = <TError = unknown,
       return useMutation(getLoginMutationOptions(options), queryClient);
     }
     /**
- * 吊销当前刷新令牌，使其无法再用于获取新的 AccessToken
- * @summary 登出（吊销刷新令牌）
+ * @summary 退出登录
  */
 export const logout = (
     logout: Logout,
@@ -316,7 +312,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LogoutMutationError = unknown
 
     /**
- * @summary 登出（吊销刷新令牌）
+ * @summary 退出登录
  */
 export const useLogout = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,{data: Logout}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -329,7 +325,6 @@ export const useLogout = <TError = unknown,
       return useMutation(getLogoutMutationOptions(options), queryClient);
     }
     /**
- * 使用 RefreshToken 获取新的 AccessToken
  * @summary 刷新令牌
  */
 export const refreshToken = (
@@ -394,7 +389,6 @@ export const useRefreshToken = <TError = unknown,
       return useMutation(getRefreshTokenMutationOptions(options), queryClient);
     }
     /**
- * 注册一个新的用户账户
  * @summary 用户注册
  */
 export const registerUser = (
@@ -459,7 +453,6 @@ export const useRegisterUser = <TError = unknown,
       return useMutation(getRegisterUserMutationOptions(options), queryClient);
     }
     /**
- * 通过邮箱验证码重置用户密码
  * @summary 重置密码
  */
 export const resetPassword = (
@@ -524,8 +517,7 @@ export const useResetPassword = <TError = unknown,
       return useMutation(getResetPasswordMutationOptions(options), queryClient);
     }
     /**
- * 通过邮箱发送用于免密登录的 6 位数验证码
- * @summary 发送登录验证码
+ * @summary 发送登录码
  */
 export const sendEmailLoginCode = (
     sendEmailLoginCode: SendEmailLoginCode,
@@ -576,7 +568,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendEmailLoginCodeMutationError = unknown
 
     /**
- * @summary 发送登录验证码
+ * @summary 发送登录码
  */
 export const useSendEmailLoginCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEmailLoginCode>>, TError,{data: SendEmailLoginCode}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -589,8 +581,7 @@ export const useSendEmailLoginCode = <TError = unknown,
       return useMutation(getSendEmailLoginCodeMutationOptions(options), queryClient);
     }
     /**
- * 通过邮箱发送用于注册的 6 位数验证码
- * @summary 发送注册验证码
+ * @summary 发送注册码
  */
 export const sendEmailRegisterCode = (
     sendEmailRegisterCode: SendEmailRegisterCode,
@@ -641,7 +632,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendEmailRegisterCodeMutationError = unknown
 
     /**
- * @summary 发送注册验证码
+ * @summary 发送注册码
  */
 export const useSendEmailRegisterCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEmailRegisterCode>>, TError,{data: SendEmailRegisterCode}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -654,8 +645,7 @@ export const useSendEmailRegisterCode = <TError = unknown,
       return useMutation(getSendEmailRegisterCodeMutationOptions(options), queryClient);
     }
     /**
- * 通过邮箱发送用于重置密码的 6 位数验证码
- * @summary 发送忘记密码验证码
+ * @summary 发送重置码
  */
 export const sendForgotPasswordCode = (
     sendForgotPasswordCode: SendForgotPasswordCode,
@@ -706,7 +696,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendForgotPasswordCodeMutationError = unknown
 
     /**
- * @summary 发送忘记密码验证码
+ * @summary 发送重置码
  */
 export const useSendForgotPasswordCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendForgotPasswordCode>>, TError,{data: SendForgotPasswordCode}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -719,8 +709,7 @@ export const useSendForgotPasswordCode = <TError = unknown,
       return useMutation(getSendForgotPasswordCodeMutationOptions(options), queryClient);
     }
     /**
- * 返回该账号所属的所有租户 ID 列表。无租户要求即可调用。
- * @summary 根据账号解析租户 ID 列表
+ * @summary 解析租户
  */
 export const resolveTenant = (
     params: ResolveTenantParams,
@@ -792,7 +781,7 @@ export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 根据账号解析租户 ID 列表
+ * @summary 解析租户
  */
 
 export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(

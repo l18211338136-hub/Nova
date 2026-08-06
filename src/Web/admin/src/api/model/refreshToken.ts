@@ -6,7 +6,7 @@
  */
 
 export interface RefreshToken {
-  /** 当前的 AccessToken（即使已过期也需要提供，用于提取用户信息） */
+  /** 访问令牌 */
   accessToken?: string;
   /** 刷新令牌 */
   refreshToken?: string;

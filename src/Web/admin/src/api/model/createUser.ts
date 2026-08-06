@@ -8,7 +8,7 @@
 export interface CreateUser {
   /** 用户名 */
   userName?: string;
-  /** 用户邮箱 */
+  /** 邮箱 */
   email?: string;
   /** 密码 */
   password?: string;
@@ -20,12 +20,12 @@ export interface CreateUser {
   /** 是否启用 */
   isEnabled?: boolean;
   /**
-     * 角色名称列表
+     * 角色列表
      * @nullable
      */
   roles?: string[] | null;
   /**
-     * 直接分配的权限标识列表
+     * 权限列表
      * @nullable
      */
   permissions?: string[] | null;

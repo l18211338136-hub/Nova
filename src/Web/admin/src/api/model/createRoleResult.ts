@@ -9,6 +9,6 @@
  * @nullable
  */
 export type CreateRoleResult = {
-  /** 新创建角色的唯一标识 ID */
+  /** 角色ID */
   roleId?: string;
 } | null;

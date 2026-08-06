@@ -6,9 +6,9 @@
  */
 
 export interface RegisterUser {
-  /** 新用户名 */
+  /** 用户名 */
   username?: string;
-  /** 用户邮箱 */
+  /** 邮箱 */
   email?: string;
   /** 密码 */
   password?: string;

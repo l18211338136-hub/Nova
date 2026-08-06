@@ -65,8 +65,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<PagedResult<UserDto>>>(200)
         .RequireAuthorization()
         .WithTags("Users")
-        .WithSummary("获取用户列表")
-        .WithDescription("获取分页的用户列表数据");
+        .WithSummary("用户列表");
 
         endpoints.MapGet("/api/identity/roles", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -111,8 +110,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<PagedResult<RoleDto>>>(200)
         .RequireAuthorization()
         .WithTags("Roles")
-        .WithSummary("获取角色列表")
-        .WithDescription("获取分页的角色列表数据");
+        .WithSummary("角色列表");
 
         endpoints.MapGet("/api/identity/menus", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -157,8 +155,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<PagedResult<MenuDto>>>(200)
         .RequireAuthorization()
         .WithTags("Menus")
-        .WithSummary("获取菜单列表")
-        .WithDescription("获取分页的菜单列表数据");
+        .WithSummary("菜单列表");
 
         endpoints.MapGet("/api/identity/auth-audit-logs", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -218,8 +215,7 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.AuditLogs.Read"))
         .WithTags("Audit")
-        .WithSummary("获取认证审计日志")
-        .WithDescription("分页获取登录成功/失败、令牌刷新、改密、登出等安全审计日志，支持 OData $filter/$orderby/$top/$skip。按当前租户隔离。");
+        .WithSummary("审计日志");
 
         endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken, UserManager<User> userManager, RoleManager<Role> roleManager) =>
         {
@@ -272,7 +268,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<List<MenuDto>>>(200)
         .RequireAuthorization()
         .WithTags("Menus")
-        .WithSummary("获取当前登录用户拥有权限的菜单")
+        .WithSummary("用户菜单")
         .WithName("GetMyMenus");
 
         endpoints.MapGet("/api/identity/permissions/all", () =>
@@ -302,7 +298,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<List<string>>>(200)
         .RequireAuthorization()
         .WithTags("Permissions")
-        .WithSummary("获取系统所有可用权限")
+        .WithSummary("可用权限")
         .WithName("GetAllPermissions");
 
         endpoints.MapGet("/api/identity/permissions/groups", () =>
@@ -339,7 +335,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<Dictionary<string, string>>>(200)
         .RequireAuthorization()
         .WithTags("Permissions")
-        .WithSummary("获取权限分组名称映射表")
+        .WithSummary("权限映射")
         .WithName("GetPermissionGroups");
 
         endpoints.MapGet("/api/identity/roles/{id}/permissions", async (string id, RoleManager<Role> roleManager) =>
@@ -360,7 +356,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<RolePermissionsDto>>(200)
         .RequireAuthorization()
         .WithTags("Roles")
-        .WithSummary("获取某个角色的所有权限和菜单")
+        .WithSummary("角色权限")
         .WithName("GetRolePermissions");
 
         endpoints.MapGet("/api/identity/users/{id}/roles", async (string id, UserManager<User> userManager) =>
@@ -373,7 +369,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<List<string>>>(200)
         .RequireAuthorization()
         .WithTags("Users")
-        .WithSummary("获取某个用户关联的角色列表")
+        .WithSummary("用户角色")
         .WithName("GetUserRoles");
 
         endpoints.MapGet("/api/identity/users/{id}/permissions", async (string id, UserManager<User> userManager) =>
@@ -387,7 +383,7 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<List<string>>>(200)
         .RequireAuthorization()
         .WithTags("Users")
-        .WithSummary("获取某个用户直接关联的权限列表")
+        .WithSummary("用户权限")
         .WithName("GetUserPermissions");
     }
 }

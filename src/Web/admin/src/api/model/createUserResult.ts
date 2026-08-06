@@ -9,5 +9,6 @@
  * @nullable
  */
 export type CreateUserResult = {
+  /** 用户ID */
   userId?: string;
 } | null;

@@ -25,6 +25,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         cell: ({ row }) => {
           const method = (row.getValue('httpMethod') as string) || 'GET'
           const path = (row.original.requestPath as string) || '-'
+          const actionName = row.original.actionName
           const isSlow = row.original.isSlowRequest
 
           const methodColorMap: Record<string, string> = {
@@ -35,15 +36,20 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
           }
 
           return (
-            <div className='flex items-center gap-2 max-w-md truncate ps-1'>
-              <Badge variant='outline' className={cn('font-mono font-bold px-1.5 py-0.5 text-[11px]', methodColorMap[method.toUpperCase()] || 'bg-muted')}>
+            <div className='flex items-center gap-2 max-w-lg truncate ps-1'>
+              <Badge variant='outline' className={cn('font-mono font-bold px-1.5 py-0.5 text-[11px] shrink-0', methodColorMap[method.toUpperCase()] || 'bg-muted')}>
                 {method}
               </Badge>
-              <span className='font-mono text-xs font-semibold text-foreground truncate' title={path}>
+              {actionName && (
+                <Badge variant='secondary' className='font-semibold px-2 py-0.5 text-xs shrink-0 bg-primary/10 text-primary border border-primary/20'>
+                  {actionName}
+                </Badge>
+              )}
+              <span className='font-mono text-xs font-semibold text-muted-foreground truncate' title={path}>
                 {path}
               </span>
               {isSlow && (
-                <Badge variant='outline' className='bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 gap-0.5 text-[10px] px-1'>
+                <Badge variant='outline' className='bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 gap-0.5 text-[10px] px-1 shrink-0'>
                   <Clock className='h-3 w-3' />
                   {t('慢日志')}
                 </Badge>

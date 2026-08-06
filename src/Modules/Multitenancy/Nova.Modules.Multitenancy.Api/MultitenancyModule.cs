@@ -30,7 +30,6 @@ public class MultitenancyModule : IModule
         .WithName("CreateTenant")
         .WithTags("Tenants")
         .WithSummary("创建租户")
-        .WithDescription("初始化并创建一个新的租户")
         .Produces<string>(StatusCodes.Status200OK)
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Multitenancy.Tenants.Create"));

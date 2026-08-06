@@ -53,8 +53,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 获取分页的租户列表数据
- * @summary 获取租户列表
+ * @summary 租户列表
  */
 export const tenants = (
 
@@ -125,7 +124,7 @@ export function useTenants<TData = Awaited<ReturnType<typeof tenants>>, TError =
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取租户列表
+ * @summary 租户列表
  */
 
 export function useTenants<TData = Awaited<ReturnType<typeof tenants>>, TError = unknown>(
@@ -146,7 +145,6 @@ export function useTenants<TData = Awaited<ReturnType<typeof tenants>>, TError =
 
 
 /**
- * 初始化并创建一个新的租户
  * @summary 创建租户
  */
 export const createTenant = (

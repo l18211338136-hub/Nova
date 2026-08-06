@@ -9,6 +9,6 @@
  * @nullable
  */
 export type UpdatePreferencesResult = {
-  /** 是否更新成功 */
+  /** 是否成功 */
   success?: boolean;
 } | null;

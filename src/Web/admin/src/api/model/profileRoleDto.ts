@@ -8,6 +8,6 @@
 export interface ProfileRoleDto {
   /** 角色名 */
   name?: string;
-  /** 角色显示名称 */
+  /** 显示名称 */
   displayName?: string;
 }

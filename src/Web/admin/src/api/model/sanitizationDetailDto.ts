@@ -6,20 +6,20 @@
  */
 
 export interface SanitizationDetailDto {
-  /** 明细主键 ID */
+  /** ID */
   id?: string;
   /**
-     * 关联日志主键 ID
+     * 日志ID
      * @nullable
      */
   logId?: string | null;
   /**
-     * 被遮蔽/脱敏的敏感字段名称
+     * 字段名
      * @nullable
      */
   fieldName?: string | null;
   /**
-     * 脱敏规则标识
+     * 脱敏规则
      * @nullable
      */
   maskedRule?: string | null;

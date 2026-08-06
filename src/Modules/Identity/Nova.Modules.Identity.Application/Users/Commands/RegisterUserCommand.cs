@@ -3,13 +3,13 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/register", typeof(RegisterUserResult), "Auth", Summary = "用户注册", Description = "注册一个新的用户账户")]
+[ApiEndpoint("POST", "/api/identity/register", typeof(RegisterUserResult), "Auth", Summary = "用户注册")]
 public record RegisterUserCommand
 {
-    [Description("新用户名")]
+    [Description("用户名")]
     public string Username { get; init; } = default!;
 
-    [Description("用户邮箱")]
+    [Description("邮箱")]
     public string Email { get; init; } = default!;
 
     [Description("密码")]
@@ -24,6 +24,6 @@ public record RegisterUserCommand
 
 public record RegisterUserResult
 {
-    [Description("新创建用户的唯一标识 ID")]
+    [Description("用户ID")]
     public Guid UserId { get; init; }
 }

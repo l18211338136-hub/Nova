@@ -4,11 +4,11 @@ using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Roles.Commands;
 
-[ApiEndpoint("PUT", "/api/identity/roles/{id}", typeof(UpdateRoleResult), "Roles", Summary = "更新角色", Description = "更新一个已存在的角色")]
+[ApiEndpoint("PUT", "/api/identity/roles/{id}", typeof(UpdateRoleResult), "Roles", Summary = "更新角色")]
 [RequirePermission("Identity.Roles.Update")]
 public record UpdateRoleCommand
 {
-    [Description("角色 ID")]
+    [Description("角色ID")]
     public Guid Id { get; init; }
 
     [Description("角色名称")]
@@ -17,7 +17,7 @@ public record UpdateRoleCommand
     [Description("显示名称")]
     public string DisplayName { get; init; } = default!;
 
-    [Description("角色备注")]
+    [Description("备注")]
     public string? Remarks { get; init; }
 
     [Description("排序")]
@@ -26,10 +26,10 @@ public record UpdateRoleCommand
     [Description("是否启用")]
     public bool IsEnabled { get; init; }
 
-    [Description("权限标识列表")]
+    [Description("权限列表")]
     public List<string>? Permissions { get; init; }
 
-    [Description("菜单标识列表")]
+    [Description("菜单列表")]
     public List<string>? Menus { get; init; }
 }
 

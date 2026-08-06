@@ -10,16 +10,16 @@ import type { TenantOptionDto } from './tenantOptionDto';
  * @nullable
  */
 export type LoginResult = {
-  /** JWT Token，需在请求头带上 Bearer {Token} */
+  /** 访问令牌 */
   token?: string;
-  /** 刷新令牌，用于在 AccessToken 过期后获取新的 Token */
+  /** 刷新令牌 */
   refreshToken?: string;
-  /** 访问令牌的过期时间（单位：秒） */
+  /** 过期秒数 */
   expiresIn?: number;
-  /** 是否需要选择租户（当密码能在多个租户匹配成功时返回 true） */
+  /** 需选择租户 */
   requiresTenantSelection?: boolean;
   /**
-     * 可选的租户列表
+     * 可用租户列表
      * @nullable
      */
   availableTenants?: TenantOptionDto[] | null;

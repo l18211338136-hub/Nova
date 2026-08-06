@@ -57,7 +57,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 创建一个新的系统菜单
  * @summary 创建菜单
  */
 export const createMenu = (
@@ -122,8 +121,7 @@ export const useCreateMenu = <TError = unknown,
       return useMutation(getCreateMenuMutationOptions(options), queryClient);
     }
     /**
- * 获取分页的菜单列表数据
- * @summary 获取菜单列表
+ * @summary 菜单列表
  */
 export const menus = (
 
@@ -194,7 +192,7 @@ export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unk
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取菜单列表
+ * @summary 菜单列表
  */
 
 export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(
@@ -215,7 +213,6 @@ export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unk
 
 
 /**
- * 软删除指定的系统菜单
  * @summary 删除菜单
  */
 export const deleteMenu = (
@@ -278,7 +275,6 @@ export const useDeleteMenu = <TError = unknown,
       return useMutation(getDeleteMenuMutationOptions(options), queryClient);
     }
     /**
- * 更新系统菜单信息
  * @summary 更新菜单
  */
 export const updateMenu = (
@@ -344,7 +340,7 @@ export const useUpdateMenu = <TError = unknown,
       return useMutation(getUpdateMenuMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取当前登录用户拥有权限的菜单
+ * @summary 用户菜单
  */
 export const getMyMenus = (
 
@@ -415,7 +411,7 @@ export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TE
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取当前登录用户拥有权限的菜单
+ * @summary 用户菜单
  */
 
 export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(

@@ -9,6 +9,6 @@
  * @nullable
  */
 export type CreateMenuResult = {
-  /** 新创建菜单的唯一标识 ID */
+  /** 菜单ID */
   menuId?: string;
 } | null;

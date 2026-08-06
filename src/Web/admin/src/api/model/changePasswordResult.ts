@@ -9,6 +9,6 @@
  * @nullable
  */
 export type ChangePasswordResult = {
-  /** 是否修改成功 */
+  /** 是否成功 */
   success?: boolean;
 } | null;

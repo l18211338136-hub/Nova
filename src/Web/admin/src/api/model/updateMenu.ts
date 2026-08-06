@@ -25,7 +25,7 @@ export interface UpdateMenu {
      */
   icon?: string | null;
   /**
-     * 备注说明
+     * 备注
      * @nullable
      */
   remarks?: string | null;

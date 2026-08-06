@@ -1,11 +1,10 @@
 using System.ComponentModel;
 using Nova.Contracts.CQRS;
-
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Menus.Commands;
 
-[ApiEndpoint("POST", "/api/identity/menus", typeof(CreateMenuResult), "Menus", Summary = "创建菜单", Description = "创建一个新的系统菜单")]
+[ApiEndpoint("POST", "/api/identity/menus", typeof(CreateMenuResult), "Menus", Summary = "创建菜单")]
 [RequirePermission("Identity.Menus.Create")]
 public record CreateMenuCommand
 {
@@ -24,7 +23,7 @@ public record CreateMenuCommand
     [Description("图标名称")]
     public string? Icon { get; init; }
 
-    [Description("备注说明")]
+    [Description("备注")]
     public string? Remarks { get; init; }
 
     [Description("排序")]
@@ -36,6 +35,6 @@ public record CreateMenuCommand
 
 public record CreateMenuResult
 {
-    [Description("新创建菜单的唯一标识 ID")]
+    [Description("菜单ID")]
     public Guid MenuId { get; init; }
 }

@@ -3,15 +3,15 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/send-register-code", typeof(SendEmailRegisterCodeResult), "Auth", Summary = "发送注册验证码", Description = "通过邮箱发送用于注册的 6 位数验证码")]
+[ApiEndpoint("POST", "/api/identity/send-register-code", typeof(SendEmailRegisterCodeResult), "Auth", Summary = "发送注册码")]
 public record SendEmailRegisterCodeCommand
 {
-    [Description("注册邮箱")]
+    [Description("邮箱")]
     public string Email { get; init; } = default!;
 }
 
 public record SendEmailRegisterCodeResult
 {
-    [Description("发送结果")]
+    [Description("是否成功")]
     public bool Success { get; init; } = true;
 }

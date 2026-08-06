@@ -9,29 +9,29 @@
  * @nullable
  */
 export type UserPreferenceDto = {
-  /** 主题：light / dark / system */
+  /** 主题 */
   theme?: string;
-  /** 界面字体 */
+  /** 字体 */
   font?: string;
-  /** 界面语言 */
+  /** 语言 */
   language?: string;
   /**
-     * 时区（IANA 名称）
+     * 时区
      * @nullable
      */
   timeZone?: string | null;
-  /** 推送范围：all / mentions / none */
+  /** 通知范围 */
   notifyType?: string;
-  /** 接收账户活动邮件 */
+  /** 账户邮件 */
   communicationEmails?: boolean;
-  /** 接收产品营销邮件 */
+  /** 营销邮件 */
   marketingEmails?: boolean;
-  /** 接收社交动态邮件 */
+  /** 社交邮件 */
   socialEmails?: boolean;
-  /** 接收安全提醒邮件（强制开启） */
+  /** 安全邮件 */
   securityEmails?: boolean;
-  /** 移动端使用独立通知设置 */
+  /** 移动通知 */
   mobileNotifications?: boolean;
-  /** 在侧边栏中被隐藏的菜单项（菜单 url 集合） */
+  /** 隐藏菜单 */
   hiddenSidebarItems?: string[];
 } | null;

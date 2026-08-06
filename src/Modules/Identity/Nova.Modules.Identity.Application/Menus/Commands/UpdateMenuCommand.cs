@@ -1,13 +1,11 @@
-using System;
 using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Nova.Contracts.CQRS;
-
 using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Menus.Commands;
 
-[ApiEndpoint("PUT", "/api/identity/menus/{id}", typeof(UpdateMenuResult), "Menus", Summary = "更新菜单", Description = "更新系统菜单信息")]
+[ApiEndpoint("PUT", "/api/identity/menus/{id}", typeof(UpdateMenuResult), "Menus", Summary = "更新菜单")]
 [RequirePermission("Identity.Menus.Update")]
 public record UpdateMenuCommand
 {
@@ -30,7 +28,7 @@ public record UpdateMenuCommand
     [Description("图标名称")]
     public string? Icon { get; init; }
 
-    [Description("备注说明")]
+    [Description("备注")]
     public string? Remarks { get; init; }
 
     [Description("排序")]
@@ -42,6 +40,6 @@ public record UpdateMenuCommand
 
 public record UpdateMenuResult
 {
-    [Description("更新后的菜单唯一标识 ID")]
+    [Description("菜单ID")]
     public Guid MenuId { get; init; }
 }

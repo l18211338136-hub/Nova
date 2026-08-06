@@ -49,8 +49,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * 支持按页码、页大小、搜索关键字、HTTP 谓词、状态码、慢日志及脱敏标志过滤操作日志
- * @summary 获取操作日志列表
+ * @summary 操作日志列表
  */
 export const getOperationLogs = (
     params: GetOperationLogsParams,
@@ -122,7 +121,7 @@ export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperati
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取操作日志列表
+ * @summary 操作日志列表
  */
 
 export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
@@ -143,8 +142,7 @@ export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperati
 
 
 /**
- * 分页获取登录成功/失败、令牌刷新、改密、登出等安全审计日志，支持 OData $filter/$orderby/$top/$skip。按当前租户隔离。
- * @summary 获取认证审计日志
+ * @summary 审计日志
  */
 export const authAuditLogs = (
 
@@ -215,7 +213,7 @@ export function useAuthAuditLogs<TData = Awaited<ReturnType<typeof authAuditLogs
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取认证审计日志
+ * @summary 审计日志
  */
 
 export function useAuthAuditLogs<TData = Awaited<ReturnType<typeof authAuditLogs>>, TError = unknown>(
@@ -229,10 +227,6 @@ export function useAuthAuditLogs<TData = Awaited<ReturnType<typeof authAuditLogs
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-export { useGetOperationLogs as useOperationLogs };
-
-
 
 
 

@@ -9,6 +9,6 @@
  * @nullable
  */
 export type UpdateMenuResult = {
-  /** 更新后的菜单唯一标识 ID */
+  /** 菜单ID */
   menuId?: string;
 } | null;

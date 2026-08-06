@@ -6,14 +6,14 @@
  */
 
 export interface UpdateRole {
-  /** 角色 ID */
+  /** 角色ID */
   id?: string;
   /** 角色名称 */
   name?: string;
   /** 显示名称 */
   displayName?: string;
   /**
-     * 角色备注
+     * 备注
      * @nullable
      */
   remarks?: string | null;
@@ -22,12 +22,12 @@ export interface UpdateRole {
   /** 是否启用 */
   isEnabled?: boolean;
   /**
-     * 权限标识列表
+     * 权限列表
      * @nullable
      */
   permissions?: string[] | null;
   /**
-     * 菜单标识列表
+     * 菜单列表
      * @nullable
      */
   menus?: string[] | null;

@@ -6,12 +6,12 @@
  */
 
 export interface Login {
-  /** 账号 (用户名或邮箱) */
+  /** 账号 */
   account?: string;
   /** 密码 */
   password?: string;
   /**
-     * 当拥有多个企业时，需指定要登录的目标租户ID
+     * 目标租户
      * @nullable
      */
   targetTenantId?: string | null;

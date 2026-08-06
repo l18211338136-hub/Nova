@@ -6,8 +6,8 @@
  */
 
 export interface Logout {
-  /** 当前的 AccessToken（即使已过期也需提供，用于提取用户与租户信息） */
+  /** 访问令牌 */
   accessToken?: string;
-  /** 要吊销的刷新令牌 */
+  /** 刷新令牌 */
   refreshToken?: string;
 }

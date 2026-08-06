@@ -2,7 +2,9 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.Extensions.Logging;
+using Nova.Contracts.CQRS;
 using Nova.Framework.Web.Logging;
 
 namespace Nova.Framework.Web.Middlewares;
@@ -37,8 +39,6 @@ public class GlobalAuditLoggingMiddleware
         var tenantId = GetTenantId(context);
         var clientIp = GetClientIp(context);
         var httpMethod = context.Request.Method;
-        var actionName = context.Request.RouteValues["action"]?.ToString() 
-            ?? context.Request.RouteValues["controller"]?.ToString();
 
         string? requestPayload = await ReadRequestBodyAsync(context);
         string? responsePayload = null;
@@ -77,6 +77,12 @@ public class GlobalAuditLoggingMiddleware
 
             try
             {
+                var endpoint = context.GetEndpoint();
+                var actionName = endpoint?.Metadata.GetMetadata<IEndpointSummaryMetadata>()?.Summary
+                    ?? endpoint?.Metadata.GetMetadata<ApiEndpointAttribute>()?.Summary
+                    ?? context.Request.RouteValues["action"]?.ToString() 
+                    ?? context.Request.RouteValues["controller"]?.ToString();
+
                 var statusCode = context.Response.StatusCode > 0 ? context.Response.StatusCode : (isSuccess ? 200 : 500);
 
                 var logRequest = new OperationLogRequest(

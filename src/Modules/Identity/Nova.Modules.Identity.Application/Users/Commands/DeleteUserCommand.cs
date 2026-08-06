@@ -3,7 +3,7 @@ using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("DELETE", "/api/identity/users/{id}", typeof(DeleteUserResult), "Users", Summary = "删除用户", Description = "管理员删除指定用户")]
+[ApiEndpoint("DELETE", "/api/identity/users/{id}", typeof(DeleteUserResult), "Users", Summary = "删除用户")]
 [RequirePermission("Identity.Users.Delete")]
 public record DeleteUserCommand
 {

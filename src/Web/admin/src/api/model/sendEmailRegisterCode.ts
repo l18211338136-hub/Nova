@@ -6,6 +6,6 @@
  */
 
 export interface SendEmailRegisterCode {
-  /** 注册邮箱 */
+  /** 邮箱 */
   email?: string;
 }

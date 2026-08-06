@@ -12,7 +12,7 @@ export interface UpdateProfile {
      */
   nickName?: string | null;
   /**
-     * 个人简介
+     * 简介
      * @nullable
      */
   bio?: string | null;
