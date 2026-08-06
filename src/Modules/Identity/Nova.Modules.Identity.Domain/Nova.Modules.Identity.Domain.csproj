@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Framework\Nova.Framework.Shared\Nova.Framework.Shared.csproj" />
     <ProjectReference Include="..\..\..\Framework\Nova.Framework.Domain\Nova.Framework.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

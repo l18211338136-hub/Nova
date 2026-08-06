@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.Extensions.Logging;
+using Nova.Contracts.Constants;
 using Nova.Contracts.CQRS;
 using Nova.Framework.Web.Logging;
 
@@ -83,7 +84,9 @@ public class GlobalAuditLoggingMiddleware
                     ?? context.Request.RouteValues["action"]?.ToString() 
                     ?? context.Request.RouteValues["controller"]?.ToString();
 
-                var statusCode = context.Response.StatusCode > 0 ? context.Response.StatusCode : (isSuccess ? 200 : 500);
+                var statusCode = !isSuccess 
+                    ? (context.Response.StatusCode >= 400 ? context.Response.StatusCode : 500) 
+                    : (context.Response.StatusCode > 0 ? context.Response.StatusCode : 200);
 
                 var logRequest = new OperationLogRequest(
                     TraceId: traceId,
@@ -120,7 +123,7 @@ public class GlobalAuditLoggingMiddleware
         return null;
     }
 
-    private static string? GetTenantId(HttpContext context)
+    private static string GetTenantId(HttpContext context)
     {
         // 1. 从 HTTP Header 中获取
         if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader) && !string.IsNullOrWhiteSpace(tenantHeader))
@@ -132,7 +135,23 @@ public class GlobalAuditLoggingMiddleware
             return tHeader.ToString();
         }
 
-        // 2. 从 JWT User Claims 中获取
+        // 2. 从 Finbuckle / HttpContext 中解构当前租户信息
+        foreach (var item in context.Items.Values)
+        {
+            if (item != null && item.GetType().Name.Contains("TenantContext"))
+            {
+                var tenantInfoProp = item.GetType().GetProperty("TenantInfo");
+                var tenantInfo = tenantInfoProp?.GetValue(item);
+                if (tenantInfo != null)
+                {
+                    var idProp = tenantInfo.GetType().GetProperty("Identifier") ?? tenantInfo.GetType().GetProperty("Id");
+                    var identifier = idProp?.GetValue(tenantInfo)?.ToString();
+                    if (!string.IsNullOrWhiteSpace(identifier)) return identifier;
+                }
+            }
+        }
+
+        // 3. 从 JWT User Claims 中获取
         var claimTenant = context.User.FindFirst("tenantId")?.Value 
             ?? context.User.FindFirst("tenant")?.Value 
             ?? context.User.FindFirst(ClaimTypes.GroupSid)?.Value;
@@ -142,24 +161,8 @@ public class GlobalAuditLoggingMiddleware
             return claimTenant;
         }
 
-        // 3. 从 HttpContext.Items 中尝试获取 Finbuckle 解析的 TenantInfo
-        foreach (var item in context.Items.Values)
-        {
-            if (item != null && item.GetType().Name.Contains("TenantContext"))
-            {
-                var tenantInfoProp = item.GetType().GetProperty("TenantInfo");
-                var tenantInfo = tenantInfoProp?.GetValue(item);
-                if (tenantInfo != null)
-                {
-                    var idProp = tenantInfo.GetType().GetProperty("Identifier");
-                    var identifier = idProp?.GetValue(tenantInfo)?.ToString();
-                    if (!string.IsNullOrWhiteSpace(identifier)) return identifier;
-                }
-            }
-        }
-
-        // 4. 若全流程无法获取租户，返回 null
-        return null;
+        // 4. 若全流程未显式传递特定子租户（如匿名/获取验证码/宿主管理），属于系统宿主 root 租户
+        return TenantConstants.RootTenantId;
     }
 
     private static string GetClientIp(HttpContext context)

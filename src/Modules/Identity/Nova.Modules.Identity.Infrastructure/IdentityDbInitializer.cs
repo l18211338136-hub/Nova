@@ -340,13 +340,13 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         {
             var adminClaims = await _roleManager.GetClaimsAsync(adminRole);
             var apiPermissions = new HashSet<string>();
-            var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic && (a.FullName?.StartsWith("Nova") == true));
 
-            foreach (var file in dllFiles)
+            foreach (var assembly in assemblies)
             {
                 try
                 {
-                    var assembly = Assembly.LoadFrom(file);
                     var types = assembly.GetTypes();
                     foreach (var type in types)
                     {

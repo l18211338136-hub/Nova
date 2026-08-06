@@ -2,6 +2,7 @@ using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Nova.Framework.Domain.Auditing;
 using Nova.Framework.MultiTenancy;
 using Nova.Framework.Web.Logging;
 using Nova.Modules.Audit.Domain.OperationLogs;
@@ -12,6 +13,7 @@ namespace Nova.Modules.Audit.Infrastructure.Services;
 public class LogProcessorHostedService : BackgroundService
 {
     private readonly OperationLogChannel _logChannel;
+    private readonly IEntityChangeChannel? _changeChannel;
     private readonly ISanitizerEngine _sanitizerEngine;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<LogProcessorHostedService> _logger;
@@ -20,9 +22,11 @@ public class LogProcessorHostedService : BackgroundService
         IOperationLogChannel logChannel,
         ISanitizerEngine sanitizerEngine,
         IServiceScopeFactory scopeFactory,
-        ILogger<LogProcessorHostedService> logger)
+        ILogger<LogProcessorHostedService> logger,
+        IEntityChangeChannel? changeChannel = null)
     {
         _logChannel = (OperationLogChannel)logChannel;
+        _changeChannel = changeChannel;
         _sanitizerEngine = sanitizerEngine;
         _scopeFactory = scopeFactory;
         _logger = logger;
@@ -32,6 +36,76 @@ public class LogProcessorHostedService : BackgroundService
     {
         _logger.LogInformation("[LogProcessor] Global Operation Log background processor started.");
 
+        var logTask = ProcessOperationLogsAsync(stoppingToken);
+        var changeTask = ProcessEntityChangesAsync(stoppingToken);
+
+        await Task.WhenAll(logTask, changeTask);
+    }
+
+    private async Task ProcessEntityChangesAsync(CancellationToken stoppingToken)
+    {
+        if (_changeChannel == null) return;
+
+        var buffer = new List<EntityChangeLog>();
+        var lastFlushTime = DateTime.UtcNow;
+
+        await foreach (var changeLog in _changeChannel.ReadAllAsync(stoppingToken))
+        {
+            buffer.Add(changeLog);
+
+            if (buffer.Count >= 50 || (DateTime.UtcNow - lastFlushTime).TotalSeconds >= 2)
+            {
+                await FlushEntityChangesAsync(buffer, stoppingToken);
+                buffer.Clear();
+                lastFlushTime = DateTime.UtcNow;
+            }
+        }
+
+        if (buffer.Count > 0)
+        {
+            await FlushEntityChangesAsync(buffer, CancellationToken.None);
+        }
+    }
+
+    private async Task FlushEntityChangesAsync(List<EntityChangeLog> items, CancellationToken cancellationToken)
+    {
+        if (items.Count == 0) return;
+
+        var groups = items.GroupBy(x => x.TenantId);
+
+        foreach (var group in groups)
+        {
+            var tenantId = group.Key;
+            var changeLogs = group.ToList();
+
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var store = scope.ServiceProvider.GetService<IMultiTenantStore<NovaTenantInfo>>();
+                var contextSetter = scope.ServiceProvider.GetService<IMultiTenantContextSetter>();
+
+                if (store != null && contextSetter != null && !string.IsNullOrWhiteSpace(tenantId))
+                {
+                    var tenantInfo = await store.GetAsync(tenantId) ?? await store.GetByIdentifierAsync(tenantId);
+                    if (tenantInfo != null)
+                    {
+                        contextSetter.MultiTenantContext = new LogTenantContext { TenantInfo = tenantInfo };
+                    }
+                }
+
+                var dbContext = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
+                await dbContext.EntityChangeLogs.AddRangeAsync(changeLogs, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[LogProcessor] Failed to persist {Count} entity change logs for Tenant '{TenantId}'.", changeLogs.Count, tenantId ?? "none");
+            }
+        }
+    }
+
+    private async Task ProcessOperationLogsAsync(CancellationToken stoppingToken)
+    {
         var buffer = new List<OperationLogQueueItem>();
         var lastFlushTime = DateTime.UtcNow;
 
@@ -76,7 +150,6 @@ public class LogProcessorHostedService : BackgroundService
                     actionName: req.ActionName
                 );
 
-                // 请求载荷与响应载荷安全自动脱敏
                 domainLog.SetAndSanitizeRequestPayload(req.RequestPayload, _sanitizerEngine);
                 domainLog.SetAndSanitizeResponsePayload(req.ResponsePayload, _sanitizerEngine);
 
@@ -99,21 +172,9 @@ public class LogProcessorHostedService : BackgroundService
                 var store = scope.ServiceProvider.GetService<IMultiTenantStore<NovaTenantInfo>>();
                 var contextSetter = scope.ServiceProvider.GetService<IMultiTenantContextSetter>();
 
-                if (store != null && contextSetter != null)
+                if (store != null && contextSetter != null && !string.IsNullOrWhiteSpace(tenantId))
                 {
-                    NovaTenantInfo? tenantInfo = null;
-
-                    if (!string.IsNullOrWhiteSpace(tenantId))
-                    {
-                        tenantInfo = await store.GetAsync(tenantId) ?? await store.GetByIdentifierAsync(tenantId);
-                    }
-
-                    // 若未显式匹配出租户，回退到宿主 root 租户挂载，确保 Finbuckle 不会抛出 TenantInfo is null 异常
-                    if (tenantInfo == null)
-                    {
-                        tenantInfo = await store.GetAsync("root") ?? await store.GetByIdentifierAsync("root");
-                    }
-
+                    var tenantInfo = await store.GetAsync(tenantId) ?? await store.GetByIdentifierAsync(tenantId);
                     if (tenantInfo != null)
                     {
                         contextSetter.MultiTenantContext = new LogTenantContext { TenantInfo = tenantInfo };

@@ -17,12 +17,16 @@ public static class DatabaseExtensions
 
         logger.LogInformation("[Nova.Database] Starting automatic migrations...");
 
-        // Ensure all Nova assemblies are loaded into the AppDomain
+        var loadedAssemblyNames = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().Name!), StringComparer.OrdinalIgnoreCase);
         var directory = AppDomain.CurrentDomain.BaseDirectory;
         var dllFiles = Directory.GetFiles(directory, "Nova.*.dll");
         foreach (var file in dllFiles)
         {
-            try { Assembly.LoadFrom(file); } catch { }
+            var fileName = Path.GetFileNameWithoutExtension(file);
+            if (!loadedAssemblyNames.Contains(fileName))
+            {
+                try { Assembly.LoadFrom(file); } catch { }
+            }
         }
 
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();

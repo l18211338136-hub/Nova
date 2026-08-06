@@ -1,9 +1,11 @@
+using Nova.Framework.Domain.Auditing;
 using Nova.Framework.Domain.Entities;
 using Nova.Modules.Audit.Domain.Services;
 
 namespace Nova.Modules.Audit.Domain.OperationLogs;
 
 // 操作日志聚合根（DDD 充血模型，所有字段支持 Nullable）
+[DisableEntityChangeAuditing]
 public class OperationLog : Entity<Guid>
 {
     public string? TraceId { get; private set; }

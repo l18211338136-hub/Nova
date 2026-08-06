@@ -61,12 +61,14 @@ public class GetOperationLogsQueryHandler : IConsumer<GetOperationLogsQuery>, IS
 
         if (request.StartDate.HasValue)
         {
-            dbQuery = dbQuery.Where(x => x.CreatedAt >= request.StartDate.Value);
+            var utcStart = request.StartDate.Value.ToUniversalTime();
+            dbQuery = dbQuery.Where(x => x.CreatedAt >= utcStart);
         }
 
         if (request.EndDate.HasValue)
         {
-            dbQuery = dbQuery.Where(x => x.CreatedAt <= request.EndDate.Value);
+            var utcEnd = request.EndDate.Value.ToUniversalTime();
+            dbQuery = dbQuery.Where(x => x.CreatedAt <= utcEnd);
         }
 
         var total = await dbQuery.CountAsync(context.CancellationToken);

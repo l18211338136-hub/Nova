@@ -1,11 +1,13 @@
+using Nova.Contracts.Constants;
+
 namespace Nova.Modules.Identity.Domain;
 
 public static class NovaIdentityConstants
 {
     public static class Tenants
     {
-        public const string RootTenantId = "root";
-        public const string RootTenantName = "宿主租户";
+        public const string RootTenantId = TenantConstants.RootTenantId;
+        public const string RootTenantName = TenantConstants.RootTenantName;
         public const string RetailTenantId = "retail"; // 散户/C端用户的默认隔离租户
     }
 

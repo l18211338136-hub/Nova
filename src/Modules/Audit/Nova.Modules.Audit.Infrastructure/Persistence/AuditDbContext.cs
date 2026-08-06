@@ -2,6 +2,7 @@ using Finbuckle.MultiTenant.Abstractions;
 using Finbuckle.MultiTenant.EntityFrameworkCore;
 using Finbuckle.MultiTenant.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Nova.Framework.Domain.Auditing;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
 using Nova.Modules.Audit.Application.Database;
 using Nova.Modules.Audit.Domain.OperationLogs;
@@ -16,6 +17,8 @@ public class AuditDbContext : DbContext, IAuditDbContext, IMultiTenantDbContext
 
     public DbSet<OperationLog> OperationLogs { get; set; } = default!;
     public DbSet<SanitizationDetail> SanitizationDetails { get; set; } = default!;
+    public DbSet<EntityChangeLog> EntityChangeLogs { get; set; } = default!;
+    public DbSet<EntityPropertyChange> EntityPropertyChanges { get; set; } = default!;
 
     public AuditDbContext(ITenantInfo tenantInfo, DbContextOptions<AuditDbContext> options)
         : base(options)
@@ -72,6 +75,39 @@ public class AuditDbContext : DbContext, IAuditDbContext, IMultiTenantDbContext
             b.Property(x => x.MaskedRule).HasMaxLength(128).IsRequired(false);
 
             b.HasIndex(x => x.LogId);
+            b.IsMultiTenant();
+        });
+
+        modelBuilder.Entity<EntityChangeLog>(b =>
+        {
+            b.ToTable("EntityChangeLogs");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
+            b.Property(x => x.EntityId).HasMaxLength(128).IsRequired();
+            b.Property(x => x.ChangeType).HasMaxLength(32).IsRequired();
+            b.Property(x => x.OperatorName).HasMaxLength(128).IsRequired(false);
+
+            b.HasIndex(x => x.EntityType);
+            b.HasIndex(x => x.EntityId);
+            b.HasIndex(x => x.CreatedAt);
+            b.HasIndex(x => new { x.EntityType, x.EntityId });
+
+            b.HasMany(x => x.PropertyChanges)
+                .WithOne()
+                .HasForeignKey(x => x.EntityChangeLogId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.IsMultiTenant();
+        });
+
+        modelBuilder.Entity<EntityPropertyChange>(b =>
+        {
+            b.ToTable("EntityPropertyChanges");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.PropertyName).HasMaxLength(128).IsRequired();
+            b.Property(x => x.PropertyDisplayName).HasMaxLength(128).IsRequired(false);
+
+            b.HasIndex(x => x.EntityChangeLogId);
             b.IsMultiTenant();
         });
 

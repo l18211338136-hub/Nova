@@ -21,7 +21,9 @@ import type {
 
 import type {
   ApiResponseOfPagedResultOfAuthAuditLogDto,
+  ApiResponseOfPagedResultOfEntityChangeLogDto,
   ApiResponseOfPagedResultOfOperationLogDto,
+  GetEntityChangesParams,
   GetOperationLogsParams
 } from '../model';
 
@@ -130,6 +132,99 @@ export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperati
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetOperationLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary 变更日志
+ */
+export const getEntityChanges = (
+    params?: GetEntityChangesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfPagedResultOfEntityChangeLogDto>(
+      {url: `/api/v1/audit/entity-changes`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetEntityChangesQueryKey = (params?: GetEntityChangesParams,) => {
+    return [
+    `/api/v1/audit/entity-changes`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetEntityChangesQueryOptions = <TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(params?: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEntityChangesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntityChanges>>> = ({ signal }) => getEntityChanges(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetEntityChangesQueryResult = NonNullable<Awaited<ReturnType<typeof getEntityChanges>>>
+export type GetEntityChangesQueryError = unknown
+
+
+export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
+ params: undefined |  GetEntityChangesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityChanges>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
+ params?: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityChanges>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
+ params?: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 变更日志
+ */
+
+export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
+ params?: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEntityChangesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

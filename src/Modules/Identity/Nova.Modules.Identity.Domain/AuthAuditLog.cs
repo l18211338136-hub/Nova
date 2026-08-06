@@ -3,6 +3,7 @@ using Nova.Framework.Domain.Auditing;
 namespace Nova.Modules.Identity.Domain;
 
 // 认证审计日志：记录登录成功/失败、令牌刷新、改密、登出等安全相关事件。
+[DisableEntityChangeAuditing]
 public class AuthAuditLog : IFullAuditedEntity
 {
     private AuthAuditLog()
