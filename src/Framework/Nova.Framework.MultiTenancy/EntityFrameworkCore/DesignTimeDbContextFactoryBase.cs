@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace Nova.Framework.MultiTenancy.EntityFrameworkCore;
 
@@ -30,20 +31,24 @@ public abstract class DesignTimeDbContextFactoryBase<TContext> : IDesignTimeDbCo
 
         basePath ??= currentDir;
 
-        var appsettingsPath = Path.Combine(basePath, "src", "Host", "Nova.WebApi", "appsettings.json");
-        if (!File.Exists(appsettingsPath))
+        var webApiPath = Path.Combine(basePath, "src", "Host", "Nova.WebApi");
+        if (!Directory.Exists(webApiPath))
         {
             // Fallback for execution within Migrator folder
-            appsettingsPath = Path.Combine(currentDir, "..", "Nova.WebApi", "appsettings.json");
+            webApiPath = Path.Combine(currentDir, "..", "Nova.WebApi");
         }
 
-        if (!File.Exists(appsettingsPath))
-        {
-            throw new FileNotFoundException($"Could not find appsettings.json at {appsettingsPath}");
-        }
+        var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
-        var json = File.ReadAllText(appsettingsPath);
-        using var doc = System.Text.Json.JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("ConnectionStrings").GetProperty("DefaultConnection").GetString()!;
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(webApiPath)
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{env}.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        return configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection not found in configuration.");
     }
 }
+
