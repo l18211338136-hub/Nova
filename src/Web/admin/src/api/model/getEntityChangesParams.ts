@@ -6,12 +6,12 @@
  */
 
 export type GetEntityChangesParams = {
-  page?: number;
-  pageSize?: number;
-  entityType?: string;
-  entityId?: string;
-  changeType?: string;
-  operatorName?: string;
-  startDate?: string;
-  endDate?: string;
+page: number;
+pageSize: number;
+entityType?: string;
+entityId?: string;
+changeType?: string;
+operatorName?: string;
+startDate?: string;
+endDate?: string;
 };

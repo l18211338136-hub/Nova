@@ -1,15 +1,17 @@
-import { useEffect } from 'react'
-import { z } from 'zod'
+import { useEffect, useState } from 'react'
+import { useForm, SubmitErrorHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
+import { Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { z } from 'zod'
 import {
   useGetProfile,
   useUpdateProfile,
   getGetProfileQueryKey,
 } from '@/api/endpoints/profile'
+import { useUpload } from '@/api/endpoints/storage'
 import { resolveErrorMessage } from '@/hooks/use-preferences'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,23 +25,23 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { AvatarCropDialog } from './avatar-crop-dialog'
 
-const getProfileFormSchema = (t: (arg: string) => string) =>
+import { getFullImageUrl } from '@/lib/utils'
+
+const getProfileFormSchema = (t: (key: string) => string) =>
   z.object({
     nickName: z
       .string()
-      .max(50, t('Nickname must not be longer than 50 characters.'))
+      .max(64, t('Nickname must not exceed 64 characters.'))
       .optional(),
     bio: z
       .string()
       .max(160, t('Bio must not be longer than 160 characters.'))
       .optional(),
-    avatarUrl: z
-      .union([z.url(t('Please enter a valid URL.')), z.literal('')])
-      .optional(),
+    avatarUrl: z.string().optional(),
     phoneNumber: z
       .union([
         z.string().regex(/^1[3-9]\d{9}$/, t('Please enter a valid phone number.')),
@@ -60,6 +62,14 @@ const EMPTY_VALUES: ProfileFormValues = {
 export function ProfileForm() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const [isUploading, setIsUploading] = useState(false)
+  const [avatarFileId, setAvatarFileId] = useState<string | undefined>()
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null)
+
+  // 裁剪弹窗相关 state
+  const [cropDialogOpen, setCropDialogOpen] = useState(false)
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
+  const [rawFileName, setRawFileName] = useState('avatar.png')
 
   const { data, isLoading } = useGetProfile()
   const profile = data?.data
@@ -70,7 +80,7 @@ export function ProfileForm() {
     mode: 'onChange',
   })
 
-  // 资料是异步拉取的，到货后再回填表单（reset 会同时刷新 dirty 基线）
+  // 资料是异步拉取的，到货后再回填表单
   useEffect(() => {
     if (!profile) return
     form.reset({
@@ -84,7 +94,10 @@ export function ProfileForm() {
   const updateMutation = useUpdateProfile({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() })
+        queryClient.invalidateQueries({
+          queryKey: getGetProfileQueryKey(),
+          refetchType: 'all',
+        })
         toast.success(t('Profile updated.'))
       },
       onError: (error: unknown) => {
@@ -93,58 +106,127 @@ export function ProfileForm() {
     },
   })
 
-  function onSubmit(values: ProfileFormValues) {
+  const uploadMutation = useUpload()
+
+  // 1. 用户选择本地图片 -> 唤起裁剪 Modal 弹窗
+  const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setRawFileName(file.name)
+    const objectUrl = URL.createObjectURL(file)
+    setRawImageSrc(objectUrl)
+    setCropDialogOpen(true)
+
+    // 重置 input value 方便重复选同一文件
+    e.target.value = ''
+  }
+
+  // 2. 在裁剪 Modal 确认后，执行裁切文件上传
+  const handleConfirmCrop = async (croppedFile: File, previewUrl: string) => {
+    try {
+      setIsUploading(true)
+      setPreviewAvatarUrl(previewUrl)
+
+      const uploadRes = await uploadMutation.mutateAsync({
+        data: { file: croppedFile },
+      })
+
+      const fileObj = uploadRes.data
+      if (!fileObj) return
+
+      const finalUrl = fileObj.accessUrl || previewUrl
+      form.setValue('avatarUrl', finalUrl, { shouldDirty: true })
+      setAvatarFileId(fileObj.id)
+
+      toast.success(t('Avatar uploaded successfully.'))
+    } catch {
+      toast.error(t('Failed to upload avatar.'))
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  function onSubmit(values: ProfileFormValues, e?: React.BaseSyntheticEvent) {
+    e?.preventDefault()
+    if (updateMutation.isPending || isUploading) return
+
     updateMutation.mutate({
       data: {
-        // 空字符串代表「清空该项」，统一转成 null 交给后端
-        nickName: values.nickName?.trim() || null,
-        bio: values.bio?.trim() || null,
-        avatarUrl: values.avatarUrl?.trim() || null,
-        phoneNumber: values.phoneNumber?.trim() || null,
+        nickName: values.nickName,
+        bio: values.bio,
+        avatarUrl: values.avatarUrl,
+        avatarFileId,
+        phoneNumber: values.phoneNumber,
       },
     })
   }
 
-  if (isLoading) {
-    return (
-      <div className='space-y-6'>
-        <Skeleton className='h-16 w-full' />
-        <Skeleton className='h-10 w-full' />
-        <Skeleton className='h-10 w-full' />
-        <Skeleton className='h-24 w-full' />
-      </div>
-    )
+  const onInvalid: SubmitErrorHandler<ProfileFormValues> = (errors) => {
+    const firstField = Object.keys(errors)[0]
+    const message = errors[firstField as keyof ProfileFormValues]?.message
+    if (message) {
+      toast.error(message)
+    }
   }
-
-  const avatarPreview = form.watch('avatarUrl')
-  const displayName = profile?.nickName || profile?.userName || ''
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        {/* 只读的账号概览：这些字段由管理员或注册流程决定，不在此页修改 */}
-        <div className='flex items-center gap-4 rounded-lg border p-4'>
-          <Avatar className='size-14'>
-            <AvatarImage src={avatarPreview || undefined} alt={displayName} />
-            <AvatarFallback>
-              {displayName.slice(0, 2).toUpperCase() || 'NA'}
-            </AvatarFallback>
-          </Avatar>
-          <div className='space-y-1'>
-            <div className='flex flex-wrap items-center gap-2'>
-              <span className='font-medium'>{profile?.userName}</span>
-              {profile?.roles?.map((role) => (
-                <Badge key={role.name} variant='secondary'>
-                  {role.displayName || role.name}
-                </Badge>
-              ))}
-            </div>
-            <div className='text-sm text-muted-foreground'>
-              {profile?.email || t('No email bound')}
-              {profile?.email && !profile.emailConfirmed && (
-                <span className='ms-2 text-amber-600'>{t('Unverified')}</span>
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className='space-y-6'>
+        {/* 头像预览与实时上传交互卡片 */}
+        <div className='flex items-center gap-6 rounded-lg border p-4 bg-muted/20'>
+          <div className='relative group'>
+            <Avatar className='h-20 w-20 border-2 border-border shadow-sm'>
+              <AvatarImage
+                src={getFullImageUrl(previewAvatarUrl || form.watch('avatarUrl') || profile?.avatarUrl)}
+                alt='Avatar'
+              />
+              <AvatarFallback className='bg-primary/10 text-primary font-bold text-xl'>
+                {profile?.userName?.substring(0, 2).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+
+            <label
+              htmlFor='avatar-file-input'
+              className='absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer'
+            >
+              {isUploading ? (
+                <Loader2 className='h-6 w-6 animate-spin' />
+              ) : (
+                <Camera className='h-6 w-6' />
+              )}
+            </label>
+
+            <input
+              id='avatar-file-input'
+              type='file'
+              accept='image/*'
+              className='hidden'
+              onChange={handleSelectFile}
+              disabled={isUploading}
+            />
+          </div>
+
+          <div className='space-y-1.5'>
+            <div className='flex items-center gap-2 flex-wrap'>
+              <h4 className='font-semibold text-base'>{profile?.userName}</h4>
+              {profile?.roles && profile.roles.length > 0 && (
+                <div className='flex flex-wrap gap-1'>
+                  {profile.roles.map((role) => (
+                    <Badge
+                      key={role.name || role.displayName}
+                      variant='outline'
+                      className='text-[10px] font-normal'
+                    >
+                      {role.displayName || role.name}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
+            <p className='text-xs text-muted-foreground hover:text-primary transition-colors'>
+              {t('Click the avatar above to select a new image.')}
+            </p>
           </div>
         </div>
 
@@ -155,14 +237,10 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>{t('Nickname')}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder={profile?.userName ?? ''}
-                  {...field}
-                  value={field.value ?? ''}
-                />
+                <Input placeholder={t('Enter your nickname')} {...field} />
               </FormControl>
               <FormDescription>
-                {t('This is your public display name. Leave it empty to use your username.')}
+                {t('This name will be displayed in the system.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -174,37 +252,12 @@ export function ProfileForm() {
           name='phoneNumber'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('Phone number')}</FormLabel>
+              <FormLabel>{t('Phone Number')}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder='13800000000'
-                  {...field}
-                  value={field.value ?? ''}
-                />
+                <Input placeholder={t('Enter your phone number')} {...field} />
               </FormControl>
               <FormDescription>
-                {t('Your phone number can be used to sign in and to locate your tenant.')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='avatarUrl'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Avatar URL')}</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder='https://example.com/avatar.png'
-                  {...field}
-                  value={field.value ?? ''}
-                />
-              </FormControl>
-              <FormDescription>
-                {t('Paste an image link to use as your avatar.')}
+                {t('Used for system notification and login.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -219,23 +272,37 @@ export function ProfileForm() {
               <FormLabel>{t('Bio')}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder={t('Tell us a little bit about yourself')}
+                  placeholder={t('Tell us a little about yourself')}
                   className='resize-none'
                   {...field}
-                  value={field.value ?? ''}
                 />
               </FormControl>
               <FormDescription>
-                {t('Up to 160 characters.')}
+                {t('Brief description for your profile.')}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type='submit' disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? t('Updating...') : t('Update profile')}
+        <Button
+          type='submit'
+          disabled={isLoading || updateMutation.isPending || isUploading}
+        >
+          {(isLoading || updateMutation.isPending) && (
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          )}
+          {t('Save changes')}
         </Button>
+
+        {/* 头像编辑裁切对话框 Modal */}
+        <AvatarCropDialog
+          open={cropDialogOpen}
+          imageSrc={rawImageSrc}
+          fileName={rawFileName}
+          onClose={() => setCropDialogOpen(false)}
+          onConfirm={handleConfirmCrop}
+        />
       </form>
     </Form>
   )

@@ -44,6 +44,7 @@ if (app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 
 app.UseHttpsRedirection();
 app.UseNovaCors();
+app.UseNovaLocalStorage();
 
 // 多租户与 JWT 认证必须在全局审计日志中间件之前执行，确保 HttpContext 中能够正确提取已解析的 TenantInfo 和 User Claims
 app.UseNovaMultiTenancy();

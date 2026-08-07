@@ -22,6 +22,11 @@ export interface UpdateProfile {
      */
   avatarUrl?: string | null;
   /**
+     * 头像物理文件Id
+     * @nullable
+     */
+  avatarFileId?: string | null;
+  /**
      * 手机号
      * @nullable
      */

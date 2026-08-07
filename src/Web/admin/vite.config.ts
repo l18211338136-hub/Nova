@@ -17,6 +17,16 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false, // Bypass SSL cert errors for localhost
         },
+        '/nova-storage': {
+          target: env.API_BASE_URL,
+          changeOrigin: true,
+          secure: false,
+        },
+        '/uploads': {
+          target: env.API_BASE_URL,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     plugins: [
@@ -27,6 +37,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
     ],
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-easy-crop'],
+    },
     resolve: {
       dedupe: ['react', 'react-dom'],
       alias: {

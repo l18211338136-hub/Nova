@@ -18,13 +18,10 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 
+import { getDisplayNameInitials, getFullImageUrl } from '@/lib/utils'
+
 function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
+  return getDisplayNameInitials(name)
 }
 
 export function ProfileDropdown() {
@@ -35,8 +32,6 @@ export function ProfileDropdown() {
   const { data: profileResponse, isLoading } = useGetProfile({
     query: {
       enabled: Boolean(accessToken),
-      staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
     },
   })
   const profile = profileResponse?.data
@@ -52,7 +47,7 @@ export function ProfileDropdown() {
 
   const displayName = profile?.nickName || profile?.userName || nameClaim
   const email = profile?.email || fallbackEmail
-  const avatarUrl = profile?.avatarUrl
+  const avatarUrl = getFullImageUrl(profile?.avatarUrl)
   const initials = getInitials(displayName).substring(0, 2)
 
   return (

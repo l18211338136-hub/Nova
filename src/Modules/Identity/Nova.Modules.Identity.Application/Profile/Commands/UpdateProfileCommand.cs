@@ -18,6 +18,9 @@ public record UpdateProfileCommand
     [Description("头像地址")]
     public string? AvatarUrl { get; init; }
 
+    [Description("头像物理文件Id")]
+    public Guid? AvatarFileId { get; init; }
+
     [Description("手机号")]
     public string? PhoneNumber { get; init; }
 }

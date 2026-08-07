@@ -9,11 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Mapster" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Storage.Application\Nova.Modules.Storage.Application.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Storage.Infrastructure\Nova.Modules.Storage.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
-

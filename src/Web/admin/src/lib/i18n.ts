@@ -13,12 +13,21 @@ i18n
       en: {
         translation: enUS,
       },
+      'en-US': {
+        translation: enUS,
+      },
       zh: {
+        translation: zhCN,
+      },
+      'zh-CN': {
+        translation: zhCN,
+      },
+      zh_CN: {
         translation: zhCN,
       },
     },
     lng: defaultLanguage, // read from localStorage
-    fallbackLng: 'en',
+    fallbackLng: 'zh',
     interpolation: {
       escapeValue: false, // react already safes from xss
     },

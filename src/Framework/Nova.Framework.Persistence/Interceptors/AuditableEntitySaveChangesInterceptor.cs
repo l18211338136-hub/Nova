@@ -35,7 +35,10 @@ public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor, ISc
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = DateTimeOffset.UtcNow;
+                if (entry.Entity.CreatedAt == default)
+                {
+                    entry.Entity.CreatedAt = DateTimeOffset.UtcNow;
+                }
                 entry.Entity.CreatedBy = _currentUser.Id;
             }
 

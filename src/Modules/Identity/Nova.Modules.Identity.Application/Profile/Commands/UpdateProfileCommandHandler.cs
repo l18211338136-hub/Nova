@@ -74,6 +74,18 @@ public class UpdateProfileCommandHandler : IConsumer<UpdateProfileCommand>
                 await SyncPhoneMappingAsync(oldPhoneNumber, newPhoneNumber, tenantId);
             }
 
+            // 发布事件由 Storage 模块异步绑定头像附件
+            if (request.AvatarFileId.HasValue)
+            {
+                await context.Publish(new Nova.Contracts.Storage.BindAttachmentEvent
+                {
+                    FileId = request.AvatarFileId.Value,
+                    TargetType = "User",
+                    TargetId = user.Id.ToString(),
+                    AttachmentType = Nova.Contracts.Storage.AttachmentType.Avatar
+                });
+            }
+
             await context.RespondAsync(new UpdateProfileResult { Success = true });
         }
     }

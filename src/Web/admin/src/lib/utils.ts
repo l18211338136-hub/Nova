@@ -73,3 +73,20 @@ export function getDisplayNameInitials(displayName: string): string {
   const last = parts[parts.length - 1]?.[0] ?? ''
   return (first + last).toUpperCase()
 }
+
+/**
+ * 智能解析图片/文件 URL：自动将相对路径（如 /nova-storage/xxx.png）转换为带完整 Host 前缀的地址
+ */
+export function getFullImageUrl(url?: string | null): string | undefined {
+  if (!url) return undefined
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+    return url
+  }
+  const baseUrl = import.meta.env.VITE_API_URL || ''
+  if (baseUrl) {
+    const cleanBase = baseUrl.replace(/\/$/, '')
+    const cleanUrl = url.startsWith('/') ? url : '/' + url
+    return `${cleanBase}${cleanUrl}`
+  }
+  return url
+}
