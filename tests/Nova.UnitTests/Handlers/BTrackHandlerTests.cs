@@ -158,7 +158,8 @@ public class BTrackHandlerTests
         harness.SetTenant(scope.ServiceProvider);
         var rm = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-        var handler = new UpdateRoleCommandHandler(rm);
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var handler = new UpdateRoleCommandHandler(rm, um, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new UpdateRoleCommand
         {
             Id = Guid.NewGuid(),
@@ -181,7 +182,8 @@ public class BTrackHandlerTests
         var role = Role.Create("Editor", "编辑", null, 0);
         await rm.CreateAsync(role);
 
-        var handler = new UpdateRoleCommandHandler(rm);
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var handler = new UpdateRoleCommandHandler(rm, um, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new UpdateRoleCommand
         {
             Id = role.Id,
@@ -210,7 +212,8 @@ public class BTrackHandlerTests
         harness.SetTenant(scope.ServiceProvider);
         var rm = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-        var handler = new DeleteRoleCommandHandler(rm);
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var handler = new DeleteRoleCommandHandler(rm, um, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new DeleteRoleCommand { Id = Guid.NewGuid() });
 
         await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(ctx));
@@ -226,7 +229,8 @@ public class BTrackHandlerTests
         var role = Role.Create("Temp", "临时", null, 0);
         await rm.CreateAsync(role);
 
-        var handler = new DeleteRoleCommandHandler(rm);
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var handler = new DeleteRoleCommandHandler(rm, um, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new DeleteRoleCommand { Id = role.Id });
 
         await handler.Consume(ctx);

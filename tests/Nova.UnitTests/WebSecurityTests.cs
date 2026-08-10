@@ -85,8 +85,6 @@ public class WebSecurityTests
 
         var result = await filter.InvokeAsync(context, _ => new ValueTask<object?>("next"));
 
-        // .NET 10 的 ForbidHttpResult 不实现 IStatusCodeHttpResult，且 ExecuteAsync 需要认证服务。
-        // 这里通过类型名断言其语义等价于 403 Forbidden。
         Assert.Equal("ForbidHttpResult", result?.GetType().Name);
     }
 
@@ -123,5 +121,21 @@ public class WebSecurityTests
         Assert.Null(currentUser.Id);
         Assert.False(currentUser.IsAuthenticated);
         Assert.Empty(currentUser.Roles);
+    }
+
+    [Theory]
+    [InlineData("Identity.Users.Read", "Identity.Users.Read", true)]
+    [InlineData("*", "Identity.Users.Read", true)]
+    [InlineData("Identity.Users.*", "Identity.Users.Read", true)]
+    [InlineData("Identity.Users.*", "Identity.Users.Create", true)]
+    [InlineData("Identity.Users.*", "Identity.Roles.Read", false)]
+    [InlineData("Identity.*", "Identity.Users.Read", true)]
+    [InlineData("Identity.*", "Identity.Roles.Create", true)]
+    [InlineData("Identity.*", "Multitenancy.Tenants.Read", false)]
+    [InlineData("Identity.Users.Read", "Identity.Users.Create", false)]
+    public void PermissionMatcher_Wildcard_Matching(string userPerm, string requiredPerm, bool expected)
+    {
+        var actual = PermissionMatcher.IsMatch(userPerm, requiredPerm);
+        Assert.Equal(expected, actual);
     }
 }

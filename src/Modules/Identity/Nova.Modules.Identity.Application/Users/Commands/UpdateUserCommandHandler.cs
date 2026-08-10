@@ -1,6 +1,8 @@
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Exceptions;
+using Nova.Framework.Domain.SeedWork;
+using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Domain.Users;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
@@ -8,10 +10,12 @@ namespace Nova.Modules.Identity.Application.Users.Commands;
 public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
 {
     private readonly UserManager<User> _userManager;
+    private readonly IDomainEventDispatcher _dispatcher;
 
-    public UpdateUserCommandHandler(UserManager<User> userManager)
+    public UpdateUserCommandHandler(UserManager<User> userManager, IDomainEventDispatcher dispatcher)
     {
         _userManager = userManager;
+        _dispatcher = dispatcher;
     }
 
     public async Task Consume(ConsumeContext<UpdateUserCommand> context)
@@ -28,14 +32,6 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
             await _userManager.SetEmailAsync(user, command.Email);
             user.EmailConfirmed = true; // 管理员修改邮箱自动确认
         }
-
-        // Username should not be modifiable after creation
-        // if (user.UserName != command.UserName)
-        // {
-        //     var existingUsername = await _userManager.FindByNameAsync(command.UserName);
-        //     if (existingUsername != null) throw new NovaValidationException("该用户名已经被使用");
-        //     await _userManager.SetUserNameAsync(user, command.UserName);
-        // }
 
         if (user.PhoneNumber != command.PhoneNumber)
         {
@@ -118,6 +114,11 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
             {
                 await _userManager.AddClaimsAsync(user, menusToAdd);
             }
+        }
+
+        if (command.Roles != null || command.Permissions != null)
+        {
+            await _dispatcher.PublishAsync(new UserPermissionsUpdatedEvent(user.Id));
         }
 
         await context.RespondAsync(new UpdateUserResult { Success = true });

@@ -71,6 +71,8 @@ public class StorageModule : IModule
         // 挂载 CleanUnboundFilesJob 每日零点自动运行未绑定文件清理回收 GC
         try
         {
+            RecurringJob.RemoveIfExists("clean-orphan-storage-files");
+
             RecurringJob.AddOrUpdate<CleanUnboundFilesJob>(
                 "clean-unbound-storage-files",
                 job => job.ExecuteAsync(default),

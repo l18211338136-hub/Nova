@@ -1,17 +1,27 @@
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Nova.Contracts.Exceptions;
+using Nova.Framework.Domain.SeedWork;
+using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Domain.Roles;
+using Nova.Modules.Identity.Domain.Users;
 
 namespace Nova.Modules.Identity.Application.Roles.Commands;
 
 public class UpdateRoleCommandHandler : IConsumer<UpdateRoleCommand>
 {
     private readonly RoleManager<Role> _roleManager;
+    private readonly UserManager<User> _userManager;
+    private readonly IDomainEventDispatcher _dispatcher;
 
-    public UpdateRoleCommandHandler(RoleManager<Role> roleManager)
+    public UpdateRoleCommandHandler(
+        RoleManager<Role> roleManager,
+        UserManager<User> userManager,
+        IDomainEventDispatcher dispatcher)
     {
         _roleManager = roleManager;
+        _userManager = userManager;
+        _dispatcher = dispatcher;
     }
 
     public async Task Consume(ConsumeContext<UpdateRoleCommand> context)
@@ -92,6 +102,15 @@ public class UpdateRoleCommandHandler : IConsumer<UpdateRoleCommand>
                 {
                     await _roleManager.AddClaimAsync(role, new System.Security.Claims.Claim("Menu", menu));
                 }
+            }
+        }
+
+        if (command.Permissions != null)
+        {
+            var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
+            foreach (var u in usersInRole)
+            {
+                await _dispatcher.PublishAsync(new UserPermissionsUpdatedEvent(u.Id));
             }
         }
 

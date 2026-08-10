@@ -45,9 +45,19 @@ public class TokenService : ITokenService, ITransientDependency
             claims.Add(new Claim("tenantId", tenantId));
         }
 
+        var useCached = _configuration.GetValue<bool>("Auth:UseCachedPermissions", true);
+
         if (additionalClaims != null)
         {
-            claims.AddRange(additionalClaims);
+            if (useCached)
+            {
+                // 开启缓存模式时，瘦身 JWT：过滤掉繁重的离散 Permission Claims
+                claims.AddRange(additionalClaims.Where(c => c.Type != "Permission"));
+            }
+            else
+            {
+                claims.AddRange(additionalClaims);
+            }
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));

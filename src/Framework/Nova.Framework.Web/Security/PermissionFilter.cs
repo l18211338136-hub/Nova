@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Nova.Contracts.Security;
 
 namespace Nova.Framework.Web.Security;
 
+/// <summary>
+/// 细粒度权限点与层级通配符端点拦截器
+/// </summary>
 public class PermissionFilter : IEndpointFilter
 {
     private readonly string _permission;
@@ -20,8 +25,19 @@ public class PermissionFilter : IEndpointFilter
             return Results.Unauthorized();
         }
 
-        // 检查是否有精准权限，或者拥有 '*' 绝对通配符
-        var hasPermission = user.HasClaim(c => c.Type == "Permission" && (c.Value == _permission || c.Value == "*"));
+        var permissionChecker = context.HttpContext.RequestServices?.GetService<IPermissionChecker>();
+        bool hasPermission;
+
+        if (permissionChecker != null)
+        {
+            hasPermission = await permissionChecker.HasPermissionAsync(user, _permission, context.HttpContext.RequestAborted);
+        }
+        else
+        {
+            // 降级回退：使用 Claims + PermissionMatcher 通配符比对
+            var claims = user.Claims.Where(c => c.Type == "Permission").Select(c => c.Value);
+            hasPermission = PermissionMatcher.IsMatchAny(claims, _permission);
+        }
         
         if (!hasPermission)
         {
