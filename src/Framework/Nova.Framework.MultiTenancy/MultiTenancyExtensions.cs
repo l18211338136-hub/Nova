@@ -51,28 +51,12 @@ public static class MultiTenancyExtensions
                             return queryValue;
                     }
 
-                    // 1. 应对 RefreshToken 等带 Header 却可能因为过期失效的原生 WithClaimStrategy
-                    if (httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                    // 1. 从已认证的 ClaimsPrincipal 提取 tenantId（已被 JwtBearer 中间件完成签名与有效性校验）
+                    if (httpContext.User.Identity?.IsAuthenticated == true)
                     {
-                        var authValue = authHeader.ToString();
-                        if (authValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var token = authValue.Substring(7);
-                            try
-                            {
-                                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                                if (handler.CanReadToken(token))
-                                {
-                                    var jwtToken = handler.ReadJwtToken(token);
-                                    var tenantClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "tenantId");
-                                    if (tenantClaim != null && !string.IsNullOrWhiteSpace(tenantClaim.Value))
-                                    {
-                                        return tenantClaim.Value;
-                                    }
-                                }
-                            }
-                            catch { /* 忽略解析错误 */ }
-                        }
+                        var tenantClaim = httpContext.User.FindFirst("tenantId")?.Value;
+                        if (!string.IsNullOrWhiteSpace(tenantClaim))
+                            return tenantClaim;
                     }
 
                 }

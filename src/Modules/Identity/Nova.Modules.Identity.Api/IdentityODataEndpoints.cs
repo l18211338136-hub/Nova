@@ -66,7 +66,7 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Users.Read"))
         .WithTags("Users")
-        .WithSummary("用户列表（管理端分页）");
+        .WithSummary("用户列表");
 
         endpoints.MapGet("/api/identity/users/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -132,7 +132,7 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Roles.Read"))
         .WithTags("Roles")
-        .WithSummary("角色列表（管理端分页）");
+        .WithSummary("角色列表");
 
         endpoints.MapGet("/api/identity/roles/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -197,7 +197,7 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Menus.Read"))
         .WithTags("Menus")
-        .WithSummary("菜单列表（管理端分页）");
+        .WithSummary("菜单列表");
 
         endpoints.MapGet("/api/identity/menus/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -206,7 +206,7 @@ public static class IdentityODataEndpoints
                 .Select(m => new
                 {
                     Id = m.Id,
-                    Title = m.Title,
+                    Title = m.Name,
                     ParentId = m.ParentId,
                     Path = m.Path
                 })

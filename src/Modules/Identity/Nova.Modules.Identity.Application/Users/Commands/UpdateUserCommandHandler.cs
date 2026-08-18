@@ -1,7 +1,10 @@
+using Finbuckle.MultiTenant.Abstractions;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Nova.Contracts.Exceptions;
 using Nova.Framework.Domain.SeedWork;
+using Nova.Framework.MultiTenancy;
 using Nova.Modules.Identity.Application.Events;
 using Nova.Modules.Identity.Domain.Users;
 
@@ -11,11 +14,19 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
 {
     private readonly UserManager<User> _userManager;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly NovaTenantDbContext? _tenantDb;
+    private readonly ITenantInfo? _tenantInfo;
 
-    public UpdateUserCommandHandler(UserManager<User> userManager, IDomainEventDispatcher dispatcher)
+    public UpdateUserCommandHandler(
+        UserManager<User> userManager,
+        IDomainEventDispatcher dispatcher,
+        NovaTenantDbContext? tenantDb = null,
+        ITenantInfo? tenantInfo = null)
     {
         _userManager = userManager;
         _dispatcher = dispatcher;
+        _tenantDb = tenantDb;
+        _tenantInfo = tenantInfo;
     }
 
     public async Task Consume(ConsumeContext<UpdateUserCommand> context)
@@ -29,8 +40,28 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
         {
             var existingEmail = await _userManager.FindByEmailAsync(command.Email);
             if (existingEmail != null) throw new NovaValidationException("该邮箱已经被使用");
+
+            var oldEmail = user.Email;
             await _userManager.SetEmailAsync(user, command.Email);
             user.EmailConfirmed = true; // 管理员修改邮箱自动确认
+
+            // BUG-04: 同步更新 GlobalUserTenantMappings
+            if (_tenantDb != null && _tenantInfo != null && !string.IsNullOrEmpty(oldEmail))
+            {
+                var oldMapping = await _tenantDb.GlobalUserTenantMappings
+                    .FirstOrDefaultAsync(m => m.Account == oldEmail && m.TenantId == _tenantInfo.Identifier);
+                if (oldMapping != null)
+                {
+                    _tenantDb.GlobalUserTenantMappings.Remove(oldMapping);
+                }
+
+                _tenantDb.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                {
+                    Account = command.Email,
+                    TenantId = _tenantInfo.Identifier
+                });
+                await _tenantDb.SaveChangesAsync();
+            }
         }
 
         if (user.PhoneNumber != command.PhoneNumber)
@@ -116,7 +147,7 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
             }
         }
 
-        if (command.Roles != null || command.Permissions != null)
+        if (command.Roles != null || command.Permissions != null || command.Menus != null)
         {
             await _dispatcher.PublishAsync(new UserPermissionsUpdatedEvent(user.Id));
         }

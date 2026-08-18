@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Hangfire.Common;
 using MassTransit;
 using NSubstitute;
+using Nova.UnitTests.Fakes;
 using Nova.Modules.Multitenancy.Application.Features;
 using Nova.Modules.Multitenancy.Application.Services;
 using Xunit;

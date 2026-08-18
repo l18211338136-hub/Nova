@@ -28,13 +28,13 @@ public static class DependencyInjectionExtensions
                 {
                     services.AddScoped(type);
                     var interfaces = type.GetInterfaces().Where(i => i != scopedType);
-                    foreach (var i in interfaces) services.AddScoped(i, type);
+                    foreach (var i in interfaces) services.AddScoped(i, sp => sp.GetRequiredService(type));
                 }
                 else if (singletonType.IsAssignableFrom(type))
                 {
                     services.AddSingleton(type);
                     var interfaces = type.GetInterfaces().Where(i => i != singletonType);
-                    foreach (var i in interfaces) services.AddSingleton(i, type);
+                    foreach (var i in interfaces) services.AddSingleton(i, sp => sp.GetRequiredService(type));
                 }
             }
         }

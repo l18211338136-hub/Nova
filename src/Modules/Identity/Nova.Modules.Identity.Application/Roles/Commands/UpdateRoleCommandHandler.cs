@@ -105,7 +105,7 @@ public class UpdateRoleCommandHandler : IConsumer<UpdateRoleCommand>
             }
         }
 
-        if (command.Permissions != null)
+        if (command.Permissions != null || command.Menus != null)
         {
             var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
             foreach (var u in usersInRole)

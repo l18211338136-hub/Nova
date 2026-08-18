@@ -103,12 +103,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
       }
     } else if (error.response) {
-      const status = error.response.status;
-      if (status === 403) {
-        window.location.href = '/403';
-      }
-      // Note: We intentionally do not redirect on 404, 500, or 503 
-      // so that react-query mutations can catch the error and show a toast!
+      // 保持让 React Query / handleServerError 拦截并抛出 Toast 提示，不强制全页跳转重定向
     }
 
     return Promise.reject(error);

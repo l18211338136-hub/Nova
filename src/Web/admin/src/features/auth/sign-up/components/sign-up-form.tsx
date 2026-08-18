@@ -131,7 +131,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel>{t('Email')}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input placeholder={t('Please enter email')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,7 +144,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel>{t('Password')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput placeholder={t('Please enter password')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,7 +157,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel>{t('Confirm Password')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput placeholder={t('Please confirm password')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -171,7 +171,7 @@ export function SignUpForm({
               <FormLabel>{t('Verification Code')}</FormLabel>
               <div className='flex gap-2'>
                 <FormControl>
-                  <Input placeholder='123456' {...field} />
+                  <Input placeholder={t('Please enter verification code')} {...field} />
                 </FormControl>
                 <Button
                   type='button'

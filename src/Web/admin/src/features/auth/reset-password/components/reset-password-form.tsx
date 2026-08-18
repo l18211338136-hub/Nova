@@ -118,7 +118,7 @@ export function ResetPasswordForm({ className, ...props }: ResetPasswordFormProp
             <FormItem>
               <FormLabel>{t('Email')}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input placeholder={t('Please enter email')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -166,7 +166,7 @@ export function ResetPasswordForm({ className, ...props }: ResetPasswordFormProp
             <FormItem>
               <FormLabel>{t('New Password')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput placeholder={t('Please enter password')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

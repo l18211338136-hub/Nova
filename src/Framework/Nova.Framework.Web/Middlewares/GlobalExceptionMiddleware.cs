@@ -40,43 +40,47 @@ public class GlobalExceptionMiddleware
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        var statusCode = (int)HttpStatusCode.InternalServerError;
+        var (statusCode, message) = ResolveExceptionDetails(exception);
+
         context.Response.StatusCode = statusCode;
-
-        string message = exception.Message;
-
-        // Unwrap MassTransit RequestFaultException if applicable
-        if (exception is RequestFaultException faultException && faultException.Fault?.Exceptions?.Any() == true)
-        {
-            var fault = faultException.Fault.Exceptions.First();
-            if (fault.ExceptionType == typeof(NovaValidationException).FullName || fault.ExceptionType == typeof(ValidationException).FullName)
-            {
-                statusCode = (int)HttpStatusCode.BadRequest;
-                message = fault.Message;
-            }
-            else
-            {
-                message = fault.Message;
-            }
-            message = fault.Message;
-        }
-        else if (exception is ValidationException validationException)
-        {
-            statusCode = (int)HttpStatusCode.BadRequest;
-            message = string.Join(" ", validationException.Errors.Select(e => e.ErrorMessage));
-        }
-        else if (exception.InnerException != null)
-        {
-            message = exception.InnerException.Message;
-        }
-
         var response = ApiResponse.Error(message, statusCode);
         
         var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
 
         return context.Response.WriteAsync(json);
+    }
+
+    private static (int StatusCode, string Message) ResolveExceptionDetails(Exception exception)
+    {
+        var current = exception;
+        while (current != null)
+        {
+            if (current is NovaValidationException novaEx)
+            {
+                return ((int)HttpStatusCode.BadRequest, novaEx.Message);
+            }
+            if (current is ValidationException validationException)
+            {
+                return ((int)HttpStatusCode.BadRequest, string.Join(" ", validationException.Errors.Select(e => e.ErrorMessage)));
+            }
+            if (current is RequestFaultException faultException && faultException.Fault?.Exceptions?.Any() == true)
+            {
+                var fault = faultException.Fault.Exceptions.First();
+                if (fault.ExceptionType == typeof(NovaValidationException).FullName ||
+                    fault.ExceptionType == typeof(ValidationException).FullName ||
+                    fault.ExceptionType?.EndsWith("ValidationException") == true)
+                {
+                    return ((int)HttpStatusCode.BadRequest, fault.Message);
+                }
+            }
+
+            current = current.InnerException;
+        }
+
+        return ((int)HttpStatusCode.InternalServerError, "服务器内部错误，请稍后再试。");
     }
 }

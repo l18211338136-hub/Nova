@@ -18,6 +18,7 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using Nova.Modules.Identity.Infrastructure;
 using NSubstitute;
+using Nova.UnitTests.Fakes;
 using Xunit;
 
 namespace Nova.UnitTests.Handlers;
@@ -426,7 +427,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = "not-a-jwt",
@@ -451,7 +452,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -477,7 +478,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -808,7 +809,7 @@ public class BTrackHandlerTests
         Assert.True(logoutResp!.Success);
 
         // 用已吊销的刷新令牌刷新 -> 应失败
-        var refreshHandler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var refreshHandler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
         await Assert.ThrowsAsync<NovaValidationException>(() => refreshHandler.Consume(
             HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
             {
@@ -930,7 +931,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
         var rotCtx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,

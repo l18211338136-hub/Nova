@@ -32,6 +32,7 @@ export function ProfileDropdown() {
   const { data: profileResponse, isLoading } = useGetProfile({
     query: {
       enabled: Boolean(accessToken),
+      staleTime: 5 * 60 * 1000,
     },
   })
   const profile = profileResponse?.data

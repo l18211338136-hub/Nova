@@ -19,13 +19,13 @@ public class LogProcessorHostedService : BackgroundService
     private readonly ILogger<LogProcessorHostedService> _logger;
 
     public LogProcessorHostedService(
-        IOperationLogChannel logChannel,
+        OperationLogChannel logChannel,
         ISanitizerEngine sanitizerEngine,
         IServiceScopeFactory scopeFactory,
         ILogger<LogProcessorHostedService> logger,
         IEntityChangeChannel? changeChannel = null)
     {
-        _logChannel = (OperationLogChannel)logChannel;
+        _logChannel = logChannel;
         _changeChannel = changeChannel;
         _sanitizerEngine = sanitizerEngine;
         _scopeFactory = scopeFactory;
@@ -47,23 +47,38 @@ public class LogProcessorHostedService : BackgroundService
         if (_changeChannel == null) return;
 
         var buffer = new List<EntityChangeLog>();
-        var lastFlushTime = DateTime.UtcNow;
 
-        await foreach (var changeLog in _changeChannel.ReadAllAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            buffer.Add(changeLog);
+            try
+            {
+                using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            if (buffer.Count >= 50 || (DateTime.UtcNow - lastFlushTime).TotalSeconds >= 2)
+                await foreach (var changeLog in _changeChannel.ReadAllAsync(timeoutCts.Token))
+                {
+                    buffer.Add(changeLog);
+                    if (buffer.Count >= 50)
+                    {
+                        await FlushEntityChangesAsync(buffer, stoppingToken);
+                        buffer.Clear();
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
+            {
+                // 2 秒定时到达：ReadAllAsync 抛出取消异常，解除阻塞并把 buffer 中的日志主动刷新落库
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "[LogProcessor] Unexpected error in ProcessEntityChangesAsync");
+            }
+
+            if (buffer.Count > 0)
             {
                 await FlushEntityChangesAsync(buffer, stoppingToken);
                 buffer.Clear();
-                lastFlushTime = DateTime.UtcNow;
             }
-        }
-
-        if (buffer.Count > 0)
-        {
-            await FlushEntityChangesAsync(buffer, CancellationToken.None);
         }
     }
 
@@ -107,23 +122,38 @@ public class LogProcessorHostedService : BackgroundService
     private async Task ProcessOperationLogsAsync(CancellationToken stoppingToken)
     {
         var buffer = new List<OperationLogQueueItem>();
-        var lastFlushTime = DateTime.UtcNow;
 
-        await foreach (var item in _logChannel.ReadAllAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            buffer.Add(item);
+            try
+            {
+                using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            if (buffer.Count >= 50 || (DateTime.UtcNow - lastFlushTime).TotalSeconds >= 2)
+                await foreach (var item in _logChannel.ReadAllAsync(timeoutCts.Token))
+                {
+                    buffer.Add(item);
+                    if (buffer.Count >= 50)
+                    {
+                        await FlushLogsAsync(buffer, stoppingToken);
+                        buffer.Clear();
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
+            {
+                // 2 秒定时到达：ReadAllAsync 抛出取消异常，解除阻塞并把 buffer 中的日志主动刷新落库
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "[LogProcessor] Unexpected error in ProcessOperationLogsAsync");
+            }
+
+            if (buffer.Count > 0)
             {
                 await FlushLogsAsync(buffer, stoppingToken);
                 buffer.Clear();
-                lastFlushTime = DateTime.UtcNow;
             }
-        }
-
-        if (buffer.Count > 0)
-        {
-            await FlushLogsAsync(buffer, CancellationToken.None);
         }
     }
 

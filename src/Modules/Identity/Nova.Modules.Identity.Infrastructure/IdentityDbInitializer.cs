@@ -198,8 +198,11 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
                     await _tenantDbContext.SaveChangesAsync(cancellationToken);
 
                     _logger.LogInformation(
-                        "[Nova.Database] Successfully created admin user '{AdminEmail}' for tenant '{TenantName}' with password: {DefaultPassword}",
-                        adminEmail, tenantInfo?.Name ?? "root", defaultPassword);
+                        "[Nova.Database] Successfully created admin user '{AdminEmail}' for tenant '{TenantName}'",
+                        adminEmail, tenantInfo?.Name ?? "root");
+                    _logger.LogDebug(
+                        "[Nova.Database] Admin user '{AdminEmail}' initial password: {DefaultPassword}",
+                        adminEmail, defaultPassword);
 
                     // 使用注入的 MassTransit IMediator 发送欢迎邮件命令
                     var emailBody = $@"

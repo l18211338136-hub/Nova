@@ -7,6 +7,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
+import { handleServerError } from '@/lib/handle-server-error'
 import { cn } from '@/lib/utils'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useLogin, useEmailLogin, useSendEmailLoginCode, resolveTenant } from '@/api/endpoints/auth'
@@ -106,7 +107,7 @@ export function UserAuthForm({
         toast.error(res.message || t('Failed to send verification code.'))
       }
     } catch (error: any) {
-      // handled globally
+      handleServerError(error)
     } finally {
       setIsSendingCode(false)
     }
@@ -120,6 +121,7 @@ export function UserAuthForm({
       })
       handleLoginSuccess(response)
     } catch (error: any) {
+      handleServerError(error)
     } finally {
       setIsLoading(false)
     }
@@ -133,6 +135,7 @@ export function UserAuthForm({
       })
       handleLoginSuccess(response)
     } catch (error: any) {
+      handleServerError(error)
     } finally {
       setIsLoading(false)
     }
@@ -170,7 +173,7 @@ export function UserAuthForm({
                   <FormItem>
                     <FormLabel>{t('Username / Email / Phone')}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('root or name@example.com or phone')} {...field} />
+                      <Input placeholder={t('Please enter username / email / phone')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,7 +186,7 @@ export function UserAuthForm({
                   <FormItem className='relative'>
                     <FormLabel>{t('Password')}</FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder='********' {...field} />
+                      <PasswordInput placeholder={t('Please enter password')} {...field} />
                     </FormControl>
                     <FormMessage />
                     <Link
@@ -212,7 +215,7 @@ export function UserAuthForm({
                   <FormItem>
                     <FormLabel>{t('Email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder='name@example.com' {...field} />
+                      <Input placeholder={t('Please enter email')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -226,7 +229,7 @@ export function UserAuthForm({
                     <FormLabel>{t('Verification Code')}</FormLabel>
                     <div className='flex gap-2'>
                       <FormControl>
-                        <Input placeholder='123456' {...field} />
+                        <Input placeholder={t('Please enter verification code')} {...field} />
                       </FormControl>
                       <Button
                         type='button'

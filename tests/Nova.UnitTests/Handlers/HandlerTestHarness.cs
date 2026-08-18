@@ -1,16 +1,15 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Common;
 using Hangfire.States;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using NSubstitute;
 using Nova.Modules.Identity.Application.Database;
 using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Menus;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
+using Nova.UnitTests.Fakes;
+using NSubstitute;
 
 namespace Nova.UnitTests.Handlers;
 
@@ -53,9 +52,7 @@ public static class HandlerTestHarness
     public static TestIdentityDbContext CreateInMemoryIdentityDb(string dbName = "")
     {
         if (string.IsNullOrEmpty(dbName))
-        {
-            dbName = System.Guid.NewGuid().ToString();
-        }
+            dbName = Guid.NewGuid().ToString();
 
         var options = new DbContextOptionsBuilder<TestIdentityDbContext>()
             .UseInMemoryDatabase(dbName)
@@ -65,7 +62,7 @@ public static class HandlerTestHarness
 
     /// <summary>
     /// 用 NSubstitute 构造一个最小的 ConsumeContext，只正确提供 Message / CancellationToken，
-    /// RespondAsync 默认返回已完成的 Task（未配置时 NSubstitute 返回 default，对 Task 即已完成）。
+    /// RespondAsync 默认返回已完成的 Task（NSubstitute 对 Task 返回已完成 Task）。
     /// </summary>
     public static ConsumeContext<T> CreateConsumeContext<T>(T message) where T : class
     {
@@ -74,23 +71,4 @@ public static class HandlerTestHarness
         ctx.CancellationToken.Returns(CancellationToken.None);
         return ctx;
     }
-}
-
-/// <summary>
-/// 最小 IBackgroundJobClient 桩：真实实现 Create/ChangeState，收集被 Enqueue 的 Job 供断言。
-/// 用于绕开 NSubstitute 无法拦截 Hangfire 扩展方法 Enqueue 导致的 Job.FromExpression 崩溃。
-/// </summary>
-public class FakeBackgroundJobClient : IBackgroundJobClient
-{
-    public System.Collections.Generic.List<Job> EnqueuedJobs { get; } = new();
-
-    public string Create(Job job, IState state)
-    {
-        EnqueuedJobs.Add(job);
-        return System.Guid.NewGuid().ToString("N");
-    }
-
-    public bool ChangeState(string jobId, IState state, string expectedState) => true;
-
-    public void Dispose() { }
 }

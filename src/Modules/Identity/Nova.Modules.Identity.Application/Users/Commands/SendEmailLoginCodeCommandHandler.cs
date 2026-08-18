@@ -47,7 +47,8 @@ public class SendEmailLoginCodeCommandHandler : IConsumer<SendEmailLoginCodeComm
         var code = Random.Shared.Next(100000, 1000000).ToString();
         await _cache.SetAsync($"LoginCode:{request.Email}", code, TimeSpan.FromMinutes(3));
 
-        _logger.LogInformation("[Nova.Auth] Generated OTP verification code '{Code}' for user '{Email}'", code, request.Email);
+        _logger.LogDebug("[Nova.Auth] Generated OTP verification code '{Code}' for user '{Email}'", code, request.Email);
+        _logger.LogInformation("[Nova.Auth] Generated OTP verification code for user '{Email}'", request.Email);
 
         var emailBody = $@"
             <h3>安全登录验证码</h3>

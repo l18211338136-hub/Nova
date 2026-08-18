@@ -56,11 +56,17 @@ public class IdentityModule : IModule
     {
         endpoints.MapIdentityODataEndpoints();
 
-        endpoints.MapGet("/api/identity/resolve-tenant", async (string account, NovaTenantDbContext tenantDb) =>
+        endpoints.MapGet("/api/identity/resolve-tenant", async (string? account, NovaTenantDbContext tenantDb) =>
         {
+            if (string.IsNullOrWhiteSpace(account))
+            {
+                return Results.Ok(new { TenantIds = Array.Empty<string>() });
+            }
+
             var mappings = await tenantDb.GlobalUserTenantMappings
                 .Where(m => m.Account == account)
                 .Select(m => m.TenantId)
+                .Distinct()
                 .ToListAsync();
 
             return Results.Ok(new { TenantIds = mappings });

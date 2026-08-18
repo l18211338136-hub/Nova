@@ -68,8 +68,18 @@ public class GlobalAuditLoggingMiddleware
             errorMessage = ex.Message;
             exceptionStackTrace = ex.StackTrace;
 
-            responsePayload = await ReadResponseBodyAsync(context.Response);
-            await responseBodyMemoryStream.CopyToAsync(originalBodyStream);
+            try
+            {
+                responsePayload = await ReadResponseBodyAsync(context.Response);
+                if (originalBodyStream.CanWrite)
+                {
+                    await responseBodyMemoryStream.CopyToAsync(originalBodyStream);
+                }
+            }
+            catch
+            {
+                // 忽略二次复制异常，保障原始异常能正常向上抛出
+            }
             throw; // 向上抛出给 GlobalExceptionMiddleware
         }
         finally
@@ -125,7 +135,20 @@ public class GlobalAuditLoggingMiddleware
 
     private static string GetTenantId(HttpContext context)
     {
-        // 1. 从 HTTP Header 中获取
+        // 1. 从已认证的 JWT User Claims 中优先获取 (真实身份保障)
+        if (context.User.Identity?.IsAuthenticated == true)
+        {
+            var claimTenant = context.User.FindFirst("tenantId")?.Value 
+                ?? context.User.FindFirst("tenant")?.Value 
+                ?? context.User.FindFirst(ClaimTypes.GroupSid)?.Value;
+
+            if (!string.IsNullOrWhiteSpace(claimTenant))
+            {
+                return claimTenant;
+            }
+        }
+
+        // 2. 从 HTTP Header 中获取 (适应未认证接口如 Login/Register)
         if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader) && !string.IsNullOrWhiteSpace(tenantHeader))
         {
             return tenantHeader.ToString();
@@ -135,7 +158,7 @@ public class GlobalAuditLoggingMiddleware
             return tHeader.ToString();
         }
 
-        // 2. 从 Finbuckle / HttpContext 中解构当前租户信息
+        // 3. 从 Finbuckle / HttpContext 中解构当前租户信息
         foreach (var item in context.Items.Values)
         {
             if (item != null && item.GetType().Name.Contains("TenantContext"))
@@ -151,16 +174,6 @@ public class GlobalAuditLoggingMiddleware
             }
         }
 
-        // 3. 从 JWT User Claims 中获取
-        var claimTenant = context.User.FindFirst("tenantId")?.Value 
-            ?? context.User.FindFirst("tenant")?.Value 
-            ?? context.User.FindFirst(ClaimTypes.GroupSid)?.Value;
-
-        if (!string.IsNullOrWhiteSpace(claimTenant))
-        {
-            return claimTenant;
-        }
-
         // 4. 若全流程未显式传递特定子租户（如匿名/获取验证码/宿主管理），属于系统宿主 root 租户
         return TenantConstants.RootTenantId;
     }
@@ -169,7 +182,11 @@ public class GlobalAuditLoggingMiddleware
     {
         if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor) && !string.IsNullOrWhiteSpace(forwardedFor))
         {
-            return forwardedFor.ToString().Split(',')[0].Trim();
+            var rawIp = forwardedFor.ToString().Split(',')[0].Trim();
+            if (System.Net.IPAddress.TryParse(rawIp, out _))
+            {
+                return rawIp;
+            }
         }
         return context.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
     }

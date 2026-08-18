@@ -27,10 +27,19 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()((set) => {
+  const safeParse = (str: string | undefined): string => {
+    if (!str) return ''
+    try {
+      return JSON.parse(str)
+    } catch {
+      return str
+    }
+  }
+
   const cookieAccess = getCookie(ACCESS_TOKEN)
   const cookieRefresh = getCookie(REFRESH_TOKEN)
-  const initAccessToken = cookieAccess ? JSON.parse(cookieAccess) : ''
-  const initRefreshToken = cookieRefresh ? JSON.parse(cookieRefresh) : ''
+  const initAccessToken = safeParse(cookieAccess)
+  const initRefreshToken = safeParse(cookieRefresh)
 
   let initUser = null
   if (initAccessToken) {
@@ -51,7 +60,7 @@ export const useAuthStore = create<AuthState>()((set) => {
       setAccessToken: (accessToken) =>
         set((state) => {
           setCookie(ACCESS_TOKEN, JSON.stringify(accessToken))
-          let user = state.auth.user
+          let user: AuthUser | null = null
           try {
             if (accessToken) user = jwtDecode<AuthUser>(accessToken)
           } catch (e) {}

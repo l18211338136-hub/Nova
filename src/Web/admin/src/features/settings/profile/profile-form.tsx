@@ -71,7 +71,9 @@ export function ProfileForm() {
   const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
   const [rawFileName, setRawFileName] = useState('avatar.png')
 
-  const { data, isLoading } = useGetProfile()
+  const { data, isLoading } = useGetProfile({
+    query: { staleTime: 5 * 60 * 1000 },
+  })
   const profile = data?.data
 
   const form = useForm<ProfileFormValues>({

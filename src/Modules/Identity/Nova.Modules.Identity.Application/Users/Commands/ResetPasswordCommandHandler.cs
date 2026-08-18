@@ -32,6 +32,9 @@ public class ResetPasswordCommandHandler : IConsumer<ResetPasswordCommand>
             return;
         }
 
+        // 验证成功后立刻更新 SecurityStamp 使该 2FA Token 无效（防重放攻击）
+        await _userManager.UpdateSecurityStampAsync(user);
+
         // 验证码通过后重置密码
         // Identity 的 ResetPasswordAsync 需要一个 PasswordResetToken，由于这里采用的是 6 位数验证码（TOTP），
         // 验证通过后，可以直接生成并消耗一个 PasswordResetToken 或者直接重置密码散列。

@@ -13,6 +13,9 @@ using Nova.Modules.Identity.Domain.Users;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
@@ -20,31 +23,69 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly IConfiguration _configuration;
 
     public RefreshTokenCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        IDomainEventDispatcher dispatcher)
+        IDomainEventDispatcher dispatcher,
+        IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _dispatcher = dispatcher;
+        _configuration = configuration;
     }
 
     public async Task Consume(ConsumeContext<RefreshTokenCommand> context)
     {
         var request = context.Message;
 
-        // 1. Read the old access token to extract user ID
+        // 1. Read and validate signature of the old access token (ignoring expiration)
         var handler = new JwtSecurityTokenHandler();
         if (!handler.CanReadToken(request.AccessToken))
         {
             throw new NovaValidationException("无效的 AccessToken 格式");
         }
 
-        var jwtToken = handler.ReadJwtToken(request.AccessToken);
-        var userIdString = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-        var tenantIdString = jwtToken.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
+        ClaimsPrincipal principal;
+        var jwtSettings = _configuration.GetSection("Jwt");
+        var secretKey = jwtSettings["SecretKey"] ?? Environment.GetEnvironmentVariable("NOVA_JWT_SECRET");
+
+        if (!string.IsNullOrWhiteSpace(secretKey))
+        {
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey));
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false // 允许已过期的 AccessToken 用于 RefreshToken 换取新 Token
+            };
+
+            try
+            {
+                principal = handler.ValidateToken(request.AccessToken, validationParameters, out var validatedToken);
+                if (validatedToken is not JwtSecurityToken jwtSecurityToken ||
+                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new NovaValidationException("AccessToken 签名算法无效");
+                }
+            }
+            catch (Exception ex) when (ex is not NovaValidationException)
+            {
+                throw new NovaValidationException("AccessToken 签名无效或已被篡改");
+            }
+        }
+        else
+        {
+            var jwtToken = handler.ReadJwtToken(request.AccessToken);
+            principal = new ClaimsPrincipal(new ClaimsIdentity(jwtToken.Claims, "Jwt"));
+        }
+
+        var userIdString = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var tenantIdString = principal.FindFirst("tenantId")?.Value;
 
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
         {

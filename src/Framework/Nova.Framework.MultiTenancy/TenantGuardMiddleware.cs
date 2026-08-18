@@ -28,7 +28,7 @@ public class TenantGuardMiddleware
                 return;
             }
 
-            if (DateTime.UtcNow > tenantInfo.ValidUpto)
+            if (tenantInfo.ValidUpto != default && DateTime.UtcNow > tenantInfo.ValidUpto)
             {
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 await context.Response.WriteAsync("此租户的订阅已过期，请续费后继续使用。");
