@@ -42,6 +42,12 @@
     <Project Path="src/Modules/Chat/Nova.Modules.Chat.Domain/Nova.Modules.Chat.Domain.csproj" />
     <Project Path="src/Modules/Chat/Nova.Modules.Chat.Infrastructure/Nova.Modules.Chat.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Modules/Dictionary/">
+    <Project Path="src/Modules/Dictionary/Nova.Modules.Dictionary.Api/Nova.Modules.Dictionary.Api.csproj" />
+    <Project Path="src/Modules/Dictionary/Nova.Modules.Dictionary.Application/Nova.Modules.Dictionary.Application.csproj" />
+    <Project Path="src/Modules/Dictionary/Nova.Modules.Dictionary.Domain/Nova.Modules.Dictionary.Domain.csproj" />
+    <Project Path="src/Modules/Dictionary/Nova.Modules.Dictionary.Infrastructure/Nova.Modules.Dictionary.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Identity/">
     <Project Path="src/Modules/Identity/Nova.Modules.Identity.Api/Nova.Modules.Identity.Api.csproj" />
     <Project Path="src/Modules/Identity/Nova.Modules.Identity.Application/Nova.Modules.Identity.Application.csproj" />

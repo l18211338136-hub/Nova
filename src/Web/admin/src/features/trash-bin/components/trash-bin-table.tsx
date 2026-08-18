@@ -15,10 +15,9 @@ import {
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
-  useGetTrashBinItems,
+  useTrashBinItems,
   useRestoreTrashBinItem,
   useHardDeleteTrashBinItem,
-  getGetTrashBinItemsQueryKey,
 } from '@/api/endpoints/trash-bin'
 import type { TrashBinItemDto } from '@/api/model'
 import { buildODataFilter, buildODataOrderBy } from '@/lib/odata'
@@ -54,8 +53,8 @@ export function TrashBinTable() {
   const $filter = buildODataFilter(columnFilters)
   const $orderby = buildODataOrderBy(sorting) || 'DeletedAt desc'
 
-  // 3. 调用由 Orval 编译产生的 Hook useGetTrashBinItems
-  const { data: response, isLoading } = useGetTrashBinItems({
+  // 3. 调用由 Orval 编译产生的 Hook useTrashBinItems
+  const { data: response, isLoading } = useTrashBinItems({
     query: {
       queryKey: ['trash-bin-items', pagination, columnFilters, sorting],
     },

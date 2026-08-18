@@ -23,8 +23,8 @@ import type {
   ApiResponseOfPagedResultOfAuthAuditLogDto,
   ApiResponseOfPagedResultOfEntityChangeLogDto,
   ApiResponseOfPagedResultOfOperationLogDto,
-  GetEntityChangesParams,
-  GetOperationLogsParams
+  EntityChangesParams,
+  OperationLogsParams
 } from '../model';
 
 import { customInstance } from '../../lib/api-client';
@@ -53,8 +53,8 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 /**
  * @summary 操作日志列表
  */
-export const getOperationLogs = (
-    params: GetOperationLogsParams,
+export const operationLogs = (
+    params: OperationLogsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
@@ -69,69 +69,69 @@ export const getOperationLogs = (
 
 
 
-export const getGetOperationLogsQueryKey = (params?: GetOperationLogsParams,) => {
+export const getOperationLogsQueryKey = (params?: OperationLogsParams,) => {
     return [
     `/api/v1/audit/operation-logs`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetOperationLogsQueryOptions = <TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getOperationLogsQueryOptions = <TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(params: OperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetOperationLogsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getOperationLogsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOperationLogs>>> = ({ signal }) => getOperationLogs(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof operationLogs>>> = ({ signal }) => operationLogs(params, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetOperationLogsQueryResult = NonNullable<Awaited<ReturnType<typeof getOperationLogs>>>
-export type GetOperationLogsQueryError = unknown
+export type OperationLogsQueryResult = NonNullable<Awaited<ReturnType<typeof operationLogs>>>
+export type OperationLogsQueryError = unknown
 
 
-export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
- params: GetOperationLogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>> & Pick<
+export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(
+ params: OperationLogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getOperationLogs>>,
+          Awaited<ReturnType<typeof operationLogs>>,
           TError,
-          Awaited<ReturnType<typeof getOperationLogs>>
+          Awaited<ReturnType<typeof operationLogs>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
- params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>> & Pick<
+export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(
+ params: OperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getOperationLogs>>,
+          Awaited<ReturnType<typeof operationLogs>>,
           TError,
-          Awaited<ReturnType<typeof getOperationLogs>>
+          Awaited<ReturnType<typeof operationLogs>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
- params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(
+ params: OperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 操作日志列表
  */
 
-export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperationLogs>>, TError = unknown>(
- params: GetOperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(
+ params: OperationLogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof operationLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetOperationLogsQueryOptions(params,options)
+  const queryOptions = getOperationLogsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -146,8 +146,8 @@ export function useGetOperationLogs<TData = Awaited<ReturnType<typeof getOperati
 /**
  * @summary 变更日志列表
  */
-export const getEntityChanges = (
-    params: GetEntityChangesParams,
+export const entityChanges = (
+    params: EntityChangesParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
@@ -162,69 +162,69 @@ export const getEntityChanges = (
 
 
 
-export const getGetEntityChangesQueryKey = (params?: GetEntityChangesParams,) => {
+export const getEntityChangesQueryKey = (params?: EntityChangesParams,) => {
     return [
     `/api/v1/audit/entity-changes`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetEntityChangesQueryOptions = <TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(params: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getEntityChangesQueryOptions = <TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(params: EntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetEntityChangesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getEntityChangesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntityChanges>>> = ({ signal }) => getEntityChanges(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof entityChanges>>> = ({ signal }) => entityChanges(params, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetEntityChangesQueryResult = NonNullable<Awaited<ReturnType<typeof getEntityChanges>>>
-export type GetEntityChangesQueryError = unknown
+export type EntityChangesQueryResult = NonNullable<Awaited<ReturnType<typeof entityChanges>>>
+export type EntityChangesQueryError = unknown
 
 
-export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
- params: GetEntityChangesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>> & Pick<
+export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(
+ params: EntityChangesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getEntityChanges>>,
+          Awaited<ReturnType<typeof entityChanges>>,
           TError,
-          Awaited<ReturnType<typeof getEntityChanges>>
+          Awaited<ReturnType<typeof entityChanges>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
- params: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>> & Pick<
+export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(
+ params: EntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getEntityChanges>>,
+          Awaited<ReturnType<typeof entityChanges>>,
           TError,
-          Awaited<ReturnType<typeof getEntityChanges>>
+          Awaited<ReturnType<typeof entityChanges>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
- params: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(
+ params: EntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 变更日志列表
  */
 
-export function useGetEntityChanges<TData = Awaited<ReturnType<typeof getEntityChanges>>, TError = unknown>(
- params: GetEntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(
+ params: EntityChangesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entityChanges>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetEntityChangesQueryOptions(params,options)
+  const queryOptions = getEntityChangesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

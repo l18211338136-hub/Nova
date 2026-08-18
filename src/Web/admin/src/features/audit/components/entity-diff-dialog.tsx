@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useGetEntityChanges } from '@/api/endpoints/audit'
+import { useEntityChanges } from '@/api/endpoints/audit'
 import type { EntityChangeLogDto } from '@/api/model'
 
 interface EntityDiffDialogProps {
@@ -37,7 +37,7 @@ export function EntityDiffDialog({
   const { t } = useTranslation()
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null)
 
-  const { data: response, isLoading } = useGetEntityChanges(
+  const { data: response, isLoading } = useEntityChanges(
     {
       page: 1,
       pageSize: 50,

@@ -27,7 +27,7 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { DataTablePagination } from '@/components/data-table'
 import { DataTableViewOptions } from '@/components/data-table/view-options'
 import { type OperationLogDto } from '@/api/model'
-import { useGetOperationLogs } from '@/api/endpoints/audit'
+import { useOperationLogs } from '@/api/endpoints/audit'
 import { useOperationColumns } from './operation-columns'
 import { OperationLogDetailDialog } from './operation-log-detail-dialog'
 import { type DateFilterValue } from '@/components/date-range-picker'
@@ -105,7 +105,7 @@ export function OperationTable({ search, navigate }: DataTableProps) {
 
   const isFiltered = columnFilters.length > 0
 
-  const { data: apiResponse, isLoading, isError } = useGetOperationLogs(
+  const { data: apiResponse, isLoading, isError } = useOperationLogs(
     {
       page: pagination.pageIndex + 1,
       pageSize: pagination.pageSize,

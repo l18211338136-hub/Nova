@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import useDialogState from '@/hooks/use-dialog-state'
 import { useAuthStore } from '@/stores/auth-store'
-import { useGetProfile } from '@/api/endpoints/profile'
+import { useProfile } from '@/api/endpoints/profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,7 +29,7 @@ export function ProfileDropdown() {
   const { t } = useTranslation()
   const { user, accessToken } = useAuthStore((state) => state.auth)
 
-  const { data: profileResponse, isLoading } = useGetProfile({
+  const { data: profileResponse, isLoading } = useProfile({
     query: {
       enabled: Boolean(accessToken),
       staleTime: 5 * 60 * 1000,

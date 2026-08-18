@@ -13,7 +13,7 @@ import { NavUser } from './nav-user'
 import { TeamSwitcher } from './team-switcher'
 import { useAuthStore } from '@/stores/auth-store'
 import { useSidebarNav } from '@/hooks/use-sidebar-nav'
-import { useGetProfile } from '@/api/endpoints/profile'
+import { useProfile } from '@/api/endpoints/profile'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
@@ -22,7 +22,7 @@ export function AppSidebar() {
   // 侧边栏的分组已在 useSidebarNav 里按用户的「显示」偏好过滤过
   const { visibleGroups } = useSidebarNav()
 
-  const { data: profileResponse } = useGetProfile({
+  const { data: profileResponse } = useProfile({
     query: { enabled: Boolean(user), staleTime: 5 * 60 * 1000 },
   })
   const profile = profileResponse?.data

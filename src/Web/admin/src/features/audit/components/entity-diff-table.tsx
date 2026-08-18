@@ -27,7 +27,7 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { DataTablePagination } from '@/components/data-table'
 import { DataTableViewOptions } from '@/components/data-table/view-options'
 import type { EntityChangeLogDto } from '@/api/model'
-import { useGetEntityChanges } from '@/api/endpoints/audit'
+import { useEntityChanges } from '@/api/endpoints/audit'
 import { useEntityDiffColumns } from './entity-diff-columns'
 import { EntityDiffDialog } from './entity-diff-dialog'
 import { type DateFilterValue } from '@/components/date-range-picker'
@@ -104,7 +104,7 @@ export function EntityDiffTable({ search, navigate }: DataTableProps) {
 
   const isFiltered = columnFilters.length > 0
 
-  const { data: apiResponse, isLoading, isError } = useGetEntityChanges(
+  const { data: apiResponse, isLoading, isError } = useEntityChanges(
     {
       page: pagination.pageIndex + 1,
       pageSize: pagination.pageSize,

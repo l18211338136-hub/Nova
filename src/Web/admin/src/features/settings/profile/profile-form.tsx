@@ -7,9 +7,9 @@ import { Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import {
-  useGetProfile,
+  useProfile,
   useUpdateProfile,
-  getGetProfileQueryKey,
+  getProfileQueryKey,
 } from '@/api/endpoints/profile'
 import { useUpload } from '@/api/endpoints/storage'
 import { resolveErrorMessage } from '@/hooks/use-preferences'
@@ -71,7 +71,7 @@ export function ProfileForm() {
   const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
   const [rawFileName, setRawFileName] = useState('avatar.png')
 
-  const { data, isLoading } = useGetProfile({
+  const { data, isLoading } = useProfile({
     query: { staleTime: 5 * 60 * 1000 },
   })
   const profile = data?.data
@@ -97,7 +97,7 @@ export function ProfileForm() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetProfileQueryKey(),
+          queryKey: getProfileQueryKey(),
           refetchType: 'all',
         })
         toast.success(t('Profile updated.'))

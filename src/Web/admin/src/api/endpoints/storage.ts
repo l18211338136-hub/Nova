@@ -30,8 +30,8 @@ import type {
   ApiResponseOfApiResponseOfListOfPreSignedUrlResponseItem,
   ApiResponseOfApiResponseOfboolean,
   ApiResponseOfStorageFileDto,
+  AttachmentsParams,
   BindAttachment,
-  GetAttachmentsParams,
   GetPreSignedUrlsQuery,
   InstantUpload,
   UploadFileFormRequest
@@ -191,8 +191,8 @@ export const useInstantUpload = <TError = unknown,
     /**
  * @summary 查询业务实体的附件列表（如获取用户头像、商品轮播图）
  */
-export const getAttachments = (
-    params?: GetAttachmentsParams,
+export const attachments = (
+    params?: AttachmentsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
@@ -207,69 +207,69 @@ export const getAttachments = (
 
 
 
-export const getGetAttachmentsQueryKey = (params?: GetAttachmentsParams,) => {
+export const getAttachmentsQueryKey = (params?: AttachmentsParams,) => {
     return [
     `/api/v1/storage/attachments`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetAttachmentsQueryOptions = <TData = Awaited<ReturnType<typeof getAttachments>>, TError = unknown>(params?: GetAttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getAttachmentsQueryOptions = <TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(params?: AttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAttachmentsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getAttachmentsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAttachments>>> = ({ signal }) => getAttachments(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof attachments>>> = ({ signal }) => attachments(params, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetAttachmentsQueryResult = NonNullable<Awaited<ReturnType<typeof getAttachments>>>
-export type GetAttachmentsQueryError = unknown
+export type AttachmentsQueryResult = NonNullable<Awaited<ReturnType<typeof attachments>>>
+export type AttachmentsQueryError = unknown
 
 
-export function useGetAttachments<TData = Awaited<ReturnType<typeof getAttachments>>, TError = unknown>(
- params: undefined |  GetAttachmentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData>> & Pick<
+export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(
+ params: undefined |  AttachmentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAttachments>>,
+          Awaited<ReturnType<typeof attachments>>,
           TError,
-          Awaited<ReturnType<typeof getAttachments>>
+          Awaited<ReturnType<typeof attachments>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAttachments<TData = Awaited<ReturnType<typeof getAttachments>>, TError = unknown>(
- params?: GetAttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData>> & Pick<
+export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(
+ params?: AttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAttachments>>,
+          Awaited<ReturnType<typeof attachments>>,
           TError,
-          Awaited<ReturnType<typeof getAttachments>>
+          Awaited<ReturnType<typeof attachments>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAttachments<TData = Awaited<ReturnType<typeof getAttachments>>, TError = unknown>(
- params?: GetAttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(
+ params?: AttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 查询业务实体的附件列表（如获取用户头像、商品轮播图）
  */
 
-export function useGetAttachments<TData = Awaited<ReturnType<typeof getAttachments>>, TError = unknown>(
- params?: GetAttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAttachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(
+ params?: AttachmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof attachments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetAttachmentsQueryOptions(params,options)
+  const queryOptions = getAttachmentsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

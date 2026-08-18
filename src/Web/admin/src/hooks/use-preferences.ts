@@ -3,9 +3,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import {
-  useGetPreferences,
+  usePreferences as usePreferencesApi,
   useUpdatePreferences,
-  getGetPreferencesQueryKey,
+  getPreferencesQueryKey,
 } from '@/api/endpoints/profile'
 import type { UpdatePreferences, UserPreferenceDto } from '@/api/model'
 import { useAuthStore } from '@/stores/auth-store'
@@ -39,7 +39,7 @@ export function usePreferences() {
   const accessToken = useAuthStore((s) => s.auth.accessToken)
   const enabled = Boolean(accessToken)
 
-  const query = useGetPreferences({
+  const query = usePreferencesApi({
     query: {
       enabled,
       staleTime: 5 * 60 * 1000,
@@ -74,7 +74,7 @@ export function useSavePreferences(options?: { successMessage?: string }) {
   const mutation = useUpdatePreferences({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetPreferencesQueryKey() })
+        queryClient.invalidateQueries({ queryKey: getPreferencesQueryKey() })
         toast.success(options?.successMessage ?? t('Preferences updated.'))
       },
       onError: (error: unknown) => {

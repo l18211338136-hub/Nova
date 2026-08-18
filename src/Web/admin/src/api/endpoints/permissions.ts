@@ -50,7 +50,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 /**
  * @summary 可用权限
  */
-export const getAllPermissions = (
+export const allPermissions = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -65,69 +65,69 @@ export const getAllPermissions = (
 
 
 
-export const getGetAllPermissionsQueryKey = () => {
+export const getAllPermissionsQueryKey = () => {
     return [
     `/api/identity/permissions/all`
     ] as const;
     }
 
 
-export const getGetAllPermissionsQueryOptions = <TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getAllPermissionsQueryOptions = <TData = Awaited<ReturnType<typeof allPermissions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllPermissionsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAllPermissionsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllPermissions>>> = ({ signal }) => getAllPermissions(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof allPermissions>>> = ({ signal }) => allPermissions(requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetAllPermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllPermissions>>>
-export type GetAllPermissionsQueryError = unknown
+export type AllPermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof allPermissions>>>
+export type AllPermissionsQueryError = unknown
 
 
-export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData>> & Pick<
+export function useAllPermissions<TData = Awaited<ReturnType<typeof allPermissions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAllPermissions>>,
+          Awaited<ReturnType<typeof allPermissions>>,
           TError,
-          Awaited<ReturnType<typeof getAllPermissions>>
+          Awaited<ReturnType<typeof allPermissions>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData>> & Pick<
+export function useAllPermissions<TData = Awaited<ReturnType<typeof allPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAllPermissions>>,
+          Awaited<ReturnType<typeof allPermissions>>,
           TError,
-          Awaited<ReturnType<typeof getAllPermissions>>
+          Awaited<ReturnType<typeof allPermissions>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useAllPermissions<TData = Awaited<ReturnType<typeof allPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 可用权限
  */
 
-export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPermissions>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useAllPermissions<TData = Awaited<ReturnType<typeof allPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof allPermissions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetAllPermissionsQueryOptions(options)
+  const queryOptions = getAllPermissionsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -142,7 +142,7 @@ export function useGetAllPermissions<TData = Awaited<ReturnType<typeof getAllPer
 /**
  * @summary 权限映射
  */
-export const getPermissionGroups = (
+export const permissionGroups = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -157,69 +157,69 @@ export const getPermissionGroups = (
 
 
 
-export const getGetPermissionGroupsQueryKey = () => {
+export const getPermissionGroupsQueryKey = () => {
     return [
     `/api/identity/permissions/groups`
     ] as const;
     }
 
 
-export const getGetPermissionGroupsQueryOptions = <TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getPermissionGroupsQueryOptions = <TData = Awaited<ReturnType<typeof permissionGroups>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPermissionGroupsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getPermissionGroupsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPermissionGroups>>> = ({ signal }) => getPermissionGroups(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof permissionGroups>>> = ({ signal }) => permissionGroups(requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetPermissionGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof getPermissionGroups>>>
-export type GetPermissionGroupsQueryError = unknown
+export type PermissionGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof permissionGroups>>>
+export type PermissionGroupsQueryError = unknown
 
 
-export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData>> & Pick<
+export function usePermissionGroups<TData = Awaited<ReturnType<typeof permissionGroups>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPermissionGroups>>,
+          Awaited<ReturnType<typeof permissionGroups>>,
           TError,
-          Awaited<ReturnType<typeof getPermissionGroups>>
+          Awaited<ReturnType<typeof permissionGroups>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData>> & Pick<
+export function usePermissionGroups<TData = Awaited<ReturnType<typeof permissionGroups>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPermissionGroups>>,
+          Awaited<ReturnType<typeof permissionGroups>>,
           TError,
-          Awaited<ReturnType<typeof getPermissionGroups>>
+          Awaited<ReturnType<typeof permissionGroups>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function usePermissionGroups<TData = Awaited<ReturnType<typeof permissionGroups>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 权限映射
  */
 
-export function useGetPermissionGroups<TData = Awaited<ReturnType<typeof getPermissionGroups>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function usePermissionGroups<TData = Awaited<ReturnType<typeof permissionGroups>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetPermissionGroupsQueryOptions(options)
+  const queryOptions = getPermissionGroupsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

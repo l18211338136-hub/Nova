@@ -61,6 +61,10 @@ export default defineConfig({
             const lastPart = parts[parts.length - 1];
             name = lastPart.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
           }
+          // Strip leading 'get' / 'Get' from GET queries to avoid 'getGet...QueryKey' in Orval
+          if (verb === 'get' && /^get/i.test(name) && name.length > 3) {
+            name = name.replace(/^get/i, '');
+          }
           // Ensure camelCase (lowercase first letter) for functions
           return name.charAt(0).toLowerCase() + name.slice(1);
         },

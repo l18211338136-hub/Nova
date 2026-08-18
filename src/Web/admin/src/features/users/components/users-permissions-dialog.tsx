@@ -22,9 +22,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { type UserDto as User } from '@/api/model'
-import { useUpdateUser, useGetUserRoles, useGetUserPermissions, getGetUserRolesQueryKey, getGetUserPermissionsQueryKey } from '@/api/endpoints/users'
+import { useUserRoles, useUserPermissions, getUserRolesQueryKey, getUserPermissionsQueryKey, useUpdateUser } from '@/api/endpoints/users'
 import { useRoles } from '@/api/endpoints/roles'
-import { useGetAllPermissions, useGetPermissionGroups } from '@/api/endpoints/permissions'
+import { useAllPermissions, usePermissionGroups } from '@/api/endpoints/permissions'
 import { useMenus } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 import React, { useEffect } from 'react'
@@ -77,14 +77,14 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
   })
 
   // Fetch all system permissions
-  const { data: allPermissions } = useGetAllPermissions({
+  const { data: allPermissions } = useAllPermissions({
     query: {
       enabled: open,
     },
   })
 
   // Fetch permission group names dictionary
-  const { data: permissionGroups } = useGetPermissionGroups({
+  const { data: permissionGroups } = usePermissionGroups({
     query: {
       enabled: open,
     },
@@ -104,7 +104,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
   })
 
   // Fetch current user roles
-  const { data: currentRoles } = useGetUserRoles(
+  const { data: currentRoles } = useUserRoles(
     currentRow?.id ?? '',
     {
       query: {
@@ -114,7 +114,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
   )
 
   // Fetch current user direct permissions
-  const { data: currentPermissions } = useGetUserPermissions(
+  const { data: currentPermissions } = useUserPermissions(
     currentRow?.id ?? '',
     {
       query: {
@@ -141,8 +141,8 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
         toast.success(t('权限分配成功'))
         queryClient.invalidateQueries({ queryKey: ['users'] })
         if (currentRow?.id) {
-          queryClient.invalidateQueries({ queryKey: getGetUserRolesQueryKey(currentRow.id) })
-          queryClient.invalidateQueries({ queryKey: getGetUserPermissionsQueryKey(currentRow.id) })
+          queryClient.invalidateQueries({ queryKey: getUserRolesQueryKey(currentRow.id) })
+          queryClient.invalidateQueries({ queryKey: getUserPermissionsQueryKey(currentRow.id) })
         }
         onOpenChange(false)
       },

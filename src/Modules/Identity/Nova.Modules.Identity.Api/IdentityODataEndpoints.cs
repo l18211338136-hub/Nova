@@ -66,7 +66,8 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Users.Read"))
         .WithTags("Users")
-        .WithSummary("用户列表");
+        .WithSummary("用户列表")
+        .WithName("GetUsers");
 
         endpoints.MapGet("/api/identity/users/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -86,7 +87,8 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<object>>(200)
         .RequireAuthorization()
         .WithTags("Users")
-        .WithSummary("用户下拉选项列表（轻量选择器）");
+        .WithSummary("用户下拉选项列表（轻量选择器）")
+        .WithName("GetUserOptions");
 
         endpoints.MapGet("/api/identity/roles", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -132,7 +134,8 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Roles.Read"))
         .WithTags("Roles")
-        .WithSummary("角色列表");
+        .WithSummary("角色列表")
+        .WithName("GetRoles");
 
         endpoints.MapGet("/api/identity/roles/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -151,7 +154,8 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<object>>(200)
         .RequireAuthorization()
         .WithTags("Roles")
-        .WithSummary("角色下拉选项列表（轻量选择器）");
+        .WithSummary("角色下拉选项列表（轻量选择器）")
+        .WithName("GetRoleOptions");
 
         endpoints.MapGet("/api/identity/menus", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -197,7 +201,8 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.Menus.Read"))
         .WithTags("Menus")
-        .WithSummary("菜单列表");
+        .WithSummary("菜单列表")
+        .WithName("GetMenus");
 
         endpoints.MapGet("/api/identity/menus/options", async (IIdentityDbContext db, CancellationToken cancellationToken) =>
         {
@@ -217,7 +222,8 @@ public static class IdentityODataEndpoints
         .Produces<ApiResponse<object>>(200)
         .RequireAuthorization()
         .WithTags("Menus")
-        .WithSummary("菜单下拉选项列表（轻量选择器）");
+        .WithSummary("菜单下拉选项列表（轻量选择器）")
+        .WithName("GetMenuOptions");
 
         endpoints.MapGet("/api/identity/auth-audit-logs", async (IIdentityDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
         {
@@ -277,7 +283,8 @@ public static class IdentityODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Identity.AuditLogs.Read"))
         .WithTags("Audit")
-        .WithSummary("审计日志");
+        .WithSummary("审计日志")
+        .WithName("GetAuthAuditLogs");
 
         endpoints.MapGet("/api/identity/menus/me", async (IIdentityDbContext db, HttpContext httpContext, CancellationToken cancellationToken, UserManager<User> userManager, RoleManager<Role> roleManager) =>
         {

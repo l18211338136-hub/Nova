@@ -27,6 +27,7 @@ import type {
   ApiResponseOfCreateMenuResult,
   ApiResponseOfDeleteMenuResult,
   ApiResponseOfListOfMenuDto,
+  ApiResponseOfObject,
   ApiResponseOfPagedResultOfMenuDto,
   ApiResponseOfUpdateMenuResult,
   CreateMenu,
@@ -60,110 +61,107 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
  * @summary 创建菜单
  */
 export const createMenu = (
-  createMenu: CreateMenu,
-  options?: SecondParameter<typeof customInstance>, signal?: AbortSignal
+    createMenu: CreateMenu,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-  return customInstance<ApiResponseOfCreateMenuResult>(
-    {
-      url: `/api/identity/menus`, method: 'POST',
-      headers: { 'Content-Type': 'application/json', },
+      return customInstance<ApiResponseOfCreateMenuResult>(
+      {url: `/api/identity/menus`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
       data: createMenu, signal
     },
-    options);
-}
+      options);
+    }
 
 
 
 
 export const getCreateMenuMutationOptions = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError, { data: CreateMenu }, TContext>, request?: SecondParameter<typeof customInstance> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError, { data: CreateMenu }, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError,{data: CreateMenu}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError,{data: CreateMenu}, TContext> => {
 
-  const mutationKey = ['createMenu'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+const mutationKey = ['createMenu'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMenu>>, { data: CreateMenu }> = (props) => {
-    const { data } = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMenu>>, {data: CreateMenu}> = (props) => {
+          const {data} = props ?? {};
 
-    return createMenu(data, requestOptions)
-  }
-
-
+          return  createMenu(data,requestOptions)
+        }
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
 
-export type CreateMenuMutationResult = NonNullable<Awaited<ReturnType<typeof createMenu>>>
-export type CreateMenuMutationBody = CreateMenu
-export type CreateMenuMutationError = unknown
 
-/**
-* @summary 创建菜单
-*/
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMenuMutationResult = NonNullable<Awaited<ReturnType<typeof createMenu>>>
+    export type CreateMenuMutationBody = CreateMenu
+    export type CreateMenuMutationError = unknown
+
+    /**
+ * @summary 创建菜单
+ */
 export const useCreateMenu = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError, { data: CreateMenu }, TContext>, request?: SecondParameter<typeof customInstance> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof createMenu>>,
-      TError,
-      { data: CreateMenu },
-      TContext
-    > => {
-  return useMutation(getCreateMenuMutationOptions(options), queryClient);
-}
-/**
-* @summary 菜单列表
-*/
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMenu>>, TError,{data: CreateMenu}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createMenu>>,
+        TError,
+        {data: CreateMenu},
+        TContext
+      > => {
+      return useMutation(getCreateMenuMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 菜单列表
+ */
 export const menus = (
 
-  options?: SecondParameter<typeof customInstance>, signal?: AbortSignal
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-  return customInstance<ApiResponseOfPagedResultOfMenuDto>(
-    {
-      url: `/api/identity/menus`, method: 'GET', signal
+      return customInstance<ApiResponseOfPagedResultOfMenuDto>(
+      {url: `/api/identity/menus`, method: 'GET', signal
     },
-    options);
-}
+      options);
+    }
 
 
 
 
 export const getMenusQueryKey = () => {
-  return [
+    return [
     `/api/identity/menus`
-  ] as const;
-}
+    ] as const;
+    }
 
 
-export const getMenusQueryOptions = <TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
+export const getMenusQueryOptions = <TData = Awaited<ReturnType<typeof menus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getMenusQueryKey();
-
-
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof menus>>> = ({ signal }) => menus(requestOptions, signal);
+  const queryKey =  queryOptions?.queryKey ?? getMenusQueryKey();
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof menus>>> = ({ signal }) => menus(requestOptions, signal);
 
 
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type MenusQueryResult = NonNullable<Awaited<ReturnType<typeof menus>>>
@@ -171,45 +169,41 @@ export type MenusQueryError = unknown
 
 
 export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof menus>>,
-        TError,
-        Awaited<ReturnType<typeof menus>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof customInstance>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof menus>>,
+          TError,
+          Awaited<ReturnType<typeof menus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof menus>>,
-        TError,
-        Awaited<ReturnType<typeof menus>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof customInstance>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof menus>>,
+          TError,
+          Awaited<ReturnType<typeof menus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 菜单列表
  */
 
 export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unknown>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMenusQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -223,221 +217,304 @@ export function useMenus<TData = Awaited<ReturnType<typeof menus>>, TError = unk
  * @summary 删除菜单
  */
 export const deleteMenu = (
-  id: string,
-  options?: SecondParameter<typeof customInstance>, signal?: AbortSignal
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-  return customInstance<ApiResponseOfDeleteMenuResult>(
-    {
-      url: `/api/identity/menus/${id}`, method: 'DELETE', signal
+      return customInstance<ApiResponseOfDeleteMenuResult>(
+      {url: `/api/identity/menus/${id}`, method: 'DELETE', signal
     },
-    options);
-}
+      options);
+    }
 
 
 
 
 export const getDeleteMenuMutationOptions = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError, { id: string }, TContext>, request?: SecondParameter<typeof customInstance> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError, { id: string }, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError,{id: string}, TContext> => {
 
-  const mutationKey = ['deleteMenu'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+const mutationKey = ['deleteMenu'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMenu>>, { id: string }> = (props) => {
-    const { id } = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMenu>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
 
-    return deleteMenu(id, requestOptions)
-  }
-
-
+          return  deleteMenu(id,requestOptions)
+        }
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
 
-export type DeleteMenuMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMenu>>>
 
-export type DeleteMenuMutationError = unknown
+  return  { mutationFn, ...mutationOptions }}
 
-/**
-* @summary 删除菜单
-*/
+    export type DeleteMenuMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMenu>>>
+
+    export type DeleteMenuMutationError = unknown
+
+    /**
+ * @summary 删除菜单
+ */
 export const useDeleteMenu = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError, { id: string }, TContext>, request?: SecondParameter<typeof customInstance> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof deleteMenu>>,
-      TError,
-      { id: string },
-      TContext
-    > => {
-  return useMutation(getDeleteMenuMutationOptions(options), queryClient);
-}
-/**
-* @summary 更新菜单
-*/
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMenu>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMenu>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteMenuMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 更新菜单
+ */
 export const updateMenu = (
-  id: string,
-  updateMenu: UpdateMenu,
-  options?: SecondParameter<typeof customInstance>, signal?: AbortSignal
+    id: string,
+    updateMenu: UpdateMenu,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-  return customInstance<ApiResponseOfUpdateMenuResult>(
-    {
-      url: `/api/identity/menus/${id}`, method: 'PUT',
-      headers: { 'Content-Type': 'application/json', },
+      return customInstance<ApiResponseOfUpdateMenuResult>(
+      {url: `/api/identity/menus/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
       data: updateMenu, signal
     },
-    options);
-}
+      options);
+    }
 
 
 
 
 export const getUpdateMenuMutationOptions = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError, { id: string; data: UpdateMenu }, TContext>, request?: SecondParameter<typeof customInstance> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError, { id: string; data: UpdateMenu }, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError,{id: string;data: UpdateMenu}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError,{id: string;data: UpdateMenu}, TContext> => {
 
-  const mutationKey = ['updateMenu'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+const mutationKey = ['updateMenu'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMenu>>, { id: string; data: UpdateMenu }> = (props) => {
-    const { id, data } = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMenu>>, {id: string;data: UpdateMenu}> = (props) => {
+          const {id,data} = props ?? {};
 
-    return updateMenu(id, data, requestOptions)
-  }
-
-
+          return  updateMenu(id,data,requestOptions)
+        }
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
 
-export type UpdateMenuMutationResult = NonNullable<Awaited<ReturnType<typeof updateMenu>>>
-export type UpdateMenuMutationBody = UpdateMenu
-export type UpdateMenuMutationError = unknown
 
-/**
-* @summary 更新菜单
-*/
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMenuMutationResult = NonNullable<Awaited<ReturnType<typeof updateMenu>>>
+    export type UpdateMenuMutationBody = UpdateMenu
+    export type UpdateMenuMutationError = unknown
+
+    /**
+ * @summary 更新菜单
+ */
 export const useUpdateMenu = <TError = unknown,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError, { id: string; data: UpdateMenu }, TContext>, request?: SecondParameter<typeof customInstance> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof updateMenu>>,
-      TError,
-      { id: string; data: UpdateMenu },
-      TContext
-    > => {
-  return useMutation(getUpdateMenuMutationOptions(options), queryClient);
-}
-/**
-* @summary 用户菜单
-*/
-export const getMyMenus = (
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMenu>>, TError,{id: string;data: UpdateMenu}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateMenu>>,
+        TError,
+        {id: string;data: UpdateMenu},
+        TContext
+      > => {
+      return useMutation(getUpdateMenuMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 菜单下拉选项列表（轻量选择器）
+ */
+export const menuOptions = (
 
-  options?: SecondParameter<typeof customInstance>, signal?: AbortSignal
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-  return customInstance<ApiResponseOfListOfMenuDto>(
-    {
-      url: `/api/identity/menus/me`, method: 'GET', signal
+      return customInstance<ApiResponseOfObject>(
+      {url: `/api/identity/menus/options`, method: 'GET', signal
     },
-    options);
-}
+      options);
+    }
 
 
 
 
-export const getGetMyMenusQueryKey = () => {
-  return [
-    `/api/identity/menus/me`
-  ] as const;
-}
+export const getMenuOptionsQueryKey = () => {
+    return [
+    `/api/identity/menus/options`
+    ] as const;
+    }
 
 
-export const getGetMyMenusQueryOptions = <TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
+export const getMenuOptionsQueryOptions = <TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetMyMenusQueryKey();
-
-
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyMenus>>> = ({ signal }) => getMyMenus(requestOptions, signal);
+  const queryKey =  queryOptions?.queryKey ?? getMenuOptionsQueryKey();
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof menuOptions>>> = ({ signal }) => menuOptions(requestOptions, signal);
 
 
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetMyMenusQueryResult = NonNullable<Awaited<ReturnType<typeof getMyMenus>>>
-export type GetMyMenusQueryError = unknown
+export type MenuOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof menuOptions>>>
+export type MenuOptionsQueryError = unknown
 
 
-export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getMyMenus>>,
-        TError,
-        Awaited<ReturnType<typeof getMyMenus>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof customInstance>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getMyMenus>>,
-        TError,
-        Awaited<ReturnType<typeof getMyMenus>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof customInstance>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof menuOptions>>,
+          TError,
+          Awaited<ReturnType<typeof menuOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof menuOptions>>,
+          TError,
+          Awaited<ReturnType<typeof menuOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 菜单下拉选项列表（轻量选择器）
+ */
+
+export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof menuOptions>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMenuOptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary 用户菜单
+ */
+export const myMenus = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfListOfMenuDto>(
+      {url: `/api/identity/menus/me`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getMyMenusQueryKey = () => {
+    return [
+    `/api/identity/menus/me`
+    ] as const;
+    }
+
+
+export const getMyMenusQueryOptions = <TData = Awaited<ReturnType<typeof myMenus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyMenusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myMenus>>> = ({ signal }) => myMenus(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyMenusQueryResult = NonNullable<Awaited<ReturnType<typeof myMenus>>>
+export type MyMenusQueryError = unknown
+
+
+export function useMyMenus<TData = Awaited<ReturnType<typeof myMenus>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myMenus>>,
+          TError,
+          Awaited<ReturnType<typeof myMenus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyMenus<TData = Awaited<ReturnType<typeof myMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myMenus>>,
+          TError,
+          Awaited<ReturnType<typeof myMenus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyMenus<TData = Awaited<ReturnType<typeof myMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 用户菜单
  */
 
-export function useGetMyMenus<TData = Awaited<ReturnType<typeof getMyMenus>>, TError = unknown>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useMyMenus<TData = Awaited<ReturnType<typeof myMenus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myMenus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetMyMenusQueryOptions(options)
+  const queryOptions = getMyMenusQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }

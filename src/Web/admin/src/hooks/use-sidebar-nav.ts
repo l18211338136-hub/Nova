@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as Icons from 'lucide-react'
-import { useGetMyMenus } from '@/api/endpoints/menus'
+import { useMyMenus } from '@/api/endpoints/menus'
 import { useAuthStore } from '@/stores/auth-store'
 import type { NavGroup, NavItem } from '@/components/layout/types'
 import { usePreferences } from '@/hooks/use-preferences'
@@ -118,7 +118,7 @@ export function useSidebarNav() {
   const { user } = useAuthStore((state) => state.auth)
   const { preferences, isLoading: isPreferencesLoading } = usePreferences()
 
-  const { data: apiResponse, isLoading: isMenusLoading } = useGetMyMenus({
+  const { data: apiResponse, isLoading: isMenusLoading } = useMyMenus({
     query: {
       enabled: Boolean(user),
       staleTime: 30 * 1000,

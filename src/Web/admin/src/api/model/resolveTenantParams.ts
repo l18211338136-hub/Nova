@@ -6,5 +6,5 @@
  */
 
 export type ResolveTenantParams = {
-account: string;
+account?: string;
 };

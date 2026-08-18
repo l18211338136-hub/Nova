@@ -40,7 +40,7 @@ import {
 import * as Icons from 'lucide-react'
 import { MenuDto } from './menus-provider'
 import { useTranslation } from 'react-i18next'
-import { useCreateMenu, useUpdateMenu, useMenus, getMenusQueryKey, getGetMyMenusQueryKey } from '@/api/endpoints/menus'
+import { useCreateMenu, useUpdateMenu, useMenus, getMenusQueryKey, getMyMenusQueryKey } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 
 const predefinedIcons = [
@@ -184,7 +184,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
-            queryClient.invalidateQueries({ queryKey: getGetMyMenusQueryKey() })
+            queryClient.invalidateQueries({ queryKey: getMyMenusQueryKey() })
             toast.success(t('Menu updated successfully'))
             onOpenChange(false)
           },
@@ -203,7 +203,7 @@ export function MenusActionDialog({ currentRow, open, onOpenChange, isEdit, isSu
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getMenusQueryKey() })
-            queryClient.invalidateQueries({ queryKey: getGetMyMenusQueryKey() })
+            queryClient.invalidateQueries({ queryKey: getMyMenusQueryKey() })
             toast.success(t('Menu created successfully'))
             onOpenChange(false)
           },

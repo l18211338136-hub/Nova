@@ -33,6 +33,13 @@
         "component": "features/tenants",
         "icon": "Building",
         "sort": 4
+      },
+      {
+        "name": "字典管理",
+        "path": "/dictionaries",
+        "component": "features/dictionaries",
+        "icon": "BookOpen",
+        "sort": 5
       }
     ]
   },

@@ -4,6 +4,7 @@ import {
   Monitor,
   Bug,
   ListTodo,
+  BookOpen,
   FileX,
   HelpCircle,
   Lock,
@@ -79,6 +80,11 @@ export const sidebarData: SidebarData = {
           title: 'Trash Bin',
           url: '/trash-bin',
           icon: RotateCcw,
+        },
+        {
+          title: 'Dictionaries',
+          url: '/dictionaries',
+          icon: BookOpen,
         },
         {
           title: 'Secured by Clerk',

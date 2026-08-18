@@ -185,7 +185,7 @@ export const useRestoreTrashBinItem = <TError = unknown,
     /**
  * @summary 回收列表
  */
-export const getTrashBinItems = (
+export const trashBinItems = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -200,69 +200,69 @@ export const getTrashBinItems = (
 
 
 
-export const getGetTrashBinItemsQueryKey = () => {
+export const getTrashBinItemsQueryKey = () => {
     return [
     `/api/identity/trash-bin`
     ] as const;
     }
 
 
-export const getGetTrashBinItemsQueryOptions = <TData = Awaited<ReturnType<typeof getTrashBinItems>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getTrashBinItemsQueryOptions = <TData = Awaited<ReturnType<typeof trashBinItems>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTrashBinItemsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getTrashBinItemsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrashBinItems>>> = ({ signal }) => getTrashBinItems(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trashBinItems>>> = ({ signal }) => trashBinItems(requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetTrashBinItemsQueryResult = NonNullable<Awaited<ReturnType<typeof getTrashBinItems>>>
-export type GetTrashBinItemsQueryError = unknown
+export type TrashBinItemsQueryResult = NonNullable<Awaited<ReturnType<typeof trashBinItems>>>
+export type TrashBinItemsQueryError = unknown
 
 
-export function useGetTrashBinItems<TData = Awaited<ReturnType<typeof getTrashBinItems>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData>> & Pick<
+export function useTrashBinItems<TData = Awaited<ReturnType<typeof trashBinItems>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTrashBinItems>>,
+          Awaited<ReturnType<typeof trashBinItems>>,
           TError,
-          Awaited<ReturnType<typeof getTrashBinItems>>
+          Awaited<ReturnType<typeof trashBinItems>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTrashBinItems<TData = Awaited<ReturnType<typeof getTrashBinItems>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData>> & Pick<
+export function useTrashBinItems<TData = Awaited<ReturnType<typeof trashBinItems>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTrashBinItems>>,
+          Awaited<ReturnType<typeof trashBinItems>>,
           TError,
-          Awaited<ReturnType<typeof getTrashBinItems>>
+          Awaited<ReturnType<typeof trashBinItems>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTrashBinItems<TData = Awaited<ReturnType<typeof getTrashBinItems>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useTrashBinItems<TData = Awaited<ReturnType<typeof trashBinItems>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 回收列表
  */
 
-export function useGetTrashBinItems<TData = Awaited<ReturnType<typeof getTrashBinItems>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useTrashBinItems<TData = Awaited<ReturnType<typeof trashBinItems>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trashBinItems>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetTrashBinItemsQueryOptions(options)
+  const queryOptions = getTrashBinItemsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

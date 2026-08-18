@@ -22,8 +22,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { type RoleDto as Role } from '@/api/model'
-import { useUpdateRole, useGetRolePermissions, getGetRolePermissionsQueryKey } from '@/api/endpoints/roles'
-import { useGetAllPermissions, useGetPermissionGroups } from '@/api/endpoints/permissions'
+import { useUpdateRole, useRolePermissions, getRolePermissionsQueryKey } from '@/api/endpoints/roles'
+import { useAllPermissions, usePermissionGroups } from '@/api/endpoints/permissions'
 import { useMenus } from '@/api/endpoints/menus'
 import { useQueryClient } from '@tanstack/react-query'
 import React, { useEffect } from 'react'
@@ -63,14 +63,14 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
   })
 
   // Fetch all system permissions
-  const { data: allPermissions } = useGetAllPermissions({
+  const { data: allPermissions } = useAllPermissions({
     query: {
       enabled: open,
     },
   })
 
   // Fetch permission group names dictionary
-  const { data: permissionGroups } = useGetPermissionGroups({
+  const { data: permissionGroups } = usePermissionGroups({
     query: {
       enabled: open,
     },
@@ -90,7 +90,7 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
   })
 
   // Fetch current role permissions
-  const { data: currentPermissions } = useGetRolePermissions(
+  const { data: currentPermissions } = useRolePermissions(
     currentRow?.id ?? '',
     {
       query: {
@@ -113,7 +113,7 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
         toast.success(t('权限分配成功'))
         queryClient.invalidateQueries({ queryKey: ['roles'] })
         if (currentRow?.id) {
-          queryClient.invalidateQueries({ queryKey: getGetRolePermissionsQueryKey(currentRow.id) })
+          queryClient.invalidateQueries({ queryKey: getRolePermissionsQueryKey(currentRow.id) })
         }
         onOpenChange(false)
       },

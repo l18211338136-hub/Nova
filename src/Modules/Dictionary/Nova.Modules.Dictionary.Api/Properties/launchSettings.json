@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Nova.Modules.Dictionary.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:58205;http://localhost:58206"
+    }
+  }
+}

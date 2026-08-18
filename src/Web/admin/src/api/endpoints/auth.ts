@@ -712,7 +712,7 @@ export const useSendForgotPasswordCode = <TError = unknown,
  * @summary 解析租户
  */
 export const resolveTenant = (
-    params: ResolveTenantParams,
+    params?: ResolveTenantParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
@@ -734,7 +734,7 @@ export const getResolveTenantQueryKey = (params?: ResolveTenantParams,) => {
     }
 
 
-export const getResolveTenantQueryOptions = <TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getResolveTenantQueryOptions = <TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(params?: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -757,7 +757,7 @@ export type ResolveTenantQueryError = unknown
 
 
 export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
- params: ResolveTenantParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
+ params: undefined |  ResolveTenantParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof resolveTenant>>,
           TError,
@@ -767,7 +767,7 @@ export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
- params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
+ params?: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof resolveTenant>>,
           TError,
@@ -777,7 +777,7 @@ export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
- params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -785,7 +785,7 @@ export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant
  */
 
 export function useResolveTenant<TData = Awaited<ReturnType<typeof resolveTenant>>, TError = unknown>(
- params: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: ResolveTenantParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof resolveTenant>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

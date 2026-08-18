@@ -58,7 +58,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 /**
  * @summary 个人偏好
  */
-export const getPreferences = (
+export const preferences = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -73,69 +73,69 @@ export const getPreferences = (
 
 
 
-export const getGetPreferencesQueryKey = () => {
+export const getPreferencesQueryKey = () => {
     return [
     `/api/identity/preferences`
     ] as const;
     }
 
 
-export const getGetPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof preferences>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPreferencesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getPreferencesQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPreferences>>> = ({ signal }) => getPreferences(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof preferences>>> = ({ signal }) => preferences(requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getPreferences>>>
-export type GetPreferencesQueryError = unknown
+export type PreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof preferences>>>
+export type PreferencesQueryError = unknown
 
 
-export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData>> & Pick<
+export function usePreferences<TData = Awaited<ReturnType<typeof preferences>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPreferences>>,
+          Awaited<ReturnType<typeof preferences>>,
           TError,
-          Awaited<ReturnType<typeof getPreferences>>
+          Awaited<ReturnType<typeof preferences>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData>> & Pick<
+export function usePreferences<TData = Awaited<ReturnType<typeof preferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPreferences>>,
+          Awaited<ReturnType<typeof preferences>>,
           TError,
-          Awaited<ReturnType<typeof getPreferences>>
+          Awaited<ReturnType<typeof preferences>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function usePreferences<TData = Awaited<ReturnType<typeof preferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 个人偏好
  */
 
-export function useGetPreferences<TData = Awaited<ReturnType<typeof getPreferences>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function usePreferences<TData = Awaited<ReturnType<typeof preferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof preferences>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetPreferencesQueryOptions(options)
+  const queryOptions = getPreferencesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -214,7 +214,7 @@ export const useUpdatePreferences = <TError = unknown,
     /**
  * @summary 个人资料
  */
-export const getProfile = (
+export const profile = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -229,69 +229,69 @@ export const getProfile = (
 
 
 
-export const getGetProfileQueryKey = () => {
+export const getProfileQueryKey = () => {
     return [
     `/api/identity/profile`
     ] as const;
     }
 
 
-export const getGetProfileQueryOptions = <TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getProfileQueryOptions = <TData = Awaited<ReturnType<typeof profile>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetProfileQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getProfileQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfile>>> = ({ signal }) => getProfile(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof profile>>> = ({ signal }) => profile(requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getProfile>>>
-export type GetProfileQueryError = unknown
+export type ProfileQueryResult = NonNullable<Awaited<ReturnType<typeof profile>>>
+export type ProfileQueryError = unknown
 
 
-export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>> & Pick<
+export function useProfile<TData = Awaited<ReturnType<typeof profile>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getProfile>>,
+          Awaited<ReturnType<typeof profile>>,
           TError,
-          Awaited<ReturnType<typeof getProfile>>
+          Awaited<ReturnType<typeof profile>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>> & Pick<
+export function useProfile<TData = Awaited<ReturnType<typeof profile>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getProfile>>,
+          Awaited<ReturnType<typeof profile>>,
           TError,
-          Awaited<ReturnType<typeof getProfile>>
+          Awaited<ReturnType<typeof profile>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useProfile<TData = Awaited<ReturnType<typeof profile>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 个人资料
  */
 
-export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useProfile<TData = Awaited<ReturnType<typeof profile>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetProfileQueryOptions(options)
+  const queryOptions = getProfileQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
