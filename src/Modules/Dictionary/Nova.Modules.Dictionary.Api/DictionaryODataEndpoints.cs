@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.ModelBuilder;
+using Nova.Framework.Authorization;
 using Nova.Framework.Web.Responses;
-using Nova.Framework.Web.Security;
 using Nova.Modules.Dictionary.Application.Database;
 using Nova.Modules.Dictionary.Application.Dtos;
 

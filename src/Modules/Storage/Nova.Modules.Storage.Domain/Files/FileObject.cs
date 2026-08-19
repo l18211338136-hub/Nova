@@ -53,4 +53,11 @@ public class FileObject : FullAuditedEntity<Guid>
         AccessUrl = accessUrl;
         ModifiedAt = DateTimeOffset.UtcNow;
     }
+
+    public void UpdateContent(long fileSize, string contentType)
+    {
+        FileSize = fileSize;
+        ContentType = contentType;
+        ModifiedAt = DateTimeOffset.UtcNow;
+    }
 }

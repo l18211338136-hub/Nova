@@ -3,6 +3,7 @@ using Finbuckle.MultiTenant.EntityFrameworkCore;
 using Finbuckle.MultiTenant.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
+using Nova.Framework.Persistence.Extensions;
 using Nova.Modules.Storage.Application.Database;
 using Nova.Modules.Storage.Domain.Attachments;
 using Nova.Modules.Storage.Domain.Files;
@@ -75,5 +76,6 @@ public class StorageDbContext : DbContext, IStorageDbContext, IMultiTenantDbCont
         });
 
         modelBuilder.ApplyTenantIsolationByDefault();
+        modelBuilder.ApplySoftDeleteQueryFilter();
     }
 }

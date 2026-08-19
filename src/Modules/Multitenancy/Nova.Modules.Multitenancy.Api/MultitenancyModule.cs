@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Nova.Framework.Authorization;
 using Nova.Framework.Web.Modular;
-using Nova.Framework.Web.Security;
 using Nova.Modules.Multitenancy.Application.Features;
 
 namespace Nova.Modules.Multitenancy.Api;

@@ -30,6 +30,11 @@ public interface IStorageProvider
     Task<string> GetPreSignedUrlAsync(string fileKey, TimeSpan expiresIn, string? bucketName = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 使用新的文件流物理覆盖已有文件（保留 fileKey 与 访问路径 AccessUrl 不变）
+    /// </summary>
+    Task<bool> OverwriteAsync(string fileKey, Stream fileStream, string contentType, string? bucketName = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 批量生成多个文件的预签名直传/上传 URL 数组
     /// </summary>
     Task<List<PreSignedUrlResponseItem>> GetPreSignedUploadUrlsAsync(List<PreSignedUrlRequestItem> items, TimeSpan expiresIn, string? bucketName = null, CancellationToken cancellationToken = default);

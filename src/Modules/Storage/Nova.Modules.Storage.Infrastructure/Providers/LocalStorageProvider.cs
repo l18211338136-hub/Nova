@@ -55,7 +55,13 @@ public class LocalStorageProvider : IStorageProvider
         string? bucketName = null,
         CancellationToken cancellationToken = default)
     {
-        var fullPath = Path.Combine(_options.LocalStorage.RootPath, fileKey);
+        var cleanKey = fileKey.StartsWith('/') ? fileKey.TrimStart('/') : fileKey;
+        if (cleanKey.StartsWith("nova-storage/", StringComparison.OrdinalIgnoreCase))
+        {
+            cleanKey = cleanKey.Substring("nova-storage/".Length);
+        }
+
+        var fullPath = Path.Combine(_options.LocalStorage.RootPath, cleanKey);
         if (!File.Exists(fullPath))
         {
             return Task.FromResult<Stream?>(null);
@@ -97,6 +103,30 @@ public class LocalStorageProvider : IStorageProvider
     {
         var baseUrl = _options.LocalStorage.BaseUrl.TrimEnd('/');
         return Task.FromResult($"{baseUrl}/{fileKey}");
+    }
+
+    public async Task<bool> OverwriteAsync(
+        string fileKey,
+        Stream fileStream,
+        string contentType,
+        string? bucketName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var rootPath = _options.LocalStorage.RootPath;
+        var fullPath = Path.Combine(rootPath, fileKey);
+
+        var dir = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+        using (var destStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+        {
+            await fileStream.CopyToAsync(destStream, cancellationToken);
+        }
+
+        return true;
     }
 
     public Task<List<PreSignedUrlResponseItem>> GetPreSignedUploadUrlsAsync(

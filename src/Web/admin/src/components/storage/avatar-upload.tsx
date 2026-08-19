@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Upload, Loader2, Camera } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { useUpload, useBindAttachment } from '@/api/endpoints/storage'
+import { useUploadStorageFile, useBindAttachment } from '@/api/endpoints/storage'
 
 interface AvatarUploadProps {
   targetId: string
@@ -24,7 +24,7 @@ export function AvatarUpload({
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(value)
 
-  const uploadMutation = useUpload()
+  const uploadMutation = useUploadStorageFile()
   const bindAttachmentMutation = useBindAttachment()
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,9 +78,8 @@ export function AvatarUpload({
 
         <label
           htmlFor={`avatar-input-${targetId}`}
-          className={`absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${
-            disabled || uploading ? 'pointer-events-none' : ''
-          }`}
+          className={`absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${disabled || uploading ? 'pointer-events-none' : ''
+            }`}
         >
           {uploading ? (
             <Loader2 className='h-5 w-5 animate-spin' />

@@ -65,6 +65,6 @@ public class CompositionRootTests
             }
         }
 
-        Assert.Equal(16, found);
+        Assert.Equal(17, found);
     }
 }

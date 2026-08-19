@@ -23,12 +23,14 @@ public class GlobalAuditLoggingMiddleware
 
     public async Task InvokeAsync(HttpContext context, IOperationLogChannel logChannel, ISanitizerEngine sanitizer)
     {
-        // 排除 Scalar / OpenAPI / 静态资源 / 审计日志查询请求
+        // 排除 Scalar / OpenAPI / 静态资源 / 审计日志查询请求 / 物理文件与图片预览流传输请求
         var path = context.Request.Path.Value ?? string.Empty;
         if (path.StartsWith("/scalar", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/openapi", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/api/v1/audit", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/api/identity/auth-audit-logs", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/nova-storage", StringComparison.OrdinalIgnoreCase) ||
+            path.Contains("/storage/files/", StringComparison.OrdinalIgnoreCase) ||
             path.Contains("favicon"))
         {
             await _next(context);
@@ -191,10 +193,32 @@ public class GlobalAuditLoggingMiddleware
         return context.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
     }
 
+    private static bool IsTextOrJsonContentType(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType)) return true;
+        var lower = contentType.ToLowerInvariant();
+        return lower.Contains("json") ||
+               lower.Contains("text") ||
+               lower.Contains("xml") ||
+               lower.Contains("html") ||
+               lower.Contains("form-urlencoded");
+    }
+
+    private static string? SanitizeNullBytes(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        return input.Contains('\0') ? input.Replace("\0", string.Empty) : input;
+    }
+
     private static async Task<string?> ReadRequestBodyAsync(HttpContext context)
     {
         if (!context.Request.ContentLength.HasValue || context.Request.ContentLength == 0) return null;
         if (context.Request.HasFormContentType) return "[Form Data]";
+
+        if (!IsTextOrJsonContentType(context.Request.ContentType))
+        {
+            return "[Binary Data]";
+        }
 
         context.Request.EnableBuffering();
         using var reader = new StreamReader(
@@ -207,7 +231,9 @@ public class GlobalAuditLoggingMiddleware
         var body = await reader.ReadToEndAsync();
         context.Request.Body.Position = 0;
 
-        if (body.Length > 65536)
+        body = SanitizeNullBytes(body);
+
+        if (body != null && body.Length > 65536)
         {
             body = body.Substring(0, 65536) + " [Truncated...]";
         }
@@ -219,6 +245,11 @@ public class GlobalAuditLoggingMiddleware
     {
         if (response.Body.CanSeek)
         {
+            if (!IsTextOrJsonContentType(response.ContentType))
+            {
+                return "[Binary Data]";
+            }
+
             response.Body.Seek(0, SeekOrigin.Begin);
             using var reader = new StreamReader(
                 response.Body,
@@ -231,7 +262,10 @@ public class GlobalAuditLoggingMiddleware
             response.Body.Seek(0, SeekOrigin.Begin);
 
             if (string.IsNullOrWhiteSpace(text)) return null;
-            if (text.Length > 65536) return text.Substring(0, 65536) + " [Truncated...]";
+
+            text = SanitizeNullBytes(text);
+
+            if (text != null && text.Length > 65536) return text.Substring(0, 65536) + " [Truncated...]";
             return text;
         }
         return null;

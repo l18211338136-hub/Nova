@@ -40,6 +40,13 @@
         "component": "features/dictionaries",
         "icon": "BookOpen",
         "sort": 5
+      },
+      {
+        "name": "文件存储",
+        "path": "/storage",
+        "component": "features/storage",
+        "icon": "HardDrive",
+        "sort": 6
       }
     ]
   },

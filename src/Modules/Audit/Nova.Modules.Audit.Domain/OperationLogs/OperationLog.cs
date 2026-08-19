@@ -59,9 +59,16 @@ public class OperationLog : Entity<Guid>
         };
     }
 
+    private static string? CleanNullBytes(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        return input.Contains('\0') ? input.Replace("\0", string.Empty) : input;
+    }
+
     // 设置并自动脱敏 RequestPayload，记录脱敏明细
     public void SetAndSanitizeRequestPayload(string? rawPayload, ISanitizerEngine? sanitizerEngine)
     {
+        rawPayload = CleanNullBytes(rawPayload);
         if (string.IsNullOrWhiteSpace(rawPayload))
         {
             RequestPayload = rawPayload;
@@ -75,7 +82,7 @@ public class OperationLog : Entity<Guid>
         }
 
         var result = sanitizerEngine.Sanitize(rawPayload);
-        RequestPayload = result.SanitizedText;
+        RequestPayload = CleanNullBytes(result.SanitizedText);
 
         if (result.MaskedFields.Count > 0)
         {
@@ -90,6 +97,7 @@ public class OperationLog : Entity<Guid>
     // 设置并自动脱敏 ResponsePayload
     public void SetAndSanitizeResponsePayload(string? rawPayload, ISanitizerEngine? sanitizerEngine)
     {
+        rawPayload = CleanNullBytes(rawPayload);
         if (string.IsNullOrWhiteSpace(rawPayload))
         {
             ResponsePayload = rawPayload;
@@ -103,7 +111,7 @@ public class OperationLog : Entity<Guid>
         }
 
         var result = sanitizerEngine.Sanitize(rawPayload);
-        ResponsePayload = result.SanitizedText;
+        ResponsePayload = CleanNullBytes(result.SanitizedText);
 
         if (result.MaskedFields.Count > 0)
         {
@@ -127,7 +135,7 @@ public class OperationLog : Entity<Guid>
     {
         StatusCode = statusCode;
         Status = ExecutionStatus.Failed;
-        ErrorMessage = exception?.Message;
-        ExceptionStackTrace = exception?.StackTrace;
+        ErrorMessage = CleanNullBytes(exception?.Message);
+        ExceptionStackTrace = CleanNullBytes(exception?.StackTrace);
     }
 }

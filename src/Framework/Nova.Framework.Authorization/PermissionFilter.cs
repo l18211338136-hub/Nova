@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Nova.Contracts.Security;
 
-namespace Nova.Framework.Web.Security;
+namespace Nova.Framework.Authorization;
 
 /// <summary>
 /// 细粒度权限点与层级通配符端点拦截器

@@ -11,7 +11,7 @@ import {
   useUpdateProfile,
   getProfileQueryKey,
 } from '@/api/endpoints/profile'
-import { useUpload } from '@/api/endpoints/storage'
+import { useUploadStorageFile } from '@/api/endpoints/storage'
 import { resolveErrorMessage } from '@/hooks/use-preferences'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -108,7 +108,7 @@ export function ProfileForm() {
     },
   })
 
-  const uploadMutation = useUpload()
+  const uploadMutation = useUploadStorageFile()
 
   // 1. 用户选择本地图片 -> 唤起裁剪 Modal 弹窗
   const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {

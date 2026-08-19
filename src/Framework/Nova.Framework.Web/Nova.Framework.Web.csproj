@@ -22,5 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
+    <ProjectReference Include="..\Nova.Framework.Authorization\Nova.Framework.Authorization.csproj" />
   </ItemGroup>
 </Project>

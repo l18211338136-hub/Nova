@@ -73,10 +73,17 @@ public class S3StorageProvider : IStorageProvider
                 cleanKey = cleanKey.Substring(targetBucket.Length + 1);
             }
 
-            var response = await _s3Client.GetObjectAsync(targetBucket, cleanKey, cancellationToken);
-            return response.ResponseStream;
+            using var response = await _s3Client.GetObjectAsync(targetBucket, cleanKey, cancellationToken);
+            var memoryStream = new MemoryStream();
+            await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (AmazonS3Exception)
+        {
+            return null;
+        }
+        catch (Exception)
         {
             return null;
         }
@@ -123,6 +130,35 @@ public class S3StorageProvider : IStorageProvider
 
         var url = _s3Client.GetPreSignedURL(request);
         return Task.FromResult(url);
+    }
+
+    public async Task<bool> OverwriteAsync(
+        string fileKey,
+        Stream fileStream,
+        string contentType,
+        string? bucketName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var targetBucket = bucketName ?? _options.BucketName;
+        await EnsureBucketExistsAsync(targetBucket, cancellationToken);
+
+        var cleanKey = fileKey.StartsWith('/') ? fileKey.TrimStart('/') : fileKey;
+        if (cleanKey.StartsWith($"{targetBucket}/", StringComparison.OrdinalIgnoreCase))
+        {
+            cleanKey = cleanKey.Substring(targetBucket.Length + 1);
+        }
+
+        var putRequest = new PutObjectRequest
+        {
+            BucketName = targetBucket,
+            Key = cleanKey,
+            InputStream = fileStream,
+            ContentType = contentType,
+            AutoCloseStream = false
+        };
+
+        await _s3Client.PutObjectAsync(putRequest, cancellationToken);
+        return true;
     }
 
     public async Task<List<PreSignedUrlResponseItem>> GetPreSignedUploadUrlsAsync(

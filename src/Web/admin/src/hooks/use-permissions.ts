@@ -23,12 +23,28 @@ export function usePermissions() {
   const hasPermission = (permission: string | string[]) => {
     if (!user) return false
 
-    const userPermissions = user.Permission || user.permission || []
-    
-    // 如果 token 里只有单个权限字符串，转换成数组
-    const normalizedPermissions: string[] = Array.isArray(userPermissions) 
-      ? userPermissions 
-      : [userPermissions]
+    // 1. 超级管理员 / root 角色判定：超级管理员拥有全量权限
+    const roles =
+      user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+      user.role ||
+      user.roles ||
+      []
+    const normalizedRoles = Array.isArray(roles) ? roles : [roles]
+    const isSuperUser = normalizedRoles.some(
+      (r) =>
+        typeof r === 'string' &&
+        ['root', 'superadmin', 'admin'].includes(r.trim().toLowerCase())
+    )
+    if (isSuperUser) return true
+
+    // 2. 提取并标准化用户权限列表
+    const rawPermissions =
+      user.Permission || user.permission || user.permissions || []
+    const normalizedPermissions: string[] = Array.isArray(rawPermissions)
+      ? rawPermissions
+      : [rawPermissions]
+
+    if (normalizedPermissions.includes('*')) return true
 
     if (Array.isArray(permission)) {
       // 要求拥有其中任意一个权限即可

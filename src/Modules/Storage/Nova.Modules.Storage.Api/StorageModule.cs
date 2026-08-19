@@ -121,6 +121,7 @@ public class StorageModule : IModule
         })
         .DisableAntiforgery()
         .WithTags("Storage")
+        .WithName("UploadStorageFile")
         .WithSummary("物理文件表单/流上传 Endpoint")
         .Accepts<UploadFileFormRequest>("multipart/form-data")
         .Produces<ApiResponse<StorageFileDto>>()
@@ -149,18 +150,42 @@ public class StorageModule : IModule
         })
         .AllowAnonymous()
         .WithTags("Storage")
+        .WithName("GetStorageFileContent")
         .WithSummary("根据文件ID获取二进制文件流");
 
-        // 挂载根据相对路径 /nova-storage/{*fileKey} 获取文件流 Endpoint (透传 MinIO)
+        // 挂载根据 Path 相对路径获取文件流 Endpoint (支持 S3 / Local 混合自动降级查寻)
         endpoints.MapGet("/nova-storage/{*fileKey}", async (
             string fileKey,
             IStorageProvider storageProvider,
+            LocalStorageProvider localStorageProvider,
+            S3StorageProvider s3StorageProvider,
             CancellationToken cancellationToken) =>
         {
             var stream = await storageProvider.DownloadAsync(fileKey, null, cancellationToken);
             if (stream == null)
             {
+                stream = await localStorageProvider.DownloadAsync(fileKey, null, cancellationToken)
+                    ?? await s3StorageProvider.DownloadAsync(fileKey, null, cancellationToken);
+            }
+
+            if (stream == null)
+            {
                 return Results.NotFound("文件不存在");
+            }
+
+            byte[] fileBytes;
+            using (stream)
+            {
+                if (stream is MemoryStream ms)
+                {
+                    fileBytes = ms.ToArray();
+                }
+                else
+                {
+                    using var tempMs = new MemoryStream();
+                    await stream.CopyToAsync(tempMs, cancellationToken);
+                    fileBytes = tempMs.ToArray();
+                }
             }
 
             var contentType = fileKey.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png"
@@ -169,10 +194,191 @@ public class StorageModule : IModule
                 : fileKey.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ? "image/gif"
                 : "application/octet-stream";
 
-            return Results.File(stream, contentType);
+            return Results.File(fileBytes, contentType);
         })
         .AllowAnonymous()
         .WithTags("Storage")
+        .WithName("GetStorageFileByPath")
         .WithSummary("根据 Path 相对路径获取文件流 (MinIO/Local)");
+
+        // 1. 文件卡片列表/分页/分类查询 Endpoint (默认每页 12 项)
+        endpoints.MapGet("/api/v1/storage/files", async (
+            IStorageDbContext db,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 12,
+            [FromQuery] string? search = null,
+            [FromQuery] string? category = null,
+            CancellationToken cancellationToken = default) =>
+        {
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 12 : pageSize;
+
+            var query = db.FileObjects.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var keyword = search.Trim().ToLower();
+                query = query.Where(f => f.FileName.ToLower().Contains(keyword) || f.FileKey.ToLower().Contains(keyword));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                var cat = category.Trim().ToLower();
+                if (cat == "image")
+                {
+                    query = query.Where(f => f.ContentType.StartsWith("image/"));
+                }
+                else if (cat == "video")
+                {
+                    query = query.Where(f => f.ContentType.StartsWith("video/"));
+                }
+                else if (cat == "audio")
+                {
+                    query = query.Where(f => f.ContentType.StartsWith("audio/"));
+                }
+                else if (cat == "document")
+                {
+                    query = query.Where(f => f.ContentType.Contains("pdf") ||
+                                            f.ContentType.Contains("word") ||
+                                            f.ContentType.Contains("document") ||
+                                            f.ContentType.Contains("text") ||
+                                            f.ContentType.Contains("json") ||
+                                            f.ContentType.Contains("sheet") ||
+                                            f.ContentType.Contains("excel"));
+                }
+                else if (cat == "archive")
+                {
+                    query = query.Where(f => f.ContentType.Contains("zip") ||
+                                            f.ContentType.Contains("rar") ||
+                                            f.ContentType.Contains("tar") ||
+                                            f.ContentType.Contains("7z") ||
+                                            f.ContentType.Contains("compressed"));
+                }
+            }
+
+            var total = await query.LongCountAsync(cancellationToken);
+            var items = await query
+                .OrderByDescending(f => f.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var dtos = items.Select(f => f.Adapt<StorageFileDto>()).ToList();
+
+            var result = new PagedResult<StorageFileDto>
+            {
+                Total = total,
+                Items = dtos,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return Results.Ok(ApiResponse<PagedResult<StorageFileDto>>.Success(result));
+        })
+        .Produces<ApiResponse<PagedResult<StorageFileDto>>>()
+        .RequireAuthorization()
+        .WithTags("Storage")
+        .WithName("GetStorageFiles")
+        .WithSummary("分页/条件获取存储文件卡片列表 (默认每页12项)");
+
+        // 覆盖上传更新物理文件内容 (同文件扩展名且访问链接保持不变)
+        endpoints.MapPut("/api/v1/storage/files/{id:guid}/content", async (
+            Guid id,
+            [FromForm] UploadFileFormRequest request,
+            IStorageDbContext db,
+            IStorageProvider storageProvider,
+            CancellationToken cancellationToken) =>
+        {
+            var fileObj = await db.FileObjects.FindAsync(new object[] { id }, cancellationToken);
+            if (fileObj == null)
+            {
+                return Results.NotFound(ApiResponse<StorageFileDto>.Error("找不到指定文件"));
+            }
+
+            var newFile = request.File;
+            if (newFile == null || newFile.Length == 0)
+            {
+                return Results.BadRequest(ApiResponse<StorageFileDto>.Error("未接收到覆盖的文件"));
+            }
+
+            // 严格校验文件后缀/扩展名一致
+            var oldExt = Path.GetExtension(fileObj.FileName).ToLowerInvariant();
+            var newExt = Path.GetExtension(newFile.FileName).ToLowerInvariant();
+
+            if (!string.Equals(oldExt, newExt, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.BadRequest(ApiResponse<StorageFileDto>.Error($"替换文件的扩展名（{newExt}）必须与原文件扩展名（{oldExt}）保持一致！"));
+            }
+
+            using var stream = newFile.OpenReadStream();
+            await storageProvider.OverwriteAsync(fileObj.FileKey, stream, newFile.ContentType, fileObj.BucketName, cancellationToken);
+
+            fileObj.UpdateContent(newFile.Length, newFile.ContentType);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return Results.Ok(ApiResponse<StorageFileDto>.Success(fileObj.Adapt<StorageFileDto>()));
+        })
+        .DisableAntiforgery()
+        .WithTags("Storage")
+        .WithName("ReplaceStorageFileContent")
+        .WithSummary("同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)")
+        .Accepts<UploadFileFormRequest>("multipart/form-data")
+        .Produces<ApiResponse<StorageFileDto>>()
+        .RequireAuthorization();
+
+        // 2. 物理与记录一键删除 Endpoint
+        endpoints.MapDelete("/api/v1/storage/files/{id:guid}", async (
+            Guid id,
+            IStorageDbContext db,
+            IStorageProvider storageProvider,
+            CancellationToken cancellationToken) =>
+        {
+            var fileObj = await db.FileObjects.FindAsync(new object[] { id }, cancellationToken);
+            if (fileObj == null)
+            {
+                return Results.NotFound(ApiResponse<bool>.Error("找不到指定文件"));
+            }
+
+            try
+            {
+                await storageProvider.DeleteAsync(fileObj.FileKey, fileObj.BucketName, cancellationToken);
+            }
+            catch { }
+
+            db.FileObjects.Remove(fileObj);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return Results.Ok(ApiResponse<bool>.Success(true));
+        })
+        .Produces<ApiResponse<bool>>()
+        .RequireAuthorization()
+        .WithTags("Storage")
+        .WithName("DeleteStorageFile")
+        .WithSummary("物理与数据库文件记录删除");
+
+        // 3. 存储统计指标 Endpoint
+        endpoints.MapGet("/api/v1/storage/stats", async (
+            IStorageDbContext db,
+            IOptions<StorageOptions> options,
+            CancellationToken cancellationToken) =>
+        {
+            var totalFiles = await db.FileObjects.LongCountAsync(cancellationToken);
+            var totalSize = await db.FileObjects.SumAsync(f => (long?)f.FileSize, cancellationToken) ?? 0;
+            var activeProvider = options.Value.ActiveProvider ?? "Local";
+
+            var stats = new
+            {
+                TotalFiles = totalFiles,
+                TotalSize = totalSize,
+                ActiveProvider = activeProvider
+            };
+
+            return Results.Ok(ApiResponse<object>.Success(stats));
+        })
+        .Produces<ApiResponse<object>>()
+        .RequireAuthorization()
+        .WithTags("Storage")
+        .WithName("GetStorageStats")
+        .WithSummary("获取存储容量及提供商统计数据");
     }
 }

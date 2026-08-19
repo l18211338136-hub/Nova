@@ -24,6 +24,7 @@ import {
   UserCheck,
   Users,
   RotateCcw,
+  HardDrive,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -80,6 +81,11 @@ export const sidebarData: SidebarData = {
           title: 'Trash Bin',
           url: '/trash-bin',
           icon: RotateCcw,
+        },
+        {
+          title: 'Storage Files',
+          url: '/storage',
+          icon: HardDrive,
         },
         {
           title: 'Dictionaries',

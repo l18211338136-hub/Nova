@@ -12,7 +12,7 @@ public class ModuleDiscoveryTests
 {
     private static readonly string[] ExpectedModules =
     {
-        "Agent", "Audit", "Billing", "Chat", "Identity", "Knowledge", "MCP",
+        "Agent", "Audit", "Billing", "Chat", "Dictionary", "Identity", "Knowledge", "MCP",
         "Memory", "Model", "Multitenancy", "Notification", "Prompt", "Storage",
         "Tool", "Workflow", "Workspace"
     };

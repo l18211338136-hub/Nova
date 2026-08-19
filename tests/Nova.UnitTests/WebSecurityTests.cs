@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Nova.Contracts.Security;
-using Nova.Framework.Web.Security;
+using Nova.Framework.Authorization;
 using Nova.Framework.Web.Services;
 using System.Security.Claims;
 using Xunit;

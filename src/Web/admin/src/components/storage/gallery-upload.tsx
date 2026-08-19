@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useUpload, useBindAttachment } from '@/api/endpoints/storage'
+import { useUploadStorageFile, useBindAttachment } from '@/api/endpoints/storage'
 
 interface GalleryItem {
   id: string
@@ -36,7 +36,7 @@ export function GalleryUpload({
   const [gallery, setGallery] = useState<GalleryItem[]>(items)
   const [uploading, setUploading] = useState(false)
 
-  const uploadMutation = useUpload()
+  const uploadMutation = useUploadStorageFile()
   const bindAttachmentMutation = useBindAttachment()
 
   const handleAddFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,9 +127,8 @@ export function GalleryUpload({
         {gallery.length < maxCount && (
           <label
             htmlFor={`gallery-input-${targetId}`}
-            className={`aspect-square border border-dashed rounded-lg flex flex-col items-center justify-center gap-1.5 hover:border-primary/60 hover:bg-accent/40 transition-colors cursor-pointer text-muted-foreground hover:text-foreground ${
-              uploading ? 'pointer-events-none opacity-60' : ''
-            }`}
+            className={`aspect-square border border-dashed rounded-lg flex flex-col items-center justify-center gap-1.5 hover:border-primary/60 hover:bg-accent/40 transition-colors cursor-pointer text-muted-foreground hover:text-foreground ${uploading ? 'pointer-events-none opacity-60' : ''
+              }`}
           >
             {uploading ? (
               <Loader2 className='h-5 w-5 animate-spin text-primary' />

@@ -29,11 +29,15 @@ import type {
   ApiResponseOfApiResponseOfListOfAttachmentDto,
   ApiResponseOfApiResponseOfListOfPreSignedUrlResponseItem,
   ApiResponseOfApiResponseOfboolean,
+  ApiResponseOfObject,
+  ApiResponseOfPagedResultOfStorageFileDto,
   ApiResponseOfStorageFileDto,
+  ApiResponseOfboolean2,
   AttachmentsParams,
   BindAttachment,
   GetPreSignedUrlsQuery,
   InstantUpload,
+  StorageFilesParams,
   UploadFileFormRequest
 } from '../model';
 
@@ -63,7 +67,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 /**
  * @summary 批量获取 S3/MinIO/Local 预签名直传/上传 URL 数组
  */
-export const getPreSignedUrls = (
+export const preSignedUrls = (
     getPreSignedUrlsQuery: GetPreSignedUrlsQuery,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -80,11 +84,11 @@ export const getPreSignedUrls = (
 
 
 
-export const getGetPreSignedUrlsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPreSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof getPreSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext> => {
+export const getPreSignedUrlsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof preSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof preSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext> => {
 
-const mutationKey = ['getPreSignedUrls'];
+const mutationKey = ['preSignedUrls'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -94,10 +98,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getPreSignedUrls>>, {data: GetPreSignedUrlsQuery}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof preSignedUrls>>, {data: GetPreSignedUrlsQuery}> = (props) => {
           const {data} = props ?? {};
 
-          return  getPreSignedUrls(data,requestOptions)
+          return  preSignedUrls(data,requestOptions)
         }
 
 
@@ -107,22 +111,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type GetPreSignedUrlsMutationResult = NonNullable<Awaited<ReturnType<typeof getPreSignedUrls>>>
-    export type GetPreSignedUrlsMutationBody = GetPreSignedUrlsQuery
-    export type GetPreSignedUrlsMutationError = unknown
+    export type PreSignedUrlsMutationResult = NonNullable<Awaited<ReturnType<typeof preSignedUrls>>>
+    export type PreSignedUrlsMutationBody = GetPreSignedUrlsQuery
+    export type PreSignedUrlsMutationError = unknown
 
     /**
  * @summary 批量获取 S3/MinIO/Local 预签名直传/上传 URL 数组
  */
-export const useGetPreSignedUrls = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getPreSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const usePreSignedUrls = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof preSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getPreSignedUrls>>,
+        Awaited<ReturnType<typeof preSignedUrls>>,
         TError,
         {data: GetPreSignedUrlsQuery},
         TContext
       > => {
-      return useMutation(getGetPreSignedUrlsMutationOptions(options), queryClient);
+      return useMutation(getPreSignedUrlsMutationOptions(options), queryClient);
     }
     /**
  * @summary 校验 Hash 进行文件秒传（若云端已存在相同 MD5 文件则免上传直接完成）
@@ -410,7 +414,7 @@ export const useUnbindAttachment = <TError = unknown,
     /**
  * @summary 物理文件表单/流上传 Endpoint
  */
-export const upload = (
+export const uploadStorageFile = (
     uploadFileFormRequest: UploadFileFormRequest,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -431,11 +435,11 @@ if(uploadFileFormRequest.file !== undefined) {
 
 
 
-export const getUploadMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upload>>, TError,{data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof upload>>, TError,{data: UploadFileFormRequest}, TContext> => {
+export const getUploadStorageFileMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadStorageFile>>, TError,{data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadStorageFile>>, TError,{data: UploadFileFormRequest}, TContext> => {
 
-const mutationKey = ['upload'];
+const mutationKey = ['uploadStorageFile'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -445,10 +449,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upload>>, {data: UploadFileFormRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadStorageFile>>, {data: UploadFileFormRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  upload(data,requestOptions)
+          return  uploadStorageFile(data,requestOptions)
         }
 
 
@@ -458,27 +462,27 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UploadMutationResult = NonNullable<Awaited<ReturnType<typeof upload>>>
-    export type UploadMutationBody = UploadFileFormRequest
-    export type UploadMutationError = unknown
+    export type UploadStorageFileMutationResult = NonNullable<Awaited<ReturnType<typeof uploadStorageFile>>>
+    export type UploadStorageFileMutationBody = UploadFileFormRequest
+    export type UploadStorageFileMutationError = unknown
 
     /**
  * @summary 物理文件表单/流上传 Endpoint
  */
-export const useUpload = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upload>>, TError,{data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const useUploadStorageFile = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadStorageFile>>, TError,{data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof upload>>,
+        Awaited<ReturnType<typeof uploadStorageFile>>,
         TError,
         {data: UploadFileFormRequest},
         TContext
       > => {
-      return useMutation(getUploadMutationOptions(options), queryClient);
+      return useMutation(getUploadStorageFileMutationOptions(options), queryClient);
     }
     /**
  * @summary 根据文件ID获取二进制文件流
  */
-export const id = (
+export const storageFileContent = (
     id: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -493,69 +497,69 @@ export const id = (
 
 
 
-export const getIdQueryKey = (id: string,) => {
+export const getStorageFileContentQueryKey = (id: string,) => {
     return [
     `/api/v1/storage/files/${id}`
     ] as const;
     }
 
 
-export const getIdQueryOptions = <TData = Awaited<ReturnType<typeof id>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getStorageFileContentQueryOptions = <TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getIdQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getStorageFileContentQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof id>>> = ({ signal }) => id(id, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageFileContent>>> = ({ signal }) => storageFileContent(id, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type IdQueryResult = NonNullable<Awaited<ReturnType<typeof id>>>
-export type IdQueryError = unknown
+export type StorageFileContentQueryResult = NonNullable<Awaited<ReturnType<typeof storageFileContent>>>
+export type StorageFileContentQueryError = unknown
 
 
-export function useId<TData = Awaited<ReturnType<typeof id>>, TError = unknown>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData>> & Pick<
+export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof id>>,
+          Awaited<ReturnType<typeof storageFileContent>>,
           TError,
-          Awaited<ReturnType<typeof id>>
+          Awaited<ReturnType<typeof storageFileContent>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useId<TData = Awaited<ReturnType<typeof id>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData>> & Pick<
+export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof id>>,
+          Awaited<ReturnType<typeof storageFileContent>>,
           TError,
-          Awaited<ReturnType<typeof id>>
+          Awaited<ReturnType<typeof storageFileContent>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useId<TData = Awaited<ReturnType<typeof id>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 根据文件ID获取二进制文件流
  */
 
-export function useId<TData = Awaited<ReturnType<typeof id>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof id>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileContent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getIdQueryOptions(id,options)
+  const queryOptions = getStorageFileContentQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -568,9 +572,71 @@ export function useId<TData = Awaited<ReturnType<typeof id>>, TError = unknown>(
 
 
 /**
+ * @summary 物理与数据库文件记录删除
+ */
+export const deleteStorageFile = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfboolean2>(
+      {url: `/api/v1/storage/files/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteStorageFileMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStorageFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStorageFile>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteStorageFile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStorageFile>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteStorageFile(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStorageFileMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStorageFile>>>
+
+    export type DeleteStorageFileMutationError = unknown
+
+    /**
+ * @summary 物理与数据库文件记录删除
+ */
+export const useDeleteStorageFile = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStorageFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStorageFile>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteStorageFileMutationOptions(options), queryClient);
+    }
+    /**
  * @summary 根据 Path 相对路径获取文件流 (MinIO/Local)
  */
-export const fileKey = (
+export const storageFileByPath = (
     fileKey: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
@@ -585,69 +651,323 @@ export const fileKey = (
 
 
 
-export const getFileKeyQueryKey = (fileKey: string,) => {
+export const getStorageFileByPathQueryKey = (fileKey: string,) => {
     return [
     `/nova-storage/${fileKey}`
     ] as const;
     }
 
 
-export const getFileKeyQueryOptions = <TData = Awaited<ReturnType<typeof fileKey>>, TError = unknown>(fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getStorageFileByPathQueryOptions = <TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getFileKeyQueryKey(fileKey);
+  const queryKey =  queryOptions?.queryKey ?? getStorageFileByPathQueryKey(fileKey);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof fileKey>>> = ({ signal }) => fileKey(fileKey, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageFileByPath>>> = ({ signal }) => storageFileByPath(fileKey, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: fileKey !== null && fileKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: fileKey !== null && fileKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type FileKeyQueryResult = NonNullable<Awaited<ReturnType<typeof fileKey>>>
-export type FileKeyQueryError = unknown
+export type StorageFileByPathQueryResult = NonNullable<Awaited<ReturnType<typeof storageFileByPath>>>
+export type StorageFileByPathQueryError = unknown
 
 
-export function useFileKey<TData = Awaited<ReturnType<typeof fileKey>>, TError = unknown>(
- fileKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData>> & Pick<
+export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(
+ fileKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof fileKey>>,
+          Awaited<ReturnType<typeof storageFileByPath>>,
           TError,
-          Awaited<ReturnType<typeof fileKey>>
+          Awaited<ReturnType<typeof storageFileByPath>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFileKey<TData = Awaited<ReturnType<typeof fileKey>>, TError = unknown>(
- fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData>> & Pick<
+export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(
+ fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof fileKey>>,
+          Awaited<ReturnType<typeof storageFileByPath>>,
           TError,
-          Awaited<ReturnType<typeof fileKey>>
+          Awaited<ReturnType<typeof storageFileByPath>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFileKey<TData = Awaited<ReturnType<typeof fileKey>>, TError = unknown>(
- fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(
+ fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 根据 Path 相对路径获取文件流 (MinIO/Local)
  */
 
-export function useFileKey<TData = Awaited<ReturnType<typeof fileKey>>, TError = unknown>(
- fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fileKey>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(
+ fileKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFileByPath>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getFileKeyQueryOptions(fileKey,options)
+  const queryOptions = getStorageFileByPathQueryOptions(fileKey,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary 分页/条件获取存储文件卡片列表 (默认每页12项)
+ */
+export const storageFiles = (
+    params?: StorageFilesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfPagedResultOfStorageFileDto>(
+      {url: `/api/v1/storage/files`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getStorageFilesQueryKey = (params?: StorageFilesParams,) => {
+    return [
+    `/api/v1/storage/files`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getStorageFilesQueryOptions = <TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(params?: StorageFilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStorageFilesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageFiles>>> = ({ signal }) => storageFiles(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StorageFilesQueryResult = NonNullable<Awaited<ReturnType<typeof storageFiles>>>
+export type StorageFilesQueryError = unknown
+
+
+export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(
+ params: undefined |  StorageFilesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storageFiles>>,
+          TError,
+          Awaited<ReturnType<typeof storageFiles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(
+ params?: StorageFilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storageFiles>>,
+          TError,
+          Awaited<ReturnType<typeof storageFiles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(
+ params?: StorageFilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 分页/条件获取存储文件卡片列表 (默认每页12项)
+ */
+
+export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(
+ params?: StorageFilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageFiles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStorageFilesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary 同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)
+ */
+export const replaceStorageFileContent = (
+    id: string,
+    uploadFileFormRequest: UploadFileFormRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(uploadFileFormRequest.file !== undefined) {
+ formData.append(`file`, uploadFileFormRequest.file);
+ }
+
+      return customInstance<ApiResponseOfStorageFileDto>(
+      {url: `/api/v1/storage/files/${id}/content`, method: 'PUT',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      options);
+    }
+
+
+
+
+export const getReplaceStorageFileContentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceStorageFileContent>>, TError,{id: string;data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceStorageFileContent>>, TError,{id: string;data: UploadFileFormRequest}, TContext> => {
+
+const mutationKey = ['replaceStorageFileContent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceStorageFileContent>>, {id: string;data: UploadFileFormRequest}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  replaceStorageFileContent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceStorageFileContentMutationResult = NonNullable<Awaited<ReturnType<typeof replaceStorageFileContent>>>
+    export type ReplaceStorageFileContentMutationBody = UploadFileFormRequest
+    export type ReplaceStorageFileContentMutationError = unknown
+
+    /**
+ * @summary 同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)
+ */
+export const useReplaceStorageFileContent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceStorageFileContent>>, TError,{id: string;data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceStorageFileContent>>,
+        TError,
+        {id: string;data: UploadFileFormRequest},
+        TContext
+      > => {
+      return useMutation(getReplaceStorageFileContentMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 获取存储容量及提供商统计数据
+ */
+export const storageStats = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfObject>(
+      {url: `/api/v1/storage/stats`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getStorageStatsQueryKey = () => {
+    return [
+    `/api/v1/storage/stats`
+    ] as const;
+    }
+
+
+export const getStorageStatsQueryOptions = <TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStorageStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageStats>>> = ({ signal }) => storageStats(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StorageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof storageStats>>>
+export type StorageStatsQueryError = unknown
+
+
+export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storageStats>>,
+          TError,
+          Awaited<ReturnType<typeof storageStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storageStats>>,
+          TError,
+          Awaited<ReturnType<typeof storageStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 获取存储容量及提供商统计数据
+ */
+
+export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStorageStatsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

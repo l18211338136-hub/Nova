@@ -65,26 +65,14 @@ public class TenantService : ITenantService, IScopedDependency
             throw new Exception($"Tenant {tenantId} not found.");
         }
 
-        using var scope = _serviceProvider.CreateScope();
-
         // 绑定管理密码
         if (adminPassword != null)
         {
             tenant.AdminPassword = adminPassword;
         }
 
-        // 切换到目标租户的上下文
-        scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>()
-            .MultiTenantContext = new ManualTenantContext { TenantInfo = tenant };
-
-        // 解析所有的 IDbInitializer，并在新租户的上下文中自动建库和填充数据
-        var initializers = scope.ServiceProvider.GetServices<IDbInitializer>();
-
-        foreach (var initializer in initializers)
-        {
-            await initializer.MigrateAsync(cancellationToken).ConfigureAwait(false);
-            await initializer.SeedAsync(cancellationToken).ConfigureAwait(false);
-        }
+        var migrator = _serviceProvider.GetRequiredService<ITenantDatabaseMigrator>();
+        await migrator.MigrateAndSeedTenantAsync(tenant, cancellationToken).ConfigureAwait(false);
     }
 }
 

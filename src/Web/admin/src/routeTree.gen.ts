@@ -32,6 +32,7 @@ import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedTrashBinIndexRouteImport } from './routes/_authenticated/trash-bin/index'
 import { Route as AuthenticatedTenantsIndexRouteImport } from './routes/_authenticated/tenants/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
+import { Route as AuthenticatedStorageIndexRouteImport } from './routes/_authenticated/storage/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRolesIndexRouteImport } from './routes/_authenticated/roles/index'
 import { Route as AuthenticatedMenusIndexRouteImport } from './routes/_authenticated/menus/index'
@@ -165,6 +166,12 @@ const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
   path: '/tasks/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStorageIndexRoute =
+  AuthenticatedStorageIndexRouteImport.update({
+    id: '/storage/',
+    path: '/storage/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
@@ -295,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/menus/': typeof AuthenticatedMenusIndexRoute
   '/roles/': typeof AuthenticatedRolesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/storage/': typeof AuthenticatedStorageIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/tenants/': typeof AuthenticatedTenantsIndexRoute
   '/trash-bin/': typeof AuthenticatedTrashBinIndexRoute
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/menus': typeof AuthenticatedMenusIndexRoute
   '/roles': typeof AuthenticatedRolesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/storage': typeof AuthenticatedStorageIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/tenants': typeof AuthenticatedTenantsIndexRoute
   '/trash-bin': typeof AuthenticatedTrashBinIndexRoute
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/_authenticated/menus/': typeof AuthenticatedMenusIndexRoute
   '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/storage/': typeof AuthenticatedStorageIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/tenants/': typeof AuthenticatedTenantsIndexRoute
   '/_authenticated/trash-bin/': typeof AuthenticatedTrashBinIndexRoute
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/menus/'
     | '/roles/'
     | '/settings/'
+    | '/storage/'
     | '/tasks/'
     | '/tenants/'
     | '/trash-bin/'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/menus'
     | '/roles'
     | '/settings'
+    | '/storage'
     | '/tasks'
     | '/tenants'
     | '/trash-bin'
@@ -493,6 +505,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menus/'
     | '/_authenticated/roles/'
     | '/_authenticated/settings/'
+    | '/_authenticated/storage/'
     | '/_authenticated/tasks/'
     | '/_authenticated/tenants/'
     | '/_authenticated/trash-bin/'
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks/'
       preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/storage/': {
+      id: '/_authenticated/storage/'
+      path: '/storage'
+      fullPath: '/storage/'
+      preLoaderRoute: typeof AuthenticatedStorageIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/': {
@@ -864,6 +884,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDictionariesIndexRoute: typeof AuthenticatedDictionariesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedStorageIndexRoute: typeof AuthenticatedStorageIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedTenantsIndexRoute: typeof AuthenticatedTenantsIndexRoute
   AuthenticatedTrashBinIndexRoute: typeof AuthenticatedTrashBinIndexRoute
@@ -881,6 +902,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedDictionariesIndexRoute: AuthenticatedDictionariesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedStorageIndexRoute: AuthenticatedStorageIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedTenantsIndexRoute: AuthenticatedTenantsIndexRoute,
   AuthenticatedTrashBinIndexRoute: AuthenticatedTrashBinIndexRoute,

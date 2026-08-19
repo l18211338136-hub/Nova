@@ -8,10 +8,10 @@ using Nova.Contracts.CQRS;
 using Nova.Contracts.Idempotency;
 using Nova.Contracts.RateLimiting;
 using Nova.Contracts.Security;
+using Nova.Framework.Authorization;
 using Nova.Framework.Web.Idempotency;
 using Nova.Framework.Web.RateLimiting;
 using Nova.Framework.Web.Responses;
-using Nova.Framework.Web.Security;
 using System.Reflection;
 
 namespace Nova.Framework.Web.CQRS;

@@ -45,7 +45,7 @@ public class TokenService : ITokenService, ITransientDependency
             claims.Add(new Claim("tenantId", tenantId));
         }
 
-        var useCached = _configuration.GetValue<bool>("Auth:UseCachedPermissions", true);
+        var useCached = _configuration.GetValue<bool>("Auth:UseCachedPermissions", false);
 
         if (additionalClaims != null)
         {
