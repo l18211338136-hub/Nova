@@ -13,6 +13,9 @@ using Nova.Modules.Identity.Domain.Users;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
+using Microsoft.AspNetCore.Http;
+using Nova.Framework.Web.Helpers;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class LogoutCommandHandler : IConsumer<LogoutCommand>
@@ -20,20 +23,25 @@ public class LogoutCommandHandler : IConsumer<LogoutCommand>
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public LogoutCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        IDomainEventDispatcher dispatcher)
+        IDomainEventDispatcher dispatcher,
+        IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _dispatcher = dispatcher;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Consume(ConsumeContext<LogoutCommand> context)
     {
         var request = context.Message;
+        var clientIp = ClientInfoHelper.GetClientIp(_httpContextAccessor.HttpContext);
+        var userAgent = ClientInfoHelper.ParseUserAgent(_httpContextAccessor.HttpContext);
 
         var handler = new JwtSecurityTokenHandler();
         if (!handler.CanReadToken(request.AccessToken))
@@ -73,12 +81,12 @@ public class LogoutCommandHandler : IConsumer<LogoutCommand>
             matched.Revoked = true;
             await RefreshTokenStore.SetAllAsync(userManager, user, tokens);
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, true));
+                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, true, null, clientIp, userAgent));
         }
         else
         {
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, false, "刷新令牌不存在或已吊销"));
+                AuthAuditEventType.Logout, tenantInfo.Identifier, user.Email, user.Id, false, "刷新令牌不存在或已吊销", clientIp, userAgent));
         }
 
         await context.RespondAsync(new LogoutResult { Success = true });

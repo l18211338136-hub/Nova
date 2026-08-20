@@ -17,6 +17,8 @@ export interface AuthAuditLogDto {
   reason?: string | null;
   /** @nullable */
   ipAddress?: string | null;
+  /** @nullable */
+  userAgent?: string | null;
   occurredOn?: string;
   createdAt?: string;
 }

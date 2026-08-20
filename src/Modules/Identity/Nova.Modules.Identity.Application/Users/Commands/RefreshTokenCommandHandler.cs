@@ -16,6 +16,9 @@ using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
+using Microsoft.AspNetCore.Http;
+using Nova.Framework.Web.Helpers;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
@@ -24,22 +27,27 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
     private readonly IConfiguration _configuration;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public RefreshTokenCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
         IDomainEventDispatcher dispatcher,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _dispatcher = dispatcher;
         _configuration = configuration;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Consume(ConsumeContext<RefreshTokenCommand> context)
     {
         var request = context.Message;
+        var clientIp = ClientInfoHelper.GetClientIp(_httpContextAccessor.HttpContext);
+        var userAgent = ClientInfoHelper.ParseUserAgent(_httpContextAccessor.HttpContext);
 
         // 1. Read and validate signature of the old access token (ignoring expiration)
         var handler = new JwtSecurityTokenHandler();
@@ -118,7 +126,7 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
         if (matched == null)
         {
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.TokenRefreshed, targetTenantId, user.Email, user.Id, false, "刷新令牌不匹配或已失效"));
+                AuthAuditEventType.TokenRefreshed, targetTenantId, user.Email, user.Id, false, "刷新令牌不匹配或已失效", clientIp, userAgent));
             throw new NovaValidationException("刷新令牌不匹配或已失效，请重新登录");
         }
 
@@ -138,7 +146,7 @@ public class RefreshTokenCommandHandler : IConsumer<RefreshTokenCommand>
         var tokenResult = tokenService.GenerateToken(user, tenantInfo.Identifier);
 
         await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.TokenRefreshed, tenantInfo.Identifier, user.Email, user.Id, true));
+            AuthAuditEventType.TokenRefreshed, tenantInfo.Identifier, user.Email, user.Id, true, null, clientIp, userAgent));
 
         await context.RespondAsync(new LoginResult
         {

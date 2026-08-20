@@ -60,7 +60,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         meta: {
           filterType: 'select',
           title: t('请求谓词 / 路径'),
-          className: 'w-[320px]',
+          className: 'w-[260px]',
           selectOptions: [
             { value: 'GET', label: 'GET' },
             { value: 'POST', label: 'POST' },
@@ -102,7 +102,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         meta: {
           filterType: 'text',
           title: t('状态码 / 耗时'),
-          className: 'w-[140px]',
+          className: 'w-[110px]',
           filterPlaceholder: t('状态码'),
         },
       },
@@ -116,8 +116,8 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
           if (!hasSanitized) return <span className='text-muted-foreground text-xs ps-2'>-</span>
 
           return (
-            <Badge variant='outline' className='bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 gap-1 text-xs'>
-              <ShieldAlert className='h-3.5 w-3.5' />
+            <Badge variant='outline' className='bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 gap-1 text-[11px] px-1.5 py-0'>
+              <ShieldAlert className='h-3 w-3' />
               {t('包含敏感词')}
             </Badge>
           )
@@ -125,7 +125,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         meta: {
           filterType: 'boolean',
           title: t('自动脱敏'),
-          className: 'w-[130px]',
+          className: 'w-[100px]',
           booleanOptions: {
             trueLabel: t('包含敏感词'),
             falseLabel: t('未脱敏'),
@@ -145,7 +145,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         meta: {
           filterType: 'text',
           title: t('客户端 IP'),
-          className: 'w-[140px]',
+          className: 'w-[130px]',
           filterPlaceholder: t('客户端 IP'),
         },
       },
@@ -165,7 +165,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
         meta: {
           filterType: 'date',
           title: t('时间'),
-          className: 'w-[180px]',
+          className: 'w-[160px]',
         },
       },
       {
@@ -178,7 +178,7 @@ export const useOperationColumns = ({ onViewDetail }: UseOperationColumnsProps) 
             variant='ghost'
             size='sm'
             onClick={() => onViewDetail(row.original)}
-            className='h-8 px-2 text-xs gap-1 text-primary hover:text-primary'
+            className='h-5 px-2 text-[11px] gap-1 text-primary hover:text-primary py-0'
           >
             <Eye className='h-3.5 w-3.5' />
             {t('查看详情')}

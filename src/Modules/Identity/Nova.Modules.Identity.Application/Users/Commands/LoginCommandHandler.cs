@@ -13,6 +13,9 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using System.Security.Claims;
 
+using Microsoft.AspNetCore.Http;
+using Nova.Framework.Web.Helpers;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class LoginCommandHandler : IConsumer<LoginCommand>
@@ -20,20 +23,25 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public LoginCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        IDomainEventDispatcher dispatcher)
+        IDomainEventDispatcher dispatcher,
+        IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _dispatcher = dispatcher;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Consume(ConsumeContext<LoginCommand> context)
     {
         var request = context.Message;
+        var clientIp = ClientInfoHelper.GetClientIp(_httpContextAccessor.HttpContext);
+        var userAgent = ClientInfoHelper.ParseUserAgent(_httpContextAccessor.HttpContext);
         // 1. 从全局映射表查找该账号归属的所有租户
         var mappings = await _tenantDb.GlobalUserTenantMappings
             .Where(m => m.Account == request.Account)
@@ -91,7 +99,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
             {
                 accountLocked = true;
                 await _dispatcher.PublishAsync(new AuthAuditEvent(
-                    AuthAuditEventType.LoginFailed, tenantInfo.Identifier, request.Account, tempUser.Id, false, "账号已被锁定"));
+                    AuthAuditEventType.LoginFailed, tenantInfo.Identifier, request.Account, tempUser.Id, false, "账号已被锁定", clientIp, userAgent));
                 continue;
             }
 
@@ -104,7 +112,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
             {
                 await um.AccessFailedAsync(tempUser);
                 await _dispatcher.PublishAsync(new AuthAuditEvent(
-                    AuthAuditEventType.LoginFailed, tenantInfo.Identifier, request.Account, tempUser.Id, false, "密码错误"));
+                    AuthAuditEventType.LoginFailed, tenantInfo.Identifier, request.Account, tempUser.Id, false, "密码错误", clientIp, userAgent));
             }
         }
 
@@ -190,7 +198,7 @@ public class LoginCommandHandler : IConsumer<LoginCommand>
         });
 
         await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.LoginSuccess, tenantId, request.Account, user!.Id, true, "密码登录"));
+            AuthAuditEventType.LoginSuccess, tenantId, request.Account, user!.Id, true, "密码登录", clientIp, userAgent));
 
         await context.RespondAsync(new LoginResult
         {

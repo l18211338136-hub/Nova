@@ -14,6 +14,9 @@ using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using System.Security.Claims;
 
+using Microsoft.AspNetCore.Http;
+using Nova.Framework.Web.Helpers;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
@@ -22,22 +25,27 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
     private readonly NovaTenantDbContext _tenantDb;
     private readonly INovaCache _cache;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public EmailLoginCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
         INovaCache cache,
-        IDomainEventDispatcher dispatcher)
+        IDomainEventDispatcher dispatcher,
+        IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _cache = cache;
         _dispatcher = dispatcher;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Consume(ConsumeContext<EmailLoginCommand> context)
     {
         var request = context.Message;
+        var clientIp = ClientInfoHelper.GetClientIp(_httpContextAccessor.HttpContext);
+        var userAgent = ClientInfoHelper.ParseUserAgent(_httpContextAccessor.HttpContext);
 
         // 1. 全局校验验证码
         var cachedCode = await _cache.GetAsync<string>($"LoginCode:{request.Email}");
@@ -108,7 +116,7 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
         if (user == null)
         {
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.LoginFailed, tenantId, request.Email, null, false, "邮箱对应的用户不存在"));
+                AuthAuditEventType.LoginFailed, tenantId, request.Email, null, false, "邮箱对应的用户不存在", clientIp, userAgent));
             throw new NovaValidationException("未找到与该邮箱关联的租户账户");
         }
 
@@ -152,7 +160,7 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
 
         // 发布审计事件（邮箱验证码登录成功）
         await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.LoginSuccess, tenantId, request.Email, user.Id, true, "邮箱登录"));
+            AuthAuditEventType.LoginSuccess, tenantId, request.Email, user.Id, true, "邮箱登录", clientIp, userAgent));
 
         // Generate Refresh Token（与 LoginCommandHandler 保持一致：使用 RefreshTokenStore，
         // 存储到 ("NovaApp", "RefreshTokens") key，JSON 数组格式，确保登出时能正确查找和吊销）

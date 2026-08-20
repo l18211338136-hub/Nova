@@ -464,6 +464,7 @@
     "Failed": "Failed",
     "Reason": "Reason",
     "IP Address": "IP Address",
+    "UserAgent": "Device / Browser",
     "Time": "Time",
     "Security": "Security",
     "Account security": "Account security",

@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Cross2Icon } from '@radix-ui/react-icons'
-import { DataTablePagination } from '@/components/data-table'
+import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { DataTableViewOptions } from '@/components/data-table/view-options'
 import type { EntityChangeLogDto } from '@/api/model'
 import { useEntityChanges } from '@/api/endpoints/audit'
@@ -165,27 +165,12 @@ export function EntityDiffTable({ search, navigate }: DataTableProps) {
     <div
       className={cn(
         'max-sm:has-[div[role="toolbar"]]:mb-16',
-        'flex flex-1 flex-col gap-4'
+        'flex flex-1 flex-col gap-4 min-w-0 w-full min-h-0'
       )}
     >
-      <div className='flex items-center justify-between'>
-        <div className='flex flex-1 items-center space-x-2'>
-          {isFiltered && (
-            <Button
-              variant='ghost'
-              onClick={handleReset}
-              className='h-8 px-2 lg:px-3'
-            >
-              {t('Reset')}
-              <Cross2Icon className='ms-2 h-4 w-4' />
-            </Button>
-          )}
-        </div>
-        <DataTableViewOptions table={table} />
-      </div>
-
-      <div className='overflow-hidden rounded-md border'>
-        <Table className='table-fixed'>
+      <DataTableToolbar table={table} hideSearch={true} filters={[]} />
+      <div className='rounded-md border w-full flex-1 overflow-hidden'>
+        <Table className='table-fixed w-full'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <Fragment key={headerGroup.id}>

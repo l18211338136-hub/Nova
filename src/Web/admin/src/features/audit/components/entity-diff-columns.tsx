@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Eye, User, Calendar } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTableColumnHeader } from '@/components/data-table'
@@ -39,7 +40,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
         meta: {
           filterType: 'select',
           title: t('实体类型'),
-          className: 'w-[170px]',
+          className: 'w-[110px]',
           selectOptions: [
             { value: 'User', label: t('用户 (User)') },
             { value: 'Role', label: t('角色 (Role)') },
@@ -56,7 +57,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
         ),
         cell: ({ row }) => (
           <span
-            className='font-mono text-xs font-medium text-foreground max-w-[260px] truncate block ps-1'
+            className='font-mono text-xs font-medium text-foreground max-w-[200px] truncate block ps-1'
             title={row.getValue('entityId')}
           >
             {row.getValue('entityId')}
@@ -66,7 +67,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
           filterType: 'text',
           title: t('显示名称 / 标识'),
           filterPlaceholder: t('实体标识'),
-          className: 'w-[280px]',
+          className: 'w-[220px]',
         },
       },
       {
@@ -83,13 +84,14 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
           }
           return (
             <Badge
-              className={
+              className={cn(
+                'text-[11px] px-1.5 py-0',
                 changeType === 'Added'
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                   : changeType === 'Modified'
                   ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
                   : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-              }
+              )}
             >
               {labelMap[changeType] || changeType}
             </Badge>
@@ -98,11 +100,11 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
         meta: {
           filterType: 'select',
           title: t('变更类型'),
-          className: 'w-[150px]',
+          className: 'w-[100px]',
           selectOptions: [
             { value: 'Added', label: t('新增 (Added)') },
             { value: 'Modified', label: t('修改 (Modified)') },
-            { value: 'Deleted', label: t('删除 (Deleted)') },
+            { value: 'Deleted', label: t('Deleted)') },
           ],
         },
       },
@@ -121,7 +123,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
           filterType: 'text',
           title: t('操作人'),
           filterPlaceholder: t('操作人'),
-          className: 'w-[140px]',
+          className: 'w-[110px]',
         },
       },
       {
@@ -141,7 +143,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
         meta: {
           filterType: 'date',
           title: t('变更时间'),
-          className: 'w-[180px]',
+          className: 'w-[160px]',
         },
       },
       {
@@ -155,7 +157,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
             <Button
               variant='outline'
               size='sm'
-              className='h-8 gap-1.5 text-xs'
+              className='h-5 px-2 gap-1 text-[11px] py-0'
               onClick={() => onViewDiff(log)}
             >
               <Eye className='h-3.5 w-3.5 text-primary' />
@@ -164,7 +166,7 @@ export const useEntityDiffColumns = ({ onViewDiff }: UseEntityDiffColumnsProps) 
           )
         },
         meta: {
-          className: 'w-[140px]',
+          className: 'w-[120px]',
         },
       },
     ],

@@ -12,6 +12,7 @@ public class AuthAuditLogDto
     public bool Success { get; set; }
     public string? Reason { get; set; }
     public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
     public DateTime OccurredOn { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }

@@ -45,7 +45,8 @@ public class AuthAuditEventConsumer : IConsumer<AuthAuditEvent>
             evt.UserId,
             evt.Success,
             evt.Reason,
-            evt.IpAddress));
+            evt.IpAddress,
+            evt.UserAgent));
 
         await db.SaveChangesAsync();
     }

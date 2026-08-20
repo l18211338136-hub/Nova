@@ -16,7 +16,8 @@ public class AuthAuditLog : IFullAuditedEntity
         Guid? userId,
         bool success,
         string? reason = null,
-        string? ipAddress = null)
+        string? ipAddress = null,
+        string? userAgent = null)
     {
         EventType = eventType;
         Account = account;
@@ -24,6 +25,7 @@ public class AuthAuditLog : IFullAuditedEntity
         Success = success;
         Reason = reason;
         IpAddress = ipAddress;
+        UserAgent = userAgent;
         OccurredOn = DateTime.UtcNow;
     }
 
@@ -36,6 +38,7 @@ public class AuthAuditLog : IFullAuditedEntity
     public bool Success { get; set; }
     public string? Reason { get; set; }
     public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
     public DateTime OccurredOn { get; set; }
 
     // IFullAuditedEntity

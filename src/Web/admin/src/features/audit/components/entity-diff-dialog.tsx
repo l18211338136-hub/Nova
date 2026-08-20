@@ -79,7 +79,7 @@ export function EntityDiffDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-5xl w-[92vw] h-[85vh] flex flex-col p-0 overflow-hidden'>
-        <DialogHeader className='px-6 pt-5 pb-4 border-b shrink-0 bg-background/95 backdrop-blur z-10'>
+        <DialogHeader className='ps-6 pe-12 pt-5 pb-4 border-b shrink-0 bg-background/95 backdrop-blur z-10'>
           <div className='flex items-center gap-2'>
             <History className='h-5 w-5 text-primary' />
             <DialogTitle className='text-xl font-bold'>
@@ -165,14 +165,14 @@ export function EntityDiffDialog({
                   </div>
 
                   <div className='flex-1 border rounded-lg overflow-hidden bg-card min-h-0 flex flex-col'>
-                    <ScrollArea className='h-full w-full'>
-                      <Table className='w-full border-collapse'>
+                    <div className='h-full w-full overflow-auto'>
+                      <Table className='table-fixed w-full min-w-[680px] border-collapse'>
                         <TableHeader className='bg-muted/60 sticky top-0 z-10 shadow-sm'>
                           <TableRow className='hover:bg-transparent'>
-                            <TableHead className='w-[180px] font-bold text-foreground'>{t('变更字段 / 属性')}</TableHead>
-                            <TableHead className='w-[42%] text-rose-600 dark:text-rose-400 font-bold'>{t('修改前 (Original Value)')}</TableHead>
-                            <TableHead className='w-[36px] p-0 text-center'></TableHead>
-                            <TableHead className='w-[42%] text-emerald-600 dark:text-emerald-400 font-bold'>{t('修改后 (New Value)')}</TableHead>
+                            <TableHead className='w-[150px] font-bold text-foreground'>{t('变更字段 / 属性')}</TableHead>
+                            <TableHead className='w-[calc(50%-90px)] text-rose-600 dark:text-rose-400 font-bold'>{t('修改前 (Original Value)')}</TableHead>
+                            <TableHead className='w-[30px] text-center p-0'></TableHead>
+                            <TableHead className='w-[calc(50%-90px)] text-emerald-600 dark:text-emerald-400 font-bold'>{t('修改后 (New Value)')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -182,17 +182,20 @@ export function EntityDiffDialog({
 
                               return (
                                 <TableRow key={change.id} className='hover:bg-muted/30'>
-                                  <TableCell className='font-mono text-xs font-semibold align-top py-3 break-all'>
-                                    <div className='flex items-center gap-1.5'>
+                                  <TableCell className='font-mono text-xs font-semibold align-top py-3 break-words break-all whitespace-normal'>
+                                    <div className='break-words break-all min-w-0'>
                                       {change.propertyDisplayName || change.propertyName}
                                     </div>
                                   </TableCell>
-                                  <TableCell className='font-mono text-xs bg-rose-500/5 text-rose-700 dark:text-rose-300 border-r align-top py-3 break-all'>
+                                  <TableCell 
+                                    className='font-mono text-xs bg-rose-500/5 text-rose-700 dark:text-rose-300 border-r align-top py-3 break-words break-all whitespace-normal'
+                                    title={change.originalValue || ''}
+                                  >
                                     {change.originalValue ? (
-                                      <span className='line-through opacity-85 inline-flex items-center gap-1'>
-                                        {isPermissionOrMenu && <MinusCircle className='h-3.5 w-3.5 text-rose-500 shrink-0' />}
+                                      <div className='line-through opacity-85 break-words break-all whitespace-normal text-xs'>
+                                        {isPermissionOrMenu && <MinusCircle className='h-3.5 w-3.5 text-rose-500 inline-block mr-1 align-sub shrink-0' />}
                                         {change.originalValue}
-                                      </span>
+                                      </div>
                                     ) : (
                                       <span className='italic opacity-50 font-normal'>(null)</span>
                                     )}
@@ -200,12 +203,15 @@ export function EntityDiffDialog({
                                   <TableCell className='p-0 text-center text-muted-foreground align-top py-3'>
                                     <ArrowRight className='h-4 w-4 mx-auto text-muted-foreground/70' />
                                   </TableCell>
-                                  <TableCell className='font-mono text-xs bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 font-medium align-top py-3 break-all'>
+                                  <TableCell 
+                                    className='font-mono text-xs bg-emerald-500/5 text-emerald-700 dark:text-emerald-300 font-medium align-top py-3 break-words break-all whitespace-normal'
+                                    title={change.newValue || ''}
+                                  >
                                     {change.newValue ? (
-                                      <span className='inline-flex items-center gap-1'>
-                                        {isPermissionOrMenu && <PlusCircle className='h-3.5 w-3.5 text-emerald-500 shrink-0' />}
+                                      <div className='break-words break-all whitespace-normal text-xs'>
+                                        {isPermissionOrMenu && <PlusCircle className='h-3.5 w-3.5 text-emerald-500 inline-block mr-1 align-sub shrink-0' />}
                                         {change.newValue}
-                                      </span>
+                                      </div>
                                     ) : (
                                       <span className='italic opacity-50 font-normal'>(null)</span>
                                     )}
@@ -222,7 +228,7 @@ export function EntityDiffDialog({
                           )}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </div>
                 </>
               )}

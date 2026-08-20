@@ -238,6 +238,7 @@ public static class IdentityODataEndpoints
                     Success = l.Success,
                     Reason = l.Reason,
                     IpAddress = l.IpAddress,
+                    UserAgent = l.UserAgent,
                     OccurredOn = l.OccurredOn,
                     CreatedAt = l.CreatedAt
                 });

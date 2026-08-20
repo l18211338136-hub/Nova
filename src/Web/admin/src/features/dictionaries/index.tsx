@@ -5,6 +5,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { Search } from '@/components/search'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -27,7 +28,7 @@ import {
   Plus,
   Edit,
   Trash2,
-  Search,
+  Search as SearchIcon,
   BookOpen,
   Tag,
   MoreVertical,
@@ -194,18 +195,15 @@ export default function Dictionaries() {
   return (
     <>
       <Header fixed>
-        <div className='flex items-center gap-2 me-auto font-medium text-sm text-muted-foreground'>
-          <BookOpen className='h-4 w-4' />
-          <span>{t('字典管理')}</span>
-        </div>
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />
       </Header>
 
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6 overflow-hidden min-h-0'>
         {/* Page Header */}
-        <div className='flex flex-wrap items-center justify-between gap-2'>
+        <div className='flex flex-wrap items-center justify-between gap-2 shrink-0'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>{t('数据字典管理')}</h2>
             <p className='text-muted-foreground text-sm'>
@@ -219,16 +217,16 @@ export default function Dictionaries() {
         </div>
 
         {/* Master-Detail Split Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-12 gap-6 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch flex-1 min-h-0 overflow-hidden'>
           {/* Left Column: Dictionary Types List (4 cols) */}
-          <Card className='md:col-span-4 shadow-sm'>
-            <CardHeader className='pb-3'>
+          <Card className='md:col-span-4 shadow-sm flex flex-col min-h-0 overflow-hidden'>
+            <CardHeader className='pb-3 shrink-0'>
               <CardTitle className='text-base font-semibold flex items-center justify-between'>
                 <span>{t('字典分类')}</span>
                 <Badge variant='outline'>{typesList.length}</Badge>
               </CardTitle>
               <div className='relative mt-2'>
-                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
                   placeholder={t('搜索类型编码/名称...')}
                   className='pl-8 h-9'
@@ -237,7 +235,7 @@ export default function Dictionaries() {
                 />
               </div>
             </CardHeader>
-            <CardContent className='p-0 max-h-[600px] overflow-y-auto divide-y'>
+            <CardContent className='p-0 flex-1 overflow-y-auto divide-y min-h-0'>
               {isTypesLoading ? (
                 <div className='p-4 text-center text-sm text-muted-foreground'>{t('加载字典分类中...')}</div>
               ) : typesList.length === 0 ? (
@@ -293,8 +291,8 @@ export default function Dictionaries() {
           </Card>
 
           {/* Right Column: Dictionary Items Details (8 cols) */}
-          <Card className='md:col-span-8 shadow-sm'>
-            <CardHeader className='pb-3 border-b'>
+          <Card className='md:col-span-8 shadow-sm flex flex-col min-h-0 overflow-hidden'>
+            <CardHeader className='pb-3 border-b shrink-0'>
               <div className='flex flex-wrap items-center justify-between gap-2'>
                 <div>
                   <CardTitle className='text-base font-semibold flex items-center gap-2'>
@@ -315,7 +313,7 @@ export default function Dictionaries() {
                 )}
               </div>
               <div className='relative mt-3'>
-                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
                   placeholder={t('搜索字典数据项文本/键值...')}
                   className='pl-8 h-9'
@@ -325,7 +323,7 @@ export default function Dictionaries() {
                 />
               </div>
             </CardHeader>
-            <CardContent className='p-0'>
+            <CardContent className='p-0 flex-1 overflow-y-auto min-h-0'>
               {!activeType ? (
                 <div className='p-8 text-center text-muted-foreground text-sm'>
                   {t('👈 请在左侧选择一个字典分类以管理其数据明细')}

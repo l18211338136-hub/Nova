@@ -21,7 +21,8 @@ public class AuthAuditEvent : IDomainEvent
         Guid? userId,
         bool success,
         string? reason = null,
-        string? ipAddress = null)
+        string? ipAddress = null,
+        string? userAgent = null)
     {
         EventType = eventType;
         TenantId = tenantId;
@@ -30,6 +31,7 @@ public class AuthAuditEvent : IDomainEvent
         Success = success;
         Reason = reason;
         IpAddress = ipAddress;
+        UserAgent = userAgent;
         OccurredOn = DateTime.UtcNow;
     }
 
@@ -40,5 +42,6 @@ public class AuthAuditEvent : IDomainEvent
     public bool Success { get; }
     public string? Reason { get; }
     public string? IpAddress { get; }
+    public string? UserAgent { get; }
     public DateTime OccurredOn { get; }
 }

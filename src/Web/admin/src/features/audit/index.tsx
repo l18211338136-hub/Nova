@@ -30,7 +30,7 @@ export function AuditLogs() {
         <ProfileDropdown />
       </Header>
 
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>
@@ -42,31 +42,31 @@ export function AuditLogs() {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'security' | 'operation' | 'entityDiff')} className='flex flex-1 flex-col gap-4'>
-          <TabsList className='w-fit grid grid-cols-3'>
-            <TabsTrigger value='operation' className='gap-2 px-4'>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'security' | 'operation' | 'entityDiff')} className='flex flex-1 flex-col gap-4 min-w-0 w-full overflow-hidden'>
+          <TabsList className='grid w-full max-w-lg grid-cols-3 h-10 p-1'>
+            <TabsTrigger value='operation' className='gap-2 px-3 text-xs sm:text-sm font-medium'>
               <List className='h-4 w-4' />
               {t('全局操作日志')}
             </TabsTrigger>
-            <TabsTrigger value='entityDiff' className='gap-2 px-4'>
+            <TabsTrigger value='entityDiff' className='gap-2 px-3 text-xs sm:text-sm font-medium'>
               <History className='h-4 w-4' />
               {t('数据变更追溯')}
             </TabsTrigger>
-            <TabsTrigger value='security' className='gap-2 px-4'>
+            <TabsTrigger value='security' className='gap-2 px-3 text-xs sm:text-sm font-medium'>
               <ShieldCheck className='h-4 w-4' />
               {t('安全认证日志')}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value='operation' className='flex-1 flex flex-col m-0'>
+          <TabsContent value='operation' className='flex-1 flex flex-col m-0 min-w-0 w-full overflow-hidden outline-none'>
             <OperationTable search={search} navigate={navigate} />
           </TabsContent>
 
-          <TabsContent value='entityDiff' className='flex-1 flex flex-col m-0'>
+          <TabsContent value='entityDiff' className='flex-1 flex flex-col m-0 min-w-0 w-full overflow-hidden outline-none'>
             <EntityDiffTable search={search} navigate={navigate} />
           </TabsContent>
 
-          <TabsContent value='security' className='flex-1 flex flex-col m-0'>
+          <TabsContent value='security' className='flex-1 flex flex-col m-0 min-w-0 w-full overflow-hidden outline-none'>
             <AuditTable search={search} navigate={navigate} />
           </TabsContent>
         </Tabs>

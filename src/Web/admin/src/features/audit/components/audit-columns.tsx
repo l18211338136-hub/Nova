@@ -27,7 +27,7 @@ export const useAuditColumns = () => {
         },
         meta: {
           filterType: 'select',
-          className: 'w-[180px]',
+          className: 'w-[110px]',
           selectOptions: [
             { value: 'LoginSuccess', label: t('LoginSuccess') },
             { value: 'LoginFailed', label: t('LoginFailed') },
@@ -43,13 +43,13 @@ export const useAuditColumns = () => {
           <DataTableColumnHeader column={column} title={t('Account')} />
         ),
         cell: ({ row }) => (
-          <div className='ps-2 text-nowrap'>
+          <div className='ps-2 text-nowrap truncate max-w-[160px]' title={row.getValue('account') || ''}>
             {row.getValue('account') || '-'}
           </div>
         ),
         meta: {
           filterType: 'text',
-          className: 'w-[200px]',
+          className: 'w-[170px]',
           filterPlaceholder: t('Account'),
         },
       },
@@ -64,7 +64,7 @@ export const useAuditColumns = () => {
             <Badge
               variant='outline'
               className={cn(
-                'capitalize',
+                'capitalize text-[11px] px-1.5 py-0',
                 success
                   ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                   : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
@@ -77,7 +77,7 @@ export const useAuditColumns = () => {
         enableSorting: true,
         meta: {
           filterType: 'boolean',
-          className: 'w-[110px]',
+          className: 'w-[80px]',
           booleanOptions: {
             trueLabel: t('Success'),
             falseLabel: t('Failed'),
@@ -90,14 +90,14 @@ export const useAuditColumns = () => {
           <DataTableColumnHeader column={column} title={t('Reason')} />
         ),
         cell: ({ row }) => (
-          <LongText className='max-w-60 ps-2'>
+          <LongText className='max-w-32 ps-2 text-xs'>
             {row.getValue('reason') || '-'}
           </LongText>
         ),
         enableSorting: false,
         enableColumnFilter: false,
         meta: {
-          className: 'w-[240px]',
+          className: 'w-[130px]',
         },
       },
       {
@@ -106,14 +106,30 @@ export const useAuditColumns = () => {
           <DataTableColumnHeader column={column} title={t('IP Address')} />
         ),
         cell: ({ row }) => (
-          <div className='w-fit ps-2 text-nowrap'>
+          <div className='w-fit ps-2 text-nowrap text-xs' title={row.getValue('ipAddress') || ''}>
             {row.getValue('ipAddress') || '-'}
           </div>
         ),
         meta: {
           filterType: 'text',
-          className: 'w-[160px]',
+          className: 'w-[130px]',
           filterPlaceholder: t('IP Address'),
+        },
+      },
+      {
+        accessorKey: 'userAgent',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t('UserAgent') || '终端设备'} className='hidden md:flex' />
+        ),
+        cell: ({ row }) => (
+          <div className='hidden md:block ps-2 text-nowrap text-xs text-muted-foreground truncate max-w-[170px]' title={row.getValue('userAgent') || ''}>
+            {row.getValue('userAgent') || '-'}
+          </div>
+        ),
+        meta: {
+          filterType: 'text',
+          className: 'w-[180px] hidden md:table-cell',
+          filterPlaceholder: t('UserAgent') || '终端设备',
         },
       },
       {
@@ -124,14 +140,14 @@ export const useAuditColumns = () => {
         cell: ({ row }) => {
           const date = row.getValue('occurredOn') as string
           return (
-            <div className='ps-2 text-nowrap'>
+            <div className='ps-2 text-nowrap text-xs'>
               {date ? new Date(date).toLocaleString() : '-'}
             </div>
           )
         },
         meta: {
           filterType: 'date',
-          className: 'w-[220px]',
+          className: 'w-[160px]',
         },
       },
     ],

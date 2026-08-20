@@ -1,4 +1,5 @@
 import { useEffect, useState, Fragment } from 'react'
+import { keepPreviousData } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
   type SortingState,
@@ -63,7 +64,6 @@ export function AuditTable({ search, navigate }: DataTableProps) {
         serialize: (v: unknown) => {
           if (!v || typeof v !== 'object') return ''
           const d = v as DateFilterValue
-          // JSON 序列化：{"op":"between","from":"...","to":"..."}
           return JSON.stringify(d)
         },
         deserialize: (v: unknown) => {
@@ -81,6 +81,7 @@ export function AuditTable({ search, navigate }: DataTableProps) {
   const { data: apiResponse, isLoading, isError } = useAuthAuditLogs({
     query: {
       queryKey: ['audit-logs', pagination, columnFilters, sorting],
+      placeholderData: keepPreviousData,
     },
     request: {
       params: {
@@ -131,12 +132,12 @@ export function AuditTable({ search, navigate }: DataTableProps) {
     <div
       className={cn(
         'max-sm:has-[div[role="toolbar"]]:mb-16',
-        'flex flex-1 flex-col gap-4'
+        'flex flex-1 flex-col gap-4 min-w-0 w-full min-h-0'
       )}
     >
       <DataTableToolbar table={table} hideSearch={true} filters={[]} />
-      <div className='overflow-hidden rounded-md border'>
-        <Table className='table-fixed'>
+      <div className='rounded-md border w-full flex-1 overflow-hidden'>
+        <Table className='table-fixed w-full'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <Fragment key={headerGroup.id}>

@@ -11,6 +11,9 @@ using Nova.Modules.Identity.Application.Services;
 using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Users;
 
+using Microsoft.AspNetCore.Http;
+using Nova.Framework.Web.Helpers;
+
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
 public class ChangePasswordCommandHandler : IConsumer<ChangePasswordCommand>
@@ -18,20 +21,25 @@ public class ChangePasswordCommandHandler : IConsumer<ChangePasswordCommand>
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NovaTenantDbContext _tenantDb;
     private readonly IDomainEventDispatcher _dispatcher;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public ChangePasswordCommandHandler(
         IServiceScopeFactory scopeFactory,
         NovaTenantDbContext tenantDb,
-        IDomainEventDispatcher dispatcher)
+        IDomainEventDispatcher dispatcher,
+        IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
         _tenantDb = tenantDb;
         _dispatcher = dispatcher;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Consume(ConsumeContext<ChangePasswordCommand> context)
     {
         var request = context.Message;
+        var clientIp = ClientInfoHelper.GetClientIp(_httpContextAccessor.HttpContext);
+        var userAgent = ClientInfoHelper.ParseUserAgent(_httpContextAccessor.HttpContext);
 
         if (request.CurrentUserId == Guid.Empty)
         {
@@ -64,12 +72,12 @@ public class ChangePasswordCommandHandler : IConsumer<ChangePasswordCommand>
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
             await _dispatcher.PublishAsync(new AuthAuditEvent(
-                AuthAuditEventType.PasswordChanged, tenantId, user.Email, user.Id, false, errors));
+                AuthAuditEventType.PasswordChanged, tenantId, user.Email, user.Id, false, errors, clientIp, userAgent));
             throw new NovaValidationException($"修改密码失败: {errors}");
         }
 
         await _dispatcher.PublishAsync(new AuthAuditEvent(
-            AuthAuditEventType.PasswordChanged, tenantId, user.Email, user.Id, true));
+            AuthAuditEventType.PasswordChanged, tenantId, user.Email, user.Id, true, null, clientIp, userAgent));
 
         await context.RespondAsync(new ChangePasswordResult { Success = true });
     }
