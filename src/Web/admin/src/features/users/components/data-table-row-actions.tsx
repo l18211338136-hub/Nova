@@ -1,7 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { useMutation } from '@tanstack/react-query'
 import { type Row } from '@tanstack/react-table'
 import { KeyRound, ShieldAlert, Trash2, UserPen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { type UserDto as User } from '@/api/model'
 import { useUsersContext } from './users-provider'
-import { customInstance } from '@/lib/api-client'
+import { useAdminResetUserPassword } from '@/api/endpoints/users'
 import { usePermissions } from '@/hooks/use-permissions'
 
 type DataTableRowActionsProps = {
@@ -31,14 +30,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const canDelete = hasPermission('Identity.Users.Delete')
   const canReset = hasPermission('Identity.Users.ResetPassword')
 
-  const adminResetMutation = useMutation({
-    mutationFn: (id: string) =>
-      customInstance<{ code: number; message: string; data?: { success: boolean; message?: string } }>({
-        url: `/api/identity/users/${id}/reset-password`,
-        method: 'POST',
-      }),
-    onSuccess: () => toast.success(t('Password reset email sent.')),
-    onError: (error: any) => toast.error(error?.response?.data?.message || t('Failed to send password reset email.')),
+  const adminResetMutation = useAdminResetUserPassword({
+    mutation: {
+      onSuccess: (res) => {
+        if (res?.data?.success === false) {
+          toast.error(res.data.message || t('Failed to reset password.'))
+        } else {
+          toast.success(res?.data?.message || t('Password reset successfully!'))
+        }
+      },
+      onError: (error: any) =>
+        toast.error(error?.response?.data?.message || t('Failed to reset password.')),
+    },
   })
 
   if (!canUpdate && !canDelete && !canReset) {
@@ -82,8 +85,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           )}
           {canReset && (
             <DropdownMenuItem
+              disabled={adminResetMutation.isPending}
               onClick={() => {
-                if (row.original.id) adminResetMutation.mutate(row.original.id)
+                if (row.original.id) {
+                  adminResetMutation.mutate({ id: row.original.id, data: {} })
+                }
               }}
             >
               <KeyRound className="mr-2 h-4 w-4 text-amber-500" />

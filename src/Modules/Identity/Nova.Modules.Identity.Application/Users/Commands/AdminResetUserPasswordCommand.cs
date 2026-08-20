@@ -9,6 +9,7 @@ namespace Nova.Modules.Identity.Application.Users.Commands;
 public record AdminResetUserPasswordCommand
 {
     public Guid Id { get; init; }
+
     public Guid CurrentUserId { get; init; }
     public string? CurrentTenantId { get; init; }
 }
@@ -18,6 +19,6 @@ public record AdminResetUserPasswordResult
     [Description("是否成功")]
     public bool Success { get; init; }
 
-    [Description("错误信息")]
+    [Description("提示消息")]
     public string? Message { get; init; }
 }

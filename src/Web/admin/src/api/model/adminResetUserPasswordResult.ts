@@ -12,7 +12,7 @@ export type AdminResetUserPasswordResult = {
   /** 是否成功 */
   success?: boolean;
   /**
-     * 错误信息
+     * 提示消息
      * @nullable
      */
   message?: string | null;
