@@ -203,17 +203,13 @@ export default function Dictionaries() {
 
       <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6 overflow-hidden min-h-0'>
         {/* Page Header */}
-        <div className='flex flex-wrap items-center justify-between gap-2 shrink-0'>
+        <div className='flex flex-wrap items-end justify-between gap-2 shrink-0'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>{t('数据字典管理')}</h2>
             <p className='text-muted-foreground text-sm'>
               {t('维护系统全局常用数据字典与明细数据项，供各模块拉取与展示。')}
             </p>
           </div>
-          <Button onClick={handleCreateType}>
-            <Plus className='mr-2 h-4 w-4' />
-            {t('新增字典类型')}
-          </Button>
         </div>
 
         {/* Master-Detail Split Grid */}
@@ -222,8 +218,14 @@ export default function Dictionaries() {
           <Card className='md:col-span-4 shadow-sm flex flex-col min-h-0 overflow-hidden'>
             <CardHeader className='pb-3 shrink-0'>
               <CardTitle className='text-base font-semibold flex items-center justify-between'>
-                <span>{t('字典分类')}</span>
-                <Badge variant='outline'>{typesList.length}</Badge>
+                <div className='flex items-center gap-2'>
+                  <span>{t('字典分类')}</span>
+                  <Badge variant='outline'>{typesList.length}</Badge>
+                </div>
+                <Button onClick={handleCreateType}>
+                  <Plus className='mr-1.5 h-4 w-4' />
+                  {t('新增类型')}
+                </Button>
               </CardTitle>
               <div className='relative mt-2'>
                 <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
@@ -247,7 +249,7 @@ export default function Dictionaries() {
                     <div
                       key={type.id}
                       onClick={() => setSelectedType(type)}
-                      className={`flex items-center justify-between p-3.5 cursor-pointer transition-colors hover:bg-muted/50 ${isSelected ? 'bg-muted/80 font-medium border-l-4 border-primary pl-2.5' : ''
+                      className={`flex items-center justify-between px-6 py-3.5 cursor-pointer transition-colors hover:bg-muted/50 ${isSelected ? 'bg-muted/80 font-medium border-l-4 border-primary pl-5' : ''
                         }`}
                     >
                       <div className='space-y-1 overflow-hidden pr-2'>
@@ -295,8 +297,7 @@ export default function Dictionaries() {
             <CardHeader className='pb-3 border-b shrink-0'>
               <div className='flex flex-wrap items-center justify-between gap-2'>
                 <div>
-                  <CardTitle className='text-base font-semibold flex items-center gap-2'>
-                    <Tag className='h-4 w-4 text-primary' />
+                  <CardTitle className='text-base font-semibold'>
                     <span>
                       {activeType ? activeType.name : t('请选择字典类型')}
                     </span>
@@ -305,12 +306,10 @@ export default function Dictionaries() {
                     <p className='text-xs text-muted-foreground mt-1'>{activeType.description}</p>
                   )}
                 </div>
-                {activeType && (
-                  <Button size='sm' onClick={handleCreateItem}>
-                    <Plus className='mr-1.5 h-3.5 w-3.5' />
-                    {t('新增字典项')}
-                  </Button>
-                )}
+                <Button onClick={handleCreateItem} disabled={!activeType}>
+                  <Plus className='mr-1.5 h-4 w-4' />
+                  {t('新增字典项')}
+                </Button>
               </div>
               <div className='relative mt-3'>
                 <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
@@ -344,17 +343,17 @@ export default function Dictionaries() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t('显示文本')}</TableHead>
+                      <TableHead className='pl-6'>{t('显示文本')}</TableHead>
                       <TableHead>{t('数据值')}</TableHead>
                       <TableHead>{t('排序')}</TableHead>
                       <TableHead>{t('状态')}</TableHead>
-                      <TableHead className='text-right'>{t('操作')}</TableHead>
+                      <TableHead className='text-right pr-6'>{t('操作')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {itemsList.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className='font-medium'>
+                        <TableCell className='pl-6 font-medium'>
                           <div className='flex items-center gap-1.5'>
                             <span>{item.label}</span>
                             {item.isDefault && (
@@ -386,7 +385,7 @@ export default function Dictionaries() {
                             )}
                           </Button>
                         </TableCell>
-                        <TableCell className='text-right'>
+                        <TableCell className='text-right pr-6'>
                           <div className='flex justify-end gap-1'>
                             <Button
                               variant='ghost'

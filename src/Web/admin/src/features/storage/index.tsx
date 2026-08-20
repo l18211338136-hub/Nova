@@ -192,8 +192,8 @@ export default function StorageFeature() {
         {/* 顶部 Header 与 标题 */}
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5'>
-              <HardDrive className='w-6 h-6 text-primary' /> {t('File Resource Management')}
+            <h2 className='text-2xl font-bold tracking-tight text-foreground'>
+              {t('File Resource Management')}
             </h2>
             <p className='text-xs text-muted-foreground mt-1'>
               {t('Card-based storage resource management with online preview.')}
@@ -202,7 +202,7 @@ export default function StorageFeature() {
 
           <Button
             onClick={() => setUploadOpen(true)}
-            className='gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl px-4 py-2 text-xs font-semibold'
+            className='gap-2'
           >
             <UploadCloud className='w-4 h-4' /> {t('Upload New File')}
           </Button>
