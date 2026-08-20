@@ -36,6 +36,13 @@ const ACTION_MAP: Record<string, string> = {
   'Delete': '删除',
   'ChangePassword': '修改密码',
   'ResetPassword': '重置密码',
+  'HardDelete': '强删',
+  'Restore': '恢复',
+  'Bind': '绑定',
+  'Unbind': '解绑',
+  'Upload': '上传',
+  'Download': '下载',
+  'InstantUpload': '秒传',
 }
 
 const formSchema = z.object({
@@ -169,7 +176,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
             const matchingMenu = allMenus.find(m => m.name === groupName)
             if (matchingMenu && matchingMenu.id) {
               selectedMenuIds.add(matchingMenu.id)
-              
+
               // 递归添加父节点
               let parentId = matchingMenu.parentId
               while (parentId) {
@@ -248,13 +255,13 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                                 return checked
                                   ? field.onChange([...(field.value || []), role.name])
                                   : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== role.name
-                                      )
+                                    field.value?.filter(
+                                      (value) => value !== role.name
                                     )
+                                  )
                               }}
                             />
-                            <span 
+                            <span
                               className="font-normal text-sm leading-none cursor-pointer"
                               onClick={() => {
                                 if (!isChecked) {
@@ -274,7 +281,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                   </FormItem>
                 )}
               />
-              
+
               {/* Permissions Section */}
               <FormField
                 control={form.control}
@@ -292,14 +299,14 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                         const safeValue = Array.isArray(field.value) ? field.value : []
                         const allSelected = perms.every((p) => safeValue.includes(p))
                         const someSelected = perms.some((p) => safeValue.includes(p))
-                        
+
                         return (
                           <div key={group} className="rounded-xl border bg-slate-50/50 dark:bg-slate-900/20 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50">
                             <div className="flex justify-between items-center mb-4 pb-3 border-b border-border/50">
                               <h4 className="text-sm font-semibold tracking-tight">
                                 {permissionGroups?.data?.[group] || group}
                               </h4>
-                              <div 
+                              <div
                                 className="flex items-center space-x-2 cursor-pointer group"
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -315,8 +322,8 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                               >
                                 <div className={cn(
                                   "flex size-4 shrink-0 items-center justify-center rounded-md border shadow-xs transition-colors",
-                                  allSelected || someSelected 
-                                    ? "bg-primary border-primary text-primary-foreground" 
+                                  allSelected || someSelected
+                                    ? "bg-primary border-primary text-primary-foreground"
                                     : "border-input bg-transparent dark:bg-input/30"
                                 )}>
                                   {allSelected && (
@@ -336,7 +343,7 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                                 const action = perm.split('.').pop() || perm;
                                 const label = ACTION_MAP[action] || action;
                                 const isChecked = safeValue.includes(perm);
-                                
+
                                 return (
                                   <div
                                     key={perm}
