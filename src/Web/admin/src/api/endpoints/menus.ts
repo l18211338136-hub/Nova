@@ -341,7 +341,7 @@ export const useUpdateMenu = <TError = unknown,
       return useMutation(getUpdateMenuMutationOptions(options), queryClient);
     }
     /**
- * @summary 菜单下拉选项列表（轻量选择器）
+ * @summary 菜单选项
  */
 export const menuOptions = (
 
@@ -412,7 +412,7 @@ export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 菜单下拉选项列表（轻量选择器）
+ * @summary 菜单选项
  */
 
 export function useMenuOptions<TData = Awaited<ReturnType<typeof menuOptions>>, TError = unknown>(

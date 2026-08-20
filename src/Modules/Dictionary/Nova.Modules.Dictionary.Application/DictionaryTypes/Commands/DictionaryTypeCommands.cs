@@ -10,7 +10,7 @@ using Nova.Modules.Dictionary.Domain.DictionaryTypes;
 
 namespace Nova.Modules.Dictionary.Application.DictionaryTypes.Commands;
 
-[ApiEndpoint("POST", "/api/dictionary/types", typeof(ApiResponse<Guid>), "Dictionaries", Summary = "创建字典类型")]
+[ApiEndpoint("POST", "/api/dictionary/types", typeof(ApiResponse<Guid>), "Dictionaries", Summary = "创建类型")]
 [RequirePermission("Dictionary.Types.Create")]
 public record CreateDictionaryTypeCommand
 {
@@ -22,7 +22,7 @@ public record CreateDictionaryTypeCommand
     public int SortOrder { get; init; }
 }
 
-[ApiEndpoint("PUT", "/api/dictionary/types/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "更新字典类型")]
+[ApiEndpoint("PUT", "/api/dictionary/types/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "更新类型")]
 [RequirePermission("Dictionary.Types.Update")]
 public record UpdateDictionaryTypeCommand
 {
@@ -33,7 +33,7 @@ public record UpdateDictionaryTypeCommand
     public int SortOrder { get; init; }
 }
 
-[ApiEndpoint("DELETE", "/api/dictionary/types/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "删除字典类型")]
+[ApiEndpoint("DELETE", "/api/dictionary/types/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "删除类型")]
 [RequirePermission("Dictionary.Types.Delete")]
 public record DeleteDictionaryTypeCommand
 {

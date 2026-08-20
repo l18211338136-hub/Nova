@@ -4,7 +4,7 @@ using Nova.Contracts.Security;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/users/{id}/reset-password", typeof(AdminResetUserPasswordResult), "Users", Summary = "重置用户密码", RequireAuthorization = true)]
+[ApiEndpoint("POST", "/api/identity/users/{id}/reset-password", typeof(AdminResetUserPasswordResult), "Users", Summary = "重置密码", RequireAuthorization = true)]
 [RequirePermission("Identity.Users.ResetPassword")]
 public record AdminResetUserPasswordCommand
 {

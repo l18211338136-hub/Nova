@@ -26,7 +26,7 @@ public record InstantUploadResult
     public string? AccessUrl { get; init; }
 }
 
-[ApiEndpoint("POST", "/api/v1/storage/instant-upload", typeof(ApiResponse<InstantUploadResult>), "Storage", Summary = "校验 Hash 进行文件秒传（若云端已存在相同 MD5 文件则免上传直接完成）")]
+[ApiEndpoint("POST", "/api/v1/storage/instant-upload", typeof(ApiResponse<InstantUploadResult>), "Storage", Summary = "文件秒传")]
 public record InstantUploadCommand
 {
     public string FileHash { get; init; } = default!;

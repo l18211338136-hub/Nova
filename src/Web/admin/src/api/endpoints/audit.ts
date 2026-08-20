@@ -51,7 +51,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary 操作日志列表
+ * @summary 操作日志
  */
 export const operationLogs = (
     params: OperationLogsParams,
@@ -123,7 +123,7 @@ export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 操作日志列表
+ * @summary 操作日志
  */
 
 export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs>>, TError = unknown>(
@@ -144,7 +144,7 @@ export function useOperationLogs<TData = Awaited<ReturnType<typeof operationLogs
 
 
 /**
- * @summary 变更日志列表
+ * @summary 变更日志
  */
 export const entityChanges = (
     params: EntityChangesParams,
@@ -216,7 +216,7 @@ export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 变更日志列表
+ * @summary 变更日志
  */
 
 export function useEntityChanges<TData = Awaited<ReturnType<typeof entityChanges>>, TError = unknown>(

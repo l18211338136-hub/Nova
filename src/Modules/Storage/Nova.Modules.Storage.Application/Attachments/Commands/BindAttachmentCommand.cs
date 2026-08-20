@@ -4,7 +4,7 @@ using Nova.Framework.Web.Responses;
 
 namespace Nova.Modules.Storage.Application.Attachments.Commands;
 
-[ApiEndpoint("POST", "/api/v1/storage/attachments/bind", typeof(ApiResponse<AttachmentDto>), "Storage", Summary = "将文件绑定为业务实体的附件（如用户头像、商品图片）")]
+[ApiEndpoint("POST", "/api/v1/storage/attachments/bind", typeof(ApiResponse<AttachmentDto>), "Storage", Summary = "绑定附件")]
 public record BindAttachmentCommand
 {
     public Guid FileId { get; init; }

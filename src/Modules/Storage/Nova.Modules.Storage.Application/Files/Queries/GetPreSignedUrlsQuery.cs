@@ -4,7 +4,7 @@ using Nova.Framework.Web.Responses;
 
 namespace Nova.Modules.Storage.Application.Files.Queries;
 
-[ApiEndpoint("POST", "/api/v1/storage/presigned-urls", typeof(ApiResponse<List<PreSignedUrlResponseItem>>), "Storage", Summary = "批量获取 S3/MinIO/Local 预签名直传/上传 URL 数组")]
+[ApiEndpoint("POST", "/api/v1/storage/presigned-urls", typeof(ApiResponse<List<PreSignedUrlResponseItem>>), "Storage", Summary = "预签链接")]
 public record GetPreSignedUrlsQuery
 {
     /// <summary>

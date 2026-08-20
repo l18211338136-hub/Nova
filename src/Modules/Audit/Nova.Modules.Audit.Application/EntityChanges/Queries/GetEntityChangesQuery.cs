@@ -6,7 +6,7 @@ using Nova.Framework.Web.Responses;
 namespace Nova.Modules.Audit.Application.EntityChanges.Queries;
 
 [ApiEndpoint("GET", "/api/v1/audit/entity-changes", typeof(PagedResult<EntityChangeLogDto>), "Audit",
-    Summary = "变更日志列表", RequireAuthorization = true)]
+    Summary = "变更日志", RequireAuthorization = true)]
 public record GetEntityChangesQuery
 {
     [Description("页码")]

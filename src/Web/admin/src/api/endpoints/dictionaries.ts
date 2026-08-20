@@ -59,7 +59,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary 创建字典类型
+ * @summary 创建类型
  */
 export const createDictionaryType = (
     createDictionaryType: CreateDictionaryType,
@@ -110,7 +110,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateDictionaryTypeMutationError = unknown
 
     /**
- * @summary 创建字典类型
+ * @summary 创建类型
  */
 export const useCreateDictionaryType = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDictionaryType>>, TError,{data: CreateDictionaryType}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -123,7 +123,7 @@ export const useCreateDictionaryType = <TError = unknown,
       return useMutation(getCreateDictionaryTypeMutationOptions(options), queryClient);
     }
     /**
- * @summary 字典类型列表
+ * @summary 字典类型
  */
 export const dictionaryTypes = (
 
@@ -194,7 +194,7 @@ export function useDictionaryTypes<TData = Awaited<ReturnType<typeof dictionaryT
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 字典类型列表
+ * @summary 字典类型
  */
 
 export function useDictionaryTypes<TData = Awaited<ReturnType<typeof dictionaryTypes>>, TError = unknown>(
@@ -215,7 +215,7 @@ export function useDictionaryTypes<TData = Awaited<ReturnType<typeof dictionaryT
 
 
 /**
- * @summary 更新字典类型
+ * @summary 更新类型
  */
 export const updateDictionaryType = (
     id: string,
@@ -267,7 +267,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateDictionaryTypeMutationError = unknown
 
     /**
- * @summary 更新字典类型
+ * @summary 更新类型
  */
 export const useUpdateDictionaryType = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDictionaryType>>, TError,{id: string;data: UpdateDictionaryType}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -280,7 +280,7 @@ export const useUpdateDictionaryType = <TError = unknown,
       return useMutation(getUpdateDictionaryTypeMutationOptions(options), queryClient);
     }
     /**
- * @summary 删除字典类型
+ * @summary 删除类型
  */
 export const deleteDictionaryType = (
     id: string,
@@ -329,7 +329,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDictionaryTypeMutationError = unknown
 
     /**
- * @summary 删除字典类型
+ * @summary 删除类型
  */
 export const useDeleteDictionaryType = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDictionaryType>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -342,7 +342,7 @@ export const useDeleteDictionaryType = <TError = unknown,
       return useMutation(getDeleteDictionaryTypeMutationOptions(options), queryClient);
     }
     /**
- * @summary 创建字典数据项
+ * @summary 创建数据
  */
 export const createDictionaryItem = (
     createDictionaryItem: CreateDictionaryItem,
@@ -393,7 +393,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateDictionaryItemMutationError = unknown
 
     /**
- * @summary 创建字典数据项
+ * @summary 创建数据
  */
 export const useCreateDictionaryItem = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDictionaryItem>>, TError,{data: CreateDictionaryItem}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -406,7 +406,7 @@ export const useCreateDictionaryItem = <TError = unknown,
       return useMutation(getCreateDictionaryItemMutationOptions(options), queryClient);
     }
     /**
- * @summary 字典数据项列表
+ * @summary 字典数据
  */
 export const dictionaryItems = (
 
@@ -477,7 +477,7 @@ export function useDictionaryItems<TData = Awaited<ReturnType<typeof dictionaryI
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 字典数据项列表
+ * @summary 字典数据
  */
 
 export function useDictionaryItems<TData = Awaited<ReturnType<typeof dictionaryItems>>, TError = unknown>(
@@ -498,7 +498,7 @@ export function useDictionaryItems<TData = Awaited<ReturnType<typeof dictionaryI
 
 
 /**
- * @summary 更新字典数据项
+ * @summary 更新数据
  */
 export const updateDictionaryItem = (
     id: string,
@@ -550,7 +550,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateDictionaryItemMutationError = unknown
 
     /**
- * @summary 更新字典数据项
+ * @summary 更新数据
  */
 export const useUpdateDictionaryItem = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDictionaryItem>>, TError,{id: string;data: UpdateDictionaryItem}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -563,7 +563,7 @@ export const useUpdateDictionaryItem = <TError = unknown,
       return useMutation(getUpdateDictionaryItemMutationOptions(options), queryClient);
     }
     /**
- * @summary 删除字典数据项
+ * @summary 删除数据
  */
 export const deleteDictionaryItem = (
     id: string,
@@ -612,7 +612,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDictionaryItemMutationError = unknown
 
     /**
- * @summary 删除字典数据项
+ * @summary 删除数据
  */
 export const useDeleteDictionaryItem = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDictionaryItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -625,7 +625,7 @@ export const useDeleteDictionaryItem = <TError = unknown,
       return useMutation(getDeleteDictionaryItemMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取指定编码的字典选项
+ * @summary 字典选项
  */
 export const dictionaryItemsByCode = (
     code: string,
@@ -696,7 +696,7 @@ export function useDictionaryItemsByCode<TData = Awaited<ReturnType<typeof dicti
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取指定编码的字典选项
+ * @summary 字典选项
  */
 
 export function useDictionaryItemsByCode<TData = Awaited<ReturnType<typeof dictionaryItemsByCode>>, TError = unknown>(

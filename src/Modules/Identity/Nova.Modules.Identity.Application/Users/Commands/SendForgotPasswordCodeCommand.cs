@@ -4,7 +4,7 @@ using Nova.Contracts.Idempotency;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/send-forgot-password-code", typeof(SendForgotPasswordCodeResult), "Auth", Summary = "发送重置码")]
+[ApiEndpoint("POST", "/api/identity/send-forgot-password-code", typeof(SendForgotPasswordCodeResult), "Auth", Summary = "重置验码")]
 [Idempotent(5)]
 public record SendForgotPasswordCodeCommand
 {

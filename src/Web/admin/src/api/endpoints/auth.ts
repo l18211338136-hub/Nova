@@ -133,7 +133,7 @@ export const useChangePassword = <TError = unknown,
       return useMutation(getChangePasswordMutationOptions(options), queryClient);
     }
     /**
- * @summary 验证码登录
+ * @summary 邮箱登录
  */
 export const emailLogin = (
     emailLogin: EmailLogin,
@@ -184,7 +184,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EmailLoginMutationError = unknown
 
     /**
- * @summary 验证码登录
+ * @summary 邮箱登录
  */
 export const useEmailLogin = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailLogin>>, TError,{data: EmailLogin}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -517,7 +517,7 @@ export const useResetPassword = <TError = unknown,
       return useMutation(getResetPasswordMutationOptions(options), queryClient);
     }
     /**
- * @summary 发送登录码
+ * @summary 登录验码
  */
 export const sendEmailLoginCode = (
     sendEmailLoginCode: SendEmailLoginCode,
@@ -568,7 +568,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendEmailLoginCodeMutationError = unknown
 
     /**
- * @summary 发送登录码
+ * @summary 登录验码
  */
 export const useSendEmailLoginCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEmailLoginCode>>, TError,{data: SendEmailLoginCode}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -581,7 +581,7 @@ export const useSendEmailLoginCode = <TError = unknown,
       return useMutation(getSendEmailLoginCodeMutationOptions(options), queryClient);
     }
     /**
- * @summary 发送注册码
+ * @summary 注册验码
  */
 export const sendEmailRegisterCode = (
     sendEmailRegisterCode: SendEmailRegisterCode,
@@ -632,7 +632,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendEmailRegisterCodeMutationError = unknown
 
     /**
- * @summary 发送注册码
+ * @summary 注册验码
  */
 export const useSendEmailRegisterCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEmailRegisterCode>>, TError,{data: SendEmailRegisterCode}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -645,7 +645,7 @@ export const useSendEmailRegisterCode = <TError = unknown,
       return useMutation(getSendEmailRegisterCodeMutationOptions(options), queryClient);
     }
     /**
- * @summary 发送重置码
+ * @summary 重置验码
  */
 export const sendForgotPasswordCode = (
     sendForgotPasswordCode: SendForgotPasswordCode,
@@ -696,7 +696,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendForgotPasswordCodeMutationError = unknown
 
     /**
- * @summary 发送重置码
+ * @summary 重置验码
  */
 export const useSendForgotPasswordCode = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendForgotPasswordCode>>, TError,{data: SendForgotPasswordCode}, TContext>, request?: SecondParameter<typeof customInstance>}

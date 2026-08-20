@@ -60,7 +60,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary 重置用户密码
+ * @summary 重置密码
  */
 export const adminResetUserPassword = (
     id: string,
@@ -112,7 +112,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminResetUserPasswordMutationError = unknown
 
     /**
- * @summary 重置用户密码
+ * @summary 重置密码
  */
 export const useAdminResetUserPassword = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminResetUserPassword>>, TError,{id: string;data: AdminResetUserPassword}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -408,7 +408,7 @@ export const useUpdateUser = <TError = unknown,
       return useMutation(getUpdateUserMutationOptions(options), queryClient);
     }
     /**
- * @summary 用户下拉选项列表（轻量选择器）
+ * @summary 用户选项
  */
 export const userOptions = (
 
@@ -479,7 +479,7 @@ export function useUserOptions<TData = Awaited<ReturnType<typeof userOptions>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 用户下拉选项列表（轻量选择器）
+ * @summary 用户选项
  */
 
 export function useUserOptions<TData = Awaited<ReturnType<typeof userOptions>>, TError = unknown>(

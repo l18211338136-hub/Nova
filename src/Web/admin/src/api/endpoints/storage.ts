@@ -65,7 +65,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary 批量获取 S3/MinIO/Local 预签名直传/上传 URL 数组
+ * @summary 预签链接
  */
 export const preSignedUrls = (
     getPreSignedUrlsQuery: GetPreSignedUrlsQuery,
@@ -116,7 +116,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PreSignedUrlsMutationError = unknown
 
     /**
- * @summary 批量获取 S3/MinIO/Local 预签名直传/上传 URL 数组
+ * @summary 预签链接
  */
 export const usePreSignedUrls = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof preSignedUrls>>, TError,{data: GetPreSignedUrlsQuery}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -129,7 +129,7 @@ export const usePreSignedUrls = <TError = unknown,
       return useMutation(getPreSignedUrlsMutationOptions(options), queryClient);
     }
     /**
- * @summary 校验 Hash 进行文件秒传（若云端已存在相同 MD5 文件则免上传直接完成）
+ * @summary 文件秒传
  */
 export const instantUpload = (
     instantUpload: InstantUpload,
@@ -180,7 +180,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InstantUploadMutationError = unknown
 
     /**
- * @summary 校验 Hash 进行文件秒传（若云端已存在相同 MD5 文件则免上传直接完成）
+ * @summary 文件秒传
  */
 export const useInstantUpload = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof instantUpload>>, TError,{data: InstantUpload}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -193,7 +193,7 @@ export const useInstantUpload = <TError = unknown,
       return useMutation(getInstantUploadMutationOptions(options), queryClient);
     }
     /**
- * @summary 查询业务实体的附件列表（如获取用户头像、商品轮播图）
+ * @summary 附件列表
  */
 export const attachments = (
     params?: AttachmentsParams,
@@ -265,7 +265,7 @@ export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 查询业务实体的附件列表（如获取用户头像、商品轮播图）
+ * @summary 附件列表
  */
 
 export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, TError = unknown>(
@@ -286,7 +286,7 @@ export function useAttachments<TData = Awaited<ReturnType<typeof attachments>>, 
 
 
 /**
- * @summary 将文件绑定为业务实体的附件（如用户头像、商品图片）
+ * @summary 绑定附件
  */
 export const bindAttachment = (
     bindAttachment: BindAttachment,
@@ -337,7 +337,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type BindAttachmentMutationError = unknown
 
     /**
- * @summary 将文件绑定为业务实体的附件（如用户头像、商品图片）
+ * @summary 绑定附件
  */
 export const useBindAttachment = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bindAttachment>>, TError,{data: BindAttachment}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -350,7 +350,7 @@ export const useBindAttachment = <TError = unknown,
       return useMutation(getBindAttachmentMutationOptions(options), queryClient);
     }
     /**
- * @summary 解绑/删除附件
+ * @summary 解绑附件
  */
 export const unbindAttachment = (
     id: string,
@@ -399,7 +399,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UnbindAttachmentMutationError = unknown
 
     /**
- * @summary 解绑/删除附件
+ * @summary 解绑附件
  */
 export const useUnbindAttachment = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unbindAttachment>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -412,7 +412,7 @@ export const useUnbindAttachment = <TError = unknown,
       return useMutation(getUnbindAttachmentMutationOptions(options), queryClient);
     }
     /**
- * @summary 物理文件表单/流上传 Endpoint
+ * @summary 上传文件
  */
 export const uploadStorageFile = (
     uploadFileFormRequest: UploadFileFormRequest,
@@ -467,7 +467,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UploadStorageFileMutationError = unknown
 
     /**
- * @summary 物理文件表单/流上传 Endpoint
+ * @summary 上传文件
  */
 export const useUploadStorageFile = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadStorageFile>>, TError,{data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -480,7 +480,7 @@ export const useUploadStorageFile = <TError = unknown,
       return useMutation(getUploadStorageFileMutationOptions(options), queryClient);
     }
     /**
- * @summary 根据文件ID获取二进制文件流
+ * @summary 文件内容
  */
 export const storageFileContent = (
     id: string,
@@ -551,7 +551,7 @@ export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageF
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 根据文件ID获取二进制文件流
+ * @summary 文件内容
  */
 
 export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageFileContent>>, TError = unknown>(
@@ -572,7 +572,7 @@ export function useStorageFileContent<TData = Awaited<ReturnType<typeof storageF
 
 
 /**
- * @summary 物理与数据库文件记录删除
+ * @summary 删除文件
  */
 export const deleteStorageFile = (
     id: string,
@@ -621,7 +621,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteStorageFileMutationError = unknown
 
     /**
- * @summary 物理与数据库文件记录删除
+ * @summary 删除文件
  */
 export const useDeleteStorageFile = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStorageFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -634,7 +634,7 @@ export const useDeleteStorageFile = <TError = unknown,
       return useMutation(getDeleteStorageFileMutationOptions(options), queryClient);
     }
     /**
- * @summary 根据 Path 相对路径获取文件流 (MinIO/Local)
+ * @summary 路径读取
  */
 export const storageFileByPath = (
     fileKey: string,
@@ -705,7 +705,7 @@ export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFi
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 根据 Path 相对路径获取文件流 (MinIO/Local)
+ * @summary 路径读取
  */
 
 export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFileByPath>>, TError = unknown>(
@@ -726,7 +726,7 @@ export function useStorageFileByPath<TData = Awaited<ReturnType<typeof storageFi
 
 
 /**
- * @summary 分页/条件获取存储文件卡片列表 (默认每页12项)
+ * @summary 文件列表
  */
 export const storageFiles = (
     params?: StorageFilesParams,
@@ -798,7 +798,7 @@ export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 分页/条件获取存储文件卡片列表 (默认每页12项)
+ * @summary 文件列表
  */
 
 export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>, TError = unknown>(
@@ -819,7 +819,7 @@ export function useStorageFiles<TData = Awaited<ReturnType<typeof storageFiles>>
 
 
 /**
- * @summary 同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)
+ * @summary 覆盖文件
  */
 export const replaceStorageFileContent = (
     id: string,
@@ -875,7 +875,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReplaceStorageFileContentMutationError = unknown
 
     /**
- * @summary 同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)
+ * @summary 覆盖文件
  */
 export const useReplaceStorageFileContent = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceStorageFileContent>>, TError,{id: string;data: UploadFileFormRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -888,7 +888,7 @@ export const useReplaceStorageFileContent = <TError = unknown,
       return useMutation(getReplaceStorageFileContentMutationOptions(options), queryClient);
     }
     /**
- * @summary 获取存储容量及提供商统计数据
+ * @summary 容量统计
  */
 export const storageStats = (
 
@@ -959,7 +959,7 @@ export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 获取存储容量及提供商统计数据
+ * @summary 容量统计
  */
 
 export function useStorageStats<TData = Awaited<ReturnType<typeof storageStats>>, TError = unknown>(

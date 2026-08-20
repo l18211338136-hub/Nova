@@ -341,7 +341,7 @@ export const useUpdateRole = <TError = unknown,
       return useMutation(getUpdateRoleMutationOptions(options), queryClient);
     }
     /**
- * @summary 角色下拉选项列表（轻量选择器）
+ * @summary 角色选项
  */
 export const roleOptions = (
 
@@ -412,7 +412,7 @@ export function useRoleOptions<TData = Awaited<ReturnType<typeof roleOptions>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 角色下拉选项列表（轻量选择器）
+ * @summary 角色选项
  */
 
 export function useRoleOptions<TData = Awaited<ReturnType<typeof roleOptions>>, TError = unknown>(

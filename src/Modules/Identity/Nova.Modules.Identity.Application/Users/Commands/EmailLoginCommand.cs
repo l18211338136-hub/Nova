@@ -3,7 +3,7 @@ using Nova.Contracts.CQRS;
 
 namespace Nova.Modules.Identity.Application.Users.Commands;
 
-[ApiEndpoint("POST", "/api/identity/email-login", typeof(LoginResult), "Auth", Summary = "验证码登录")]
+[ApiEndpoint("POST", "/api/identity/email-login", typeof(LoginResult), "Auth", Summary = "邮箱登录")]
 public record EmailLoginCommand
 {
     [Description("邮箱")]

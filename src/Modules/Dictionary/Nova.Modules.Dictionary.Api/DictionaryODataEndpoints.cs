@@ -61,7 +61,7 @@ public static class DictionaryODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Dictionary.Types.Read"))
         .WithTags("Dictionaries")
-        .WithSummary("字典类型列表")
+        .WithSummary("字典类型")
         .WithName("GetDictionaryTypes");
 
         // 2. 字典明细项列表（支持 OData 分页与过滤）
@@ -109,7 +109,7 @@ public static class DictionaryODataEndpoints
         .RequireAuthorization()
         .AddEndpointFilter(new PermissionFilter("Dictionary.Items.Read"))
         .WithTags("Dictionaries")
-        .WithSummary("字典数据项列表")
+        .WithSummary("字典数据")
         .WithName("GetDictionaryItems");
 
         // 3. 全局通用的指定 code 字典下拉数据快捷获取接口 (无需复杂权限控制，仅需登录)
@@ -143,7 +143,7 @@ public static class DictionaryODataEndpoints
         .Produces<ApiResponse<List<DictionaryItemDto>>>(200)
         .RequireAuthorization()
         .WithTags("Dictionaries")
-        .WithSummary("获取指定编码的字典选项")
+        .WithSummary("字典选项")
         .WithName("GetDictionaryItemsByCode");
     }
 }

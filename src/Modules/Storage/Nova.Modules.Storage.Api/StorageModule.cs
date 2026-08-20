@@ -122,7 +122,7 @@ public class StorageModule : IModule
         .DisableAntiforgery()
         .WithTags("Storage")
         .WithName("UploadStorageFile")
-        .WithSummary("物理文件表单/流上传 Endpoint")
+        .WithSummary("上传文件")
         .Accepts<UploadFileFormRequest>("multipart/form-data")
         .Produces<ApiResponse<StorageFileDto>>()
         .RequireAuthorization();
@@ -151,7 +151,7 @@ public class StorageModule : IModule
         .AllowAnonymous()
         .WithTags("Storage")
         .WithName("GetStorageFileContent")
-        .WithSummary("根据文件ID获取二进制文件流");
+        .WithSummary("文件内容");
 
         // 挂载根据 Path 相对路径获取文件流 Endpoint (支持 S3 / Local 混合自动降级查寻)
         endpoints.MapGet("/nova-storage/{*fileKey}", async (
@@ -199,7 +199,7 @@ public class StorageModule : IModule
         .AllowAnonymous()
         .WithTags("Storage")
         .WithName("GetStorageFileByPath")
-        .WithSummary("根据 Path 相对路径获取文件流 (MinIO/Local)");
+        .WithSummary("路径读取");
 
         // 1. 文件卡片列表/分页/分类查询 Endpoint (默认每页 12 项)
         endpoints.MapGet("/api/v1/storage/files", async (
@@ -279,7 +279,7 @@ public class StorageModule : IModule
         .RequireAuthorization()
         .WithTags("Storage")
         .WithName("GetStorageFiles")
-        .WithSummary("分页/条件获取存储文件卡片列表 (默认每页12项)");
+        .WithSummary("文件列表");
 
         // 覆盖上传更新物理文件内容 (同文件扩展名且访问链接保持不变)
         endpoints.MapPut("/api/v1/storage/files/{id:guid}/content", async (
@@ -321,7 +321,7 @@ public class StorageModule : IModule
         .DisableAntiforgery()
         .WithTags("Storage")
         .WithName("ReplaceStorageFileContent")
-        .WithSummary("同扩展名覆盖上传更新物理文件内容 (保留原访问链接与 FileKey 不变)")
+        .WithSummary("覆盖文件")
         .Accepts<UploadFileFormRequest>("multipart/form-data")
         .Produces<ApiResponse<StorageFileDto>>()
         .RequireAuthorization();
@@ -354,7 +354,7 @@ public class StorageModule : IModule
         .RequireAuthorization()
         .WithTags("Storage")
         .WithName("DeleteStorageFile")
-        .WithSummary("物理与数据库文件记录删除");
+        .WithSummary("删除文件");
 
         // 3. 存储统计指标 Endpoint
         endpoints.MapGet("/api/v1/storage/stats", async (
@@ -379,6 +379,6 @@ public class StorageModule : IModule
         .RequireAuthorization()
         .WithTags("Storage")
         .WithName("GetStorageStats")
-        .WithSummary("获取存储容量及提供商统计数据");
+        .WithSummary("容量统计");
     }
 }

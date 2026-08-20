@@ -11,7 +11,7 @@ using Nova.Modules.Dictionary.Domain.DictionaryItems;
 
 namespace Nova.Modules.Dictionary.Application.DictionaryItems.Commands;
 
-[ApiEndpoint("POST", "/api/dictionary/items", typeof(ApiResponse<Guid>), "Dictionaries", Summary = "创建字典数据项")]
+[ApiEndpoint("POST", "/api/dictionary/items", typeof(ApiResponse<Guid>), "Dictionaries", Summary = "创建数据")]
 [RequirePermission("Dictionary.Items.Create")]
 public record CreateDictionaryItemCommand
 {
@@ -25,7 +25,7 @@ public record CreateDictionaryItemCommand
     public string? Remarks { get; init; }
 }
 
-[ApiEndpoint("PUT", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "更新字典数据项")]
+[ApiEndpoint("PUT", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "更新数据")]
 [RequirePermission("Dictionary.Items.Update")]
 public record UpdateDictionaryItemCommand
 {
@@ -39,7 +39,7 @@ public record UpdateDictionaryItemCommand
     public string? Remarks { get; init; }
 }
 
-[ApiEndpoint("DELETE", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "删除字典数据项")]
+[ApiEndpoint("DELETE", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "删除数据")]
 [RequirePermission("Dictionary.Items.Delete")]
 public record DeleteDictionaryItemCommand
 {

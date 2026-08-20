@@ -5,7 +5,7 @@ using Nova.Framework.Web.Responses;
 namespace Nova.Modules.Audit.Application.OperationLogs.Queries;
 
 [ApiEndpoint("GET", "/api/v1/audit/operation-logs", typeof(PagedResult<OperationLogDto>), "Audit",
-    Summary = "操作日志列表", RequireAuthorization = true)]
+    Summary = "操作日志", RequireAuthorization = true)]
 public record GetOperationLogsQuery
 {
     [Description("页码")]
