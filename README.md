@@ -30,6 +30,18 @@ dotnet ef migrations add Initial_Identity -c IdentityDbContext -p src\Modules\Id
 dotnet ef database update -c IdentityDbContext -s src\Host\Nova.WebApi
 ```
 
+### 3. 为 `Organizations` (组织架构模块) 生成和更新迁移
+
+**生成迁移：**
+```powershell
+dotnet ef migrations add Initial_Organizations -c OrganizationDbContext -p src\Modules\Organizations\Nova.Modules.Organizations.Infrastructure -s src\Host\Nova.WebApi -o Migrations
+```
+
+**更新数据库：**
+```powershell
+dotnet ef database update -c OrganizationDbContext -s src\Host\Nova.WebApi
+```
+
 ### 命令参数详解
 
 - **`-c [DbContextName]`** (Context)：指定为哪一个上下文生成迁移。由于项目中存在多个 `DbContext`，必须显式指定。

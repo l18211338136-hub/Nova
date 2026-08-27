@@ -18,9 +18,23 @@ public class ServerInjectedPropertySchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
-        if (schema.Properties is null || schema.Properties.Count == 0) return Task.CompletedTask;
-
         var type = context.JsonTypeInfo.Type;
+
+        // 修复树形结构 DTO 自引用产生的非标准 JSON Pointer ($ref)
+        if (schema.Properties != null && schema.Properties.TryGetValue("children", out var childrenSchema) && childrenSchema != null)
+        {
+            if (childrenSchema.Type == "array" && childrenSchema.Items != null)
+            {
+                childrenSchema.Items.UnresolvedReference = true;
+                childrenSchema.Items.Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.Schema,
+                    Id = type.Name
+                };
+            }
+        }
+
+        if (schema.Properties is null || schema.Properties.Count == 0) return Task.CompletedTask;
         if (type.GetCustomAttribute<ApiEndpointAttribute>() is null) return Task.CompletedTask;
 
         foreach (var name in schema.Properties.Keys.ToList())

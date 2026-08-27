@@ -71,33 +71,53 @@ export default function Dictionaries() {
   const [deletingType, setDeletingType] = useState<DictionaryTypeDto | null>(null)
   const [deletingItem, setDeletingItem] = useState<DictionaryItemDto | null>(null)
 
-  // API Queries & Mutations
-  const { data: typesData, isLoading: isTypesLoading, refetch: refetchTypes } = useDictionaryTypes()
-  const rawTypesList = typesData?.data?.items || []
+  // 1. Build OData $filter for Dictionary Types (Left side remote search)
+  const typeFilter = typeSearch.trim()
+    ? `contains(tolower(Name), '${typeSearch.trim().toLowerCase().replace(/'/g, "''")}') or contains(tolower(Code), '${typeSearch.trim().toLowerCase().replace(/'/g, "''")}')`
+    : undefined
 
-  // Filter dictionary types by left search box
-  const typesList = rawTypesList.filter(
-    (type) =>
-      !typeSearch ||
-      (type.name || '').toLowerCase().includes(typeSearch.toLowerCase()) ||
-      (type.code || '').toLowerCase().includes(typeSearch.toLowerCase())
-  )
+  const { data: typesData, isLoading: isTypesLoading, refetch: refetchTypes } = useDictionaryTypes({
+    query: {
+      queryKey: [...getTypesQueryKey(), typeFilter],
+    },
+    request: {
+      params: {
+        ...(typeFilter && { $filter: typeFilter }),
+        $orderby: 'SortOrder asc, CreatedAt asc',
+      },
+    },
+  })
+  const typesList = typesData?.data?.items || []
 
   // Auto select first type if none selected
   const activeType = selectedType || (typesList.length > 0 ? typesList[0] : null)
 
-  // Query dictionary items
-  const { data: itemsData, isLoading: isItemsLoading, refetch: refetchItems } = useDictionaryItems()
-  const rawItemsList = itemsData?.data?.items || []
+  // 2. Build OData $filter for Dictionary Items (Right side remote search)
+  const itemFilterConditions: string[] = []
+  if (activeType) {
+    itemFilterConditions.push(`TypeId eq ${activeType.id}`)
+  }
+  if (itemSearch.trim()) {
+    const escaped = itemSearch.trim().toLowerCase().replace(/'/g, "''")
+    itemFilterConditions.push(`(contains(tolower(Label), '${escaped}') or contains(tolower(Value), '${escaped}'))`)
+  }
+  const itemFilter = itemFilterConditions.length > 0 ? itemFilterConditions.join(' and ') : undefined
 
-  // Filter dictionary items by activeType and right search box
-  const itemsList = rawItemsList.filter(
-    (item) =>
-      (activeType ? (item.typeId === activeType.id || item.typeCode === activeType.code) : true) &&
-      (!itemSearch ||
-        (item.label || '').toLowerCase().includes(itemSearch.toLowerCase()) ||
-        (item.value || '').toLowerCase().includes(itemSearch.toLowerCase()))
+  const { data: itemsData, isLoading: isItemsLoading, refetch: refetchItems } = useDictionaryItems(
+    {
+      query: {
+        enabled: !!activeType,
+        queryKey: [...getItemsQueryKey(), activeType?.id, itemFilter],
+      },
+      request: {
+        params: {
+          ...(itemFilter && { $filter: itemFilter }),
+          $orderby: 'SortOrder asc, CreatedAt asc',
+        },
+      },
+    }
   )
+  const itemsList = itemsData?.data?.items || []
 
   const deleteTypeMutation = useDeleteDictionaryType()
   const deleteItemMutation = useDeleteDictionaryItem()

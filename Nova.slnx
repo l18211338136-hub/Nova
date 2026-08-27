@@ -89,6 +89,12 @@
     <Project Path="src/Modules/Notification/Nova.Modules.Notification.Domain/Nova.Modules.Notification.Domain.csproj" />
     <Project Path="src/Modules/Notification/Nova.Modules.Notification.Infrastructure/Nova.Modules.Notification.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Modules/Organizations/">
+    <Project Path="src/Modules/Organizations/Nova.Modules.Organizations.Api/Nova.Modules.Organizations.Api.csproj" />
+    <Project Path="src/Modules/Organizations/Nova.Modules.Organizations.Application/Nova.Modules.Organizations.Application.csproj" />
+    <Project Path="src/Modules/Organizations/Nova.Modules.Organizations.Domain/Nova.Modules.Organizations.Domain.csproj" />
+    <Project Path="src/Modules/Organizations/Nova.Modules.Organizations.Infrastructure/Nova.Modules.Organizations.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Prompt/">
     <Project Path="src/Modules/Prompt/Nova.Modules.Prompt.Api/Nova.Modules.Prompt.Api.csproj" />
     <Project Path="src/Modules/Prompt/Nova.Modules.Prompt.Application/Nova.Modules.Prompt.Application.csproj" />

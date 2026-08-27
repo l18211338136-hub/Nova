@@ -13,6 +13,8 @@ using Nova.Modules.Identity.Domain;
 using Nova.Modules.Identity.Domain.Roles;
 using Nova.Modules.Identity.Domain.Users;
 using System.Security.Claims;
+using Nova.Contracts.Constants;
+using Nova.Contracts.Security;
 
 using Microsoft.AspNetCore.Http;
 using Nova.Framework.Web.Helpers;
@@ -153,6 +155,18 @@ public class EmailLoginCommandHandler : IConsumer<EmailLoginCommand>
                         claims.Add(c);
                     }
                 }
+            }
+        }
+
+        // 通过共享契约接口获取当前用户兼任的所有部门，并批量将 OrgId 写入 JWT Claims
+        var userOrgProvider = scope.ServiceProvider.GetService<IUserOrganizationProvider>();
+        if (userOrgProvider != null && user != null)
+        {
+            var orgIds = await userOrgProvider.GetUserOrgIdsAsync(user.Id);
+            foreach (var orgId in orgIds)
+            {
+                claims.Add(new Claim(NovaClaimTypes.OrgId, orgId.ToString()));
+                claims.Add(new Claim(NovaClaimTypes.OrganizationId, orgId.ToString()));
             }
         }
 

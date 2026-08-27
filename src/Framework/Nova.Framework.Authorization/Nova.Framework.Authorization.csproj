@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
+    <ProjectReference Include="..\Nova.Framework.Persistence\Nova.Framework.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

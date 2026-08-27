@@ -25,6 +25,7 @@ import {
   Users,
   RotateCcw,
   HardDrive,
+  Building2,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -91,6 +92,11 @@ export const sidebarData: SidebarData = {
           title: 'Dictionaries',
           url: '/dictionaries',
           icon: BookOpen,
+        },
+        {
+          title: 'Organizations',
+          url: '/organizations',
+          icon: Building2,
         },
         {
           title: 'Secured by Clerk',

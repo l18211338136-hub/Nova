@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OData" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Modules.Organizations.Domain\Nova.Modules.Organizations.Domain.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Organizations.Application\Nova.Modules.Organizations.Application.csproj" />
+    <ProjectReference Include="..\Nova.Modules.Organizations.Infrastructure\Nova.Modules.Organizations.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\..\..\Framework\Nova.Framework.Authorization\Nova.Framework.Authorization.csproj" />
+  </ItemGroup>
+
+</Project>
