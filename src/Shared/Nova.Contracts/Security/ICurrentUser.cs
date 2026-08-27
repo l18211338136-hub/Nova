@@ -12,4 +12,6 @@ public interface ICurrentUser : IScopedDependency
     IEnumerable<Claim> Claims { get; }
     string[] Roles { get; }
     bool IsInRole(string role);
+    string? GetClaimValue(string claimType);
+    string[]? GetClaimValues(string claimType);
 }

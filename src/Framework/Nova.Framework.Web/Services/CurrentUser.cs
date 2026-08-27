@@ -1,6 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Nova.Contracts.Constants;
 using Nova.Contracts.Security;
+using System.Security.Claims;
 
 namespace Nova.Framework.Web.Services;
 
@@ -35,4 +36,17 @@ public class CurrentUser : ICurrentUser
     public string[] Roles => User?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray() ?? Array.Empty<string>();
 
     public bool IsInRole(string role) => User?.IsInRole(role) ?? false;
+
+    public string? GetClaimValue(string claimType)
+    {
+        return User?.FindFirst(claimType)?.Value;
+    }
+
+    public string[]? GetClaimValues(string claimType)
+    {
+        return User?.FindAll(claimType)
+            .Select(c => c.Value)
+            .Distinct()
+            .ToArray();
+    }
 }

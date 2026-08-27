@@ -18,21 +18,19 @@ public static class AbacQueryExtensions
 
     public static async Task<IQueryable<TEntity>> ApplyAbacFilterAsync<TEntity>(
         this IQueryable<TEntity> query,
-        HttpContext httpContext,
+        ICurrentUser currentUser,
         DbContext dbContext,
         CancellationToken cancellationToken = default) where TEntity : class
     {
-        var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? httpContext.User.FindFirst("sub")?.Value
-                        ?? httpContext.User.FindFirst("user_id")?.Value;
-        var currentUserId = Guid.TryParse(userIdStr, out var uid) ? uid : Guid.Empty;
+        var currentUserId = currentUser.Id ?? Guid.Empty;
 
         // 提取用户包含的所有部门 Claims（支持兼任多部门）
-        var userOrgIds = httpContext.User.FindAll(NovaClaimTypes.OrgId)
-            .Select(c => Guid.TryParse(c.Value, out var id) ? id : Guid.Empty)
+        var userOrgIds = currentUser.GetClaimValues(NovaClaimTypes.OrgId)?
+            .Select(c => Guid.TryParse(c, out var id) ? id : Guid.Empty)
             .Where(id => id != Guid.Empty)
             .Distinct()
             .ToList();
+
 
         // 自动检索部门配置的 ABAC 行列防护策略
         var policyEntityType = dbContext.Model.GetEntityTypes()
@@ -58,7 +56,7 @@ public static class AbacQueryExtensions
                     var policiesJson = policiesJsonProp?.GetValue(activeOrgObj) as string;
                     var dataScope = dataScopeProp?.GetValue(activeOrgObj) is int ds ? ds : 0;
 
-                    query = query.ApplyAbacFilter(httpContext, policiesJson, dataScope, currentUserId, userOrgIds);
+                    query = query.ApplyAbacFilter(currentUser, policiesJson, dataScope, currentUserId, userOrgIds);
                 }
             }
         }
@@ -68,7 +66,7 @@ public static class AbacQueryExtensions
 
     public static IQueryable<T> ApplyAbacFilter<T>(
         this IQueryable<T> query,
-        HttpContext httpContext,
+        ICurrentUser currentUser,
         string? abacPoliciesJson,
         int dataScope,
         Guid currentUserId,
@@ -77,7 +75,7 @@ public static class AbacQueryExtensions
         query = query.ApplyAbacFilter(abacPoliciesJson, dataScope, currentUserId, userOrgIds, out var fieldConfigs);
         if (fieldConfigs.Any())
         {
-            httpContext.Items[AbacConstants.HttpContextKeys.AbacFieldConfigs] = fieldConfigs;
+            //httpContext.Items[AbacConstants.HttpContextKeys.AbacFieldConfigs] = fieldConfigs;
         }
         return query;
     }
@@ -162,26 +160,60 @@ public static class AbacQueryExtensions
         // DataScope: 1 (仅本人数据)
         if (dataScope == 1)
         {
-            var leaderProp = type.GetProperty(AbacConstants.PropertyNames.LeaderUserId, BindingFlags.Public | BindingFlags.Instance) ??
-                             type.GetProperty(AbacConstants.PropertyNames.CreatedBy, BindingFlags.Public | BindingFlags.Instance) ??
-                             type.GetProperty(AbacConstants.PropertyNames.UserId, BindingFlags.Public | BindingFlags.Instance);
+            var conditions = new List<Expression>();
 
-            if (leaderProp != null)
+            foreach (var propertyName in new[]
             {
-                var propAccess = Expression.Property(parameter, leaderProp);
-                var targetType = Nullable.GetUnderlyingType(leaderProp.PropertyType) ?? leaderProp.PropertyType;
+                AbacConstants.PropertyNames.LeaderUserId,
+                AbacConstants.PropertyNames.CreatedBy,
+                AbacConstants.PropertyNames.UserId
+            })
+            {
+                var prop = type.GetProperty(
+                    propertyName,
+                    BindingFlags.Public | BindingFlags.Instance);
 
-                Expression constExpr = targetType == typeof(Guid)
-                    ? Expression.Constant(currentUserId, leaderProp.PropertyType)
-                    : Expression.Constant(currentUserId.ToString(), leaderProp.PropertyType);
+                if (prop == null)
+                    continue;
 
-                var lambda = Expression.Lambda<Func<T, bool>>(
-                    Expression.Equal(propAccess, constExpr),
-                    parameter
-                );
+                var property = Expression.Property(parameter, prop);
 
-                return query.Where(lambda);
+                Expression currentUserExpression;
+
+                if (prop.PropertyType == typeof(Guid?))
+                {
+                    currentUserExpression =
+                        Expression.Constant((Guid?)currentUserId, typeof(Guid?));
+                }
+                else if (prop.PropertyType == typeof(Guid))
+                {
+                    currentUserExpression =
+                        Expression.Constant(currentUserId, typeof(Guid));
+                }
+                else
+                {
+                    continue;
+                }
+
+                conditions.Add(
+                    Expression.Equal(property, currentUserExpression));
             }
+
+            if (conditions.Count == 0)
+                return query;
+
+            Expression body = conditions[0];
+
+            foreach (var condition in conditions.Skip(1))
+            {
+                body = Expression.OrElse(body, condition);
+            }
+
+            var lambda = Expression.Lambda<Func<T, bool>>(
+                body,
+                parameter);
+
+            return query.Where(lambda);
         }
 
         // DataScope: 2 (仅本部门及兼任部门数据 - 支持多部门 IN 查询)

@@ -19,9 +19,9 @@ public static class OrganizationODataEndpoints
     public static void MapOrganizationODataEndpoints(this IEndpointRouteBuilder endpoints)
     {
         // 1. 获取组织机构树状结构 (GET /api/organizations/tree)
-        endpoints.MapGet("/api/organizations/tree", async (IOrganizationDbContext db, HttpContext httpContext, CancellationToken cancellationToken) =>
+        endpoints.MapGet("/api/organizations/tree", async (IOrganizationDbContext db, ICurrentUser currentUser, CancellationToken cancellationToken) =>
         {
-            var query = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(httpContext, (DbContext)db, cancellationToken);
+            var query = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(currentUser, (DbContext)db, cancellationToken);
 
             var orgs = await query
                 .OrderBy(o => o.Sort)
