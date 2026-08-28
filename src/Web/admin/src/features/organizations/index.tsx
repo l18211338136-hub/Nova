@@ -192,12 +192,36 @@ export default function OrganizationsFeature() {
     setModalOpen(true)
   }
 
-  const handleEditNode = (node: OrganizationTreeDto) => {
-    // Note: since we only have the tree node here, some details like email/phone/remarks
-    // might be missing if they are only fetched in detail view.
-    // Ideally, we'd wait for selectedDetail or pass what we have.
+  const handleEditNode = async (node: OrganizationTreeDto) => {
     const parentNode = node.parentId ? (findNodeInTree(treeData, node.parentId) || null) : null
     setModalParentNode(parentNode)
+    
+    if (node.id) {
+      try {
+        const res = await organizationById(node.id)
+        const detail = res.data
+        if (detail) {
+          setModalInitialData({
+            id: detail.id,
+            name: detail.name,
+            parentId: detail.parentId,
+            code: detail.code,
+            type: detail.type,
+            sort: detail.sort,
+            isEnabled: detail.isEnabled,
+            phone: detail.phone,
+            email: detail.email,
+            remarks: detail.remarks,
+          })
+          setModalOpen(true)
+          return
+        }
+      } catch {
+        toast.error('获取机构详情失败')
+      }
+    }
+
+    // Fallback if no ID or API fails
     setModalInitialData({
       id: node.id,
       name: node.name,
@@ -376,6 +400,18 @@ export default function OrganizationsFeature() {
                                 dataScope: updated.dataScope,
                                 abacPoliciesJson: updated.abacPoliciesJson,
                               })
+                              // 刷新左侧树状列表，以便立即查看到脱敏和隐藏效果
+                              await loadTree()
+                              
+                              // 刷新当前选中的机构详情，让右侧的头部信息也能实时反应脱敏结果
+                              try {
+                                const res = await organizationById(selectedDetail.id)
+                                if (res.data) {
+                                  setSelectedDetail(res.data)
+                                }
+                              } catch {
+                                // ignore
+                              }
                             }
                           }}
                         />

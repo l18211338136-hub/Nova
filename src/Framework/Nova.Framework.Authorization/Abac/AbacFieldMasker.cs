@@ -52,12 +52,20 @@ public static class AbacFieldMasker
                 {
                     prop.SetValue(item, GetDefaultValue(prop.PropertyType));
                 }
-                else if (config.Mask && prop.PropertyType == typeof(string))
+                else if (config.Mask)
                 {
-                    var rawVal = prop.GetValue(item) as string;
-                    if (!string.IsNullOrEmpty(rawVal))
+                    if (prop.PropertyType == typeof(string))
                     {
-                        prop.SetValue(item, MaskValue(rawVal, prop.Name));
+                        var rawVal = prop.GetValue(item) as string;
+                        if (!string.IsNullOrEmpty(rawVal))
+                        {
+                            prop.SetValue(item, MaskValue(rawVal, prop.Name));
+                        }
+                    }
+                    else
+                    {
+                        // 不能对非字符串类型赋值 "***"，降级为隐藏（赋予默认值）
+                        prop.SetValue(item, GetDefaultValue(prop.PropertyType));
                     }
                 }
             }

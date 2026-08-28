@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Shield, EyeOff, Lock, Code } from 'lucide-react'
+import { Plus, Trash2, Shield, EyeOff, Lock, Code, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -121,29 +121,41 @@ export function AbacRuleBuilder({ metadata, policies, onChange }: AbacRuleBuilde
     })
   }
 
-  const handleToggleHiddenField = (fieldName: string, checked: boolean) => {
+  const handleToggleHiddenField = (fieldName: string) => {
     const hidden = new Set(currentPolicy.fieldPermissions.hiddenFields)
-    if (checked) hidden.add(fieldName)
-    else hidden.delete(fieldName)
+    const masked = new Set(currentPolicy.fieldPermissions.maskedFields)
+
+    if (hidden.has(fieldName)) {
+      hidden.delete(fieldName)
+    } else {
+      hidden.add(fieldName)
+      masked.delete(fieldName) // Mutually exclusive
+    }
 
     updateCurrentPolicy({
       ...currentPolicy,
       fieldPermissions: {
-        ...currentPolicy.fieldPermissions,
         hiddenFields: Array.from(hidden),
+        maskedFields: Array.from(masked),
       },
     })
   }
 
-  const handleToggleMaskedField = (fieldName: string, checked: boolean) => {
+  const handleToggleMaskedField = (fieldName: string) => {
+    const hidden = new Set(currentPolicy.fieldPermissions.hiddenFields)
     const masked = new Set(currentPolicy.fieldPermissions.maskedFields)
-    if (checked) masked.add(fieldName)
-    else masked.delete(fieldName)
+
+    if (masked.has(fieldName)) {
+      masked.delete(fieldName)
+    } else {
+      masked.add(fieldName)
+      hidden.delete(fieldName) // Mutually exclusive
+    }
 
     updateCurrentPolicy({
       ...currentPolicy,
       fieldPermissions: {
-        ...currentPolicy.fieldPermissions,
+        hiddenFields: Array.from(hidden),
         maskedFields: Array.from(masked),
       },
     })
@@ -340,38 +352,66 @@ export function AbacRuleBuilder({ metadata, policies, onChange }: AbacRuleBuilde
               return (
                 <div
                   key={field.name}
-                  className="flex items-center justify-between p-2 rounded border bg-muted/10 text-xs"
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card/50 transition-colors hover:bg-muted/30"
                 >
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-xs">{field.displayName}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono">
+                  <div className="space-y-1">
+                    <div className="font-bold text-sm">{field.displayName}</div>
+                    <div className="text-[11px] text-muted-foreground font-mono">
                       {field.name} ({field.type})
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <Checkbox
-                        checked={isHidden}
-                        onCheckedChange={(checked) => handleToggleHiddenField(field.name, !!checked)}
-                      />
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                        <EyeOff className="h-3 w-3" />
+                  <div className="flex items-center gap-4">
+                    <div
+                      onClick={() => handleToggleHiddenField(field.name)}
+                      className={`flex items-center gap-1.5 cursor-pointer transition-colors ${
+                        isHidden ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-4 h-4 rounded-full border shrink-0 transition-colors ${
+                          isHidden
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'border-input bg-background'
+                        }`}
+                      >
+                        {isHidden && <Check className="h-3 w-3 stroke-[3]" />}
+                      </div>
+                      <span className="text-[12px] font-medium flex items-center gap-1">
+                        <EyeOff className="h-3.5 w-3.5" />
                         隐藏此列
                       </span>
-                    </label>
+                    </div>
 
-                    {field.supportMasking !== false && (
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <Checkbox
-                          checked={isMasked}
-                          onCheckedChange={(checked) => handleToggleMaskedField(field.name, !!checked)}
-                        />
-                        <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                          <Lock className="h-3 w-3" />
+                    {field.supportMasking !== false ? (
+                      <div
+                        onClick={() => handleToggleMaskedField(field.name)}
+                        className={`flex items-center gap-1.5 cursor-pointer transition-colors ${
+                          isMasked ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+                        }`}
+                      >
+                        <div
+                          className={`flex items-center justify-center w-4 h-4 rounded-full border shrink-0 transition-colors ${
+                            isMasked
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-input bg-background'
+                          }`}
+                        >
+                          {isMasked && <Check className="h-3 w-3 stroke-[3]" />}
+                        </div>
+                        <span className="text-[12px] font-medium flex items-center gap-1">
+                          <Lock className="h-3.5 w-3.5" />
                           打码脱敏
                         </span>
-                      </label>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 opacity-30 cursor-not-allowed text-muted-foreground" title="该字段类型不支持脱敏">
+                        <div className="flex items-center justify-center w-4 h-4 rounded-full border border-input shrink-0" />
+                        <span className="text-[12px] font-medium flex items-center gap-1">
+                          <Lock className="h-3.5 w-3.5" />
+                          打码脱敏
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>

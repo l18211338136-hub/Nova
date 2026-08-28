@@ -20,6 +20,7 @@ public static class AbacQueryExtensions
         this IQueryable<TEntity> query,
         ICurrentUser currentUser,
         DbContext dbContext,
+        HttpContext? httpContext = null,
         CancellationToken cancellationToken = default) where TEntity : class
     {
         var currentUserId = currentUser.Id ?? Guid.Empty;
@@ -76,7 +77,7 @@ public static class AbacQueryExtensions
                         }
                     } while (added);
 
-                    query = query.ApplyAbacFilter(currentUser, policiesJson, dataScope, currentUserId, userOrgIds, userOrgAndSubIds.ToList());
+                    query = query.ApplyAbacFilter(currentUser, policiesJson, dataScope, currentUserId, userOrgIds, userOrgAndSubIds.ToList(), httpContext);
                 }
             }
         }
@@ -91,12 +92,13 @@ public static class AbacQueryExtensions
         int dataScope,
         Guid currentUserId,
         List<Guid>? userOrgIds,
-        List<Guid>? userOrgAndSubIds = null)
+        List<Guid>? userOrgAndSubIds = null,
+        HttpContext? httpContext = null)
     {
         query = query.ApplyAbacFilter(abacPoliciesJson, dataScope, currentUserId, userOrgIds, userOrgAndSubIds, out var fieldConfigs);
-        if (fieldConfigs.Any())
+        if (fieldConfigs.Any() && httpContext != null)
         {
-            //httpContext.Items[AbacConstants.HttpContextKeys.AbacFieldConfigs] = fieldConfigs;
+            httpContext.Items[AbacConstants.HttpContextKeys.AbacFieldConfigs] = fieldConfigs;
         }
         return query;
     }

@@ -18,13 +18,22 @@ public class AbacMaskingFilter : IEndpointFilter
         if (fieldConfigs != null && fieldConfigs.Any())
         {
             object? dataToMask = result;
-            var resultType = result.GetType();
-
-            // 如果响应对象是包装结构（如 ApiResponse<T>），提取其 Data 属性
-            var dataProp = resultType.GetProperty("Data");
-            if (dataProp != null)
+            
+            // 如果返回的是 Minimal API 的 IResult (如 Results.Ok)
+            var valueProp = result.GetType().GetProperty("Value");
+            if (valueProp != null)
             {
-                dataToMask = dataProp.GetValue(result);
+                dataToMask = valueProp.GetValue(result);
+            }
+
+            if (dataToMask != null)
+            {
+                // 如果响应对象是包装结构（如 ApiResponse<T>），提取其 Data 属性
+                var dataProp = dataToMask.GetType().GetProperty("Data");
+                if (dataProp != null)
+                {
+                    dataToMask = dataProp.GetValue(dataToMask);
+                }
             }
 
             if (dataToMask != null)

@@ -20,9 +20,9 @@ public static class OrganizationODataEndpoints
     public static void MapOrganizationODataEndpoints(this IEndpointRouteBuilder endpoints)
     {
         // 1. 获取组织机构树状结构 (GET /api/organizations/tree)
-        endpoints.MapGet("/api/organizations/tree", async (IOrganizationDbContext db, ICurrentUser currentUser, CancellationToken cancellationToken) =>
+        endpoints.MapGet("/api/organizations/tree", async (IOrganizationDbContext db, ICurrentUser currentUser, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
-            var query = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(currentUser, (DbContext)db, cancellationToken);
+            var query = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(currentUser, (DbContext)db, httpContext, cancellationToken);
 
             var orgs = await query
                 .OrderBy(o => o.Sort)
@@ -68,9 +68,10 @@ public static class OrganizationODataEndpoints
         .WithName("GetOrganizationTree");
 
         // 2. 获取组织机构列表 (支持 OData 过滤/分页: GET /api/organizations)
-        endpoints.MapGet("/api/organizations", async (IOrganizationDbContext db, HttpRequest request, CancellationToken cancellationToken) =>
+        endpoints.MapGet("/api/organizations", async (IOrganizationDbContext db, HttpRequest request, ICurrentUser currentUser, CancellationToken cancellationToken) =>
         {
-            var query = db.Organizations.AsNoTracking().ProjectToType<OrganizationDto>();
+            var orgQuery = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(currentUser, (DbContext)db, request.HttpContext, cancellationToken);
+            var query = orgQuery.ProjectToType<OrganizationDto>();
 
             var builder = new ODataConventionModelBuilder();
             builder.EntitySet<OrganizationDto>("Organizations");
@@ -110,14 +111,15 @@ public static class OrganizationODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<OrganizationDto>>>(200)
         .RequireAuthorization()
+        .AddEndpointFilter<AbacMaskingFilter>()
         .WithTags("Organizations")
         .WithSummary("组织列表")
         .WithName("GetOrganizations");
 
-        // 3. 获取单条机构详情 (GET /api/organizations/{id})
-        endpoints.MapGet("/api/organizations/{id:guid}", async (Guid id, IOrganizationDbContext db, CancellationToken cancellationToken) =>
+        endpoints.MapGet("/api/organizations/{id:guid}", async (Guid id, IOrganizationDbContext db, ICurrentUser currentUser, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
-            var org = await db.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+            var query = await db.Organizations.AsNoTracking().ApplyAbacFilterAsync(currentUser, (DbContext)db, httpContext, cancellationToken);
+            var org = await query.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
             if (org == null)
             {
                 return Results.NotFound(ApiResponse<OrganizationDto>.Error("组织机构不存在"));
@@ -130,6 +132,7 @@ public static class OrganizationODataEndpoints
         })
         .Produces<ApiResponse<OrganizationDto>>(200)
         .RequireAuthorization()
+        .AddEndpointFilter<AbacMaskingFilter>()
         .WithTags("Organizations")
         .WithSummary("组织详情")
         .WithName("GetOrganizationById");

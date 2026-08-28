@@ -61,7 +61,26 @@ export function OrganizationPermissionsTab({ permissions, onSave }: Organization
       try {
         const parsed = JSON.parse(permissions.abacPoliciesJson)
         if (Array.isArray(parsed)) {
-          setPolicies(parsed)
+          // Check if it's the old frontend format or the new backend format
+          const isBackendFormat = parsed.length > 0 && ('entityName' in parsed[0] || 'EntityName' in parsed[0])
+          
+          if (isBackendFormat) {
+            const frontendPolicies: AbacPolicyItem[] = parsed.map((p: any) => ({
+              targetEntity: p.entityName || p.EntityName,
+              rowRules: {
+                logic: p.logic || p.Logic || 'AND',
+                conditions: p.rules || p.Rules || []
+              },
+              fieldPermissions: {
+                hiddenFields: (p.fields || p.Fields || []).filter((f: any) => f.hide || f.Hide).map((f: any) => f.field || f.Field),
+                maskedFields: (p.fields || p.Fields || []).filter((f: any) => f.mask || f.Mask).map((f: any) => f.field || f.Field)
+              }
+            }))
+            setPolicies(frontendPolicies)
+          } else {
+            // Legacy fallback
+            setPolicies(parsed)
+          }
         }
       } catch {
         // ignore parse error
@@ -87,7 +106,24 @@ export function OrganizationPermissionsTab({ permissions, onSave }: Organization
   const handleSave = async () => {
     setSaving(true)
     try {
-      const policiesJson = JSON.stringify(policies)
+      // Map frontend AbacPolicyItem to backend AbacPolicyConfig structure
+      const backendPolicies = policies.map((p) => {
+        const fieldNames = new Set([...p.fieldPermissions.hiddenFields, ...p.fieldPermissions.maskedFields])
+        const fields = Array.from(fieldNames).map((fieldName) => ({
+          field: fieldName,
+          hide: p.fieldPermissions.hiddenFields.includes(fieldName),
+          mask: p.fieldPermissions.maskedFields.includes(fieldName)
+        }))
+
+        return {
+          entityName: p.targetEntity,
+          logic: p.rowRules.logic,
+          rules: p.rowRules.conditions,
+          fields: fields
+        }
+      })
+
+      const policiesJson = JSON.stringify(backendPolicies)
       await onSave({
         ...permissions,
         dataScope,
