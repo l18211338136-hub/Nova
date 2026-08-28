@@ -30,6 +30,11 @@ public static class AbacConstants
     {
         public const string CurrentUserId = "@CurrentUserId";
         public const string CurrentOrgId = "@CurrentOrgId";
+        public const string CurrentOrgAndSubIds = "@CurrentOrgAndSubIds";
+        public const string Today = "@Today";
+        public const string Recent7Days = "@Recent7Days";
         public const string Recent30Days = "@Recent30Days";
+        public const string ThisMonth = "@ThisMonth";
+        public const string ThisYear = "@ThisYear";
     }
 }

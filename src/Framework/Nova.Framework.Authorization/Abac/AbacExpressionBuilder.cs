@@ -9,7 +9,8 @@ public static class AbacExpressionBuilder
         List<AbacRuleConfig>? rules,
         string logic,
         Guid currentUserId,
-        Guid? currentOrgId = null)
+        Guid? currentOrgId = null,
+        List<Guid>? userOrgAndSubIds = null)
     {
         if (rules == null || !rules.Any())
             return null;
@@ -29,7 +30,7 @@ public static class AbacExpressionBuilder
                 continue;
 
             var propAccess = Expression.Property(parameter, property);
-            Expression? ruleExpr = BuildRuleExpression(propAccess, property.PropertyType, rule, currentUserId, currentOrgId);
+            Expression? ruleExpr = BuildRuleExpression(propAccess, property.PropertyType, rule, currentUserId, currentOrgId, userOrgAndSubIds);
 
             if (ruleExpr == null)
                 continue;
@@ -57,7 +58,8 @@ public static class AbacExpressionBuilder
         Type propType,
         AbacRuleConfig rule,
         Guid currentUserId,
-        Guid? currentOrgId)
+        Guid? currentOrgId,
+        List<Guid>? userOrgAndSubIds)
     {
         var op = rule.Operator?.Trim().ToLowerInvariant() ?? "=";
 
@@ -86,11 +88,27 @@ public static class AbacExpressionBuilder
             if (string.IsNullOrWhiteSpace(rule.Value))
                 return null;
 
-            var rawValues = rule.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            var listValues = rawValues
-                .Select(v => ResolveValue(v, targetType, currentUserId, currentOrgId))
-                .Where(v => v != null)
-                .ToList();
+            var listValues = new List<object>();
+
+            if (rule.Value.Equals(AbacConstants.DynamicMacros.CurrentOrgAndSubIds, StringComparison.OrdinalIgnoreCase))
+            {
+                if (userOrgAndSubIds != null && userOrgAndSubIds.Any())
+                {
+                    if (targetType == typeof(Guid))
+                        listValues.AddRange(userOrgAndSubIds.Cast<object>());
+                    else
+                        listValues.AddRange(userOrgAndSubIds.Select(id => id.ToString()).Cast<object>());
+                }
+            }
+            else
+            {
+                var rawValues = rule.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var resolved = rawValues
+                    .Select(v => ResolveValue(v, targetType, currentUserId, currentOrgId))
+                    .Where(v => v != null)
+                    .ToList();
+                listValues.AddRange(resolved!);
+            }
 
             if (!listValues.Any())
                 return null;
@@ -170,11 +188,41 @@ public static class AbacExpressionBuilder
             return currentOrgId.Value.ToString();
         }
 
+        if (rawValue.Equals(AbacConstants.DynamicMacros.Today, StringComparison.OrdinalIgnoreCase))
+        {
+            var today = DateTimeOffset.UtcNow.Date;
+            if (targetType == typeof(DateTimeOffset)) return new DateTimeOffset(today);
+            if (targetType == typeof(DateTime)) return today;
+        }
+
+        if (rawValue.Equals(AbacConstants.DynamicMacros.Recent7Days, StringComparison.OrdinalIgnoreCase))
+        {
+            var dt7 = DateTimeOffset.UtcNow.AddDays(-7);
+            if (targetType == typeof(DateTimeOffset)) return dt7;
+            if (targetType == typeof(DateTime)) return dt7.DateTime;
+        }
+
         if (rawValue.Equals(AbacConstants.DynamicMacros.Recent30Days, StringComparison.OrdinalIgnoreCase))
         {
             var dt30 = DateTimeOffset.UtcNow.AddDays(-30);
             if (targetType == typeof(DateTimeOffset)) return dt30;
             if (targetType == typeof(DateTime)) return dt30.DateTime;
+        }
+
+        if (rawValue.Equals(AbacConstants.DynamicMacros.ThisMonth, StringComparison.OrdinalIgnoreCase))
+        {
+            var now = DateTimeOffset.UtcNow;
+            var thisMonth = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, now.Offset);
+            if (targetType == typeof(DateTimeOffset)) return thisMonth;
+            if (targetType == typeof(DateTime)) return thisMonth.DateTime;
+        }
+
+        if (rawValue.Equals(AbacConstants.DynamicMacros.ThisYear, StringComparison.OrdinalIgnoreCase))
+        {
+            var now = DateTimeOffset.UtcNow;
+            var thisYear = new DateTimeOffset(now.Year, 1, 1, 0, 0, 0, now.Offset);
+            if (targetType == typeof(DateTimeOffset)) return thisYear;
+            if (targetType == typeof(DateTime)) return thisYear.DateTime;
         }
 
         try

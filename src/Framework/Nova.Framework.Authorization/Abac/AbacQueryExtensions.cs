@@ -56,7 +56,27 @@ public static class AbacQueryExtensions
                     var policiesJson = policiesJsonProp?.GetValue(activeOrgObj) as string;
                     var dataScope = dataScopeProp?.GetValue(activeOrgObj) is int ds ? ds : 0;
 
-                    query = query.ApplyAbacFilter(currentUser, policiesJson, dataScope, currentUserId, userOrgIds);
+                    var userOrgAndSubIds = new HashSet<Guid>(userOrgIds ?? new List<Guid>());
+                    var parentIdProp = clrType.GetProperty("ParentId");
+                    
+                    bool added;
+                    do
+                    {
+                        added = false;
+                        foreach (var org in orgList)
+                        {
+                            var orgId = idProp?.GetValue(org) as Guid?;
+                            var parentId = parentIdProp?.GetValue(org) as Guid?;
+
+                            if (orgId.HasValue && parentId.HasValue && userOrgAndSubIds.Contains(parentId.Value) && !userOrgAndSubIds.Contains(orgId.Value))
+                            {
+                                userOrgAndSubIds.Add(orgId.Value);
+                                added = true;
+                            }
+                        }
+                    } while (added);
+
+                    query = query.ApplyAbacFilter(currentUser, policiesJson, dataScope, currentUserId, userOrgIds, userOrgAndSubIds.ToList());
                 }
             }
         }
@@ -70,9 +90,10 @@ public static class AbacQueryExtensions
         string? abacPoliciesJson,
         int dataScope,
         Guid currentUserId,
-        List<Guid>? userOrgIds)
+        List<Guid>? userOrgIds,
+        List<Guid>? userOrgAndSubIds = null)
     {
-        query = query.ApplyAbacFilter(abacPoliciesJson, dataScope, currentUserId, userOrgIds, out var fieldConfigs);
+        query = query.ApplyAbacFilter(abacPoliciesJson, dataScope, currentUserId, userOrgIds, userOrgAndSubIds, out var fieldConfigs);
         if (fieldConfigs.Any())
         {
             //httpContext.Items[AbacConstants.HttpContextKeys.AbacFieldConfigs] = fieldConfigs;
@@ -86,6 +107,7 @@ public static class AbacQueryExtensions
         int dataScope,
         Guid currentUserId,
         List<Guid>? userOrgIds,
+        List<Guid>? userOrgAndSubIds,
         out List<AbacFieldPermissionConfig> fieldConfigs)
     {
         fieldConfigs = new List<AbacFieldPermissionConfig>();
@@ -94,7 +116,7 @@ public static class AbacQueryExtensions
             return query;
 
         // 1. 数据范围基础条件处理 (DataScope)
-        query = ApplyDataScopeFilter(query, dataScope, currentUserId, userOrgIds);
+        query = ApplyDataScopeFilter(query, dataScope, currentUserId, userOrgIds, userOrgAndSubIds);
 
         // 2. ABAC 动态表达式解析 (Row-Level Rules & Fields)
         if (!string.IsNullOrWhiteSpace(abacPoliciesJson))
@@ -129,7 +151,8 @@ public static class AbacQueryExtensions
                             targetPolicy.Rules,
                             targetPolicy.Logic,
                             currentUserId,
-                            primaryOrgId
+                            primaryOrgId,
+                            userOrgAndSubIds
                         );
 
                         if (rowExpression != null)
@@ -152,13 +175,14 @@ public static class AbacQueryExtensions
         IQueryable<T> query,
         int dataScope,
         Guid currentUserId,
-        List<Guid>? userOrgIds)
+        List<Guid>? userOrgIds,
+        List<Guid>? userOrgAndSubIds)
     {
         var type = typeof(T);
         var parameter = Expression.Parameter(type, "x");
 
-        // DataScope: 1 (仅本人数据)
-        if (dataScope == 1)
+        // DataScope: 4 (仅本人数据)
+        if (dataScope == 4)
         {
             var conditions = new List<Expression>();
 
@@ -252,6 +276,54 @@ public static class AbacQueryExtensions
                     for (int i = 0; i < userOrgIds.Count; i++)
                     {
                         typedList.SetValue(targetType == typeof(Guid) ? userOrgIds[i] : userOrgIds[i].ToString(), i);
+                    }
+
+                    var listConst = Expression.Constant(typedList);
+                    var unboxedProp = orgIdProp.PropertyType != targetType ? Expression.Convert(propAccess, targetType) : (Expression)propAccess;
+                    var containsCall = Expression.Call(containsMethod, listConst, unboxedProp);
+
+                    var lambda = Expression.Lambda<Func<T, bool>>(containsCall, parameter);
+                    return query.Where(lambda);
+                }
+            }
+        }
+
+        // DataScope: 3 (本部门及下级部门数据)
+        if (dataScope == 3 && userOrgAndSubIds != null && userOrgAndSubIds.Any())
+        {
+            var orgIdProp = type.GetProperty(AbacConstants.PropertyNames.Id, BindingFlags.Public | BindingFlags.Instance) ??
+                            type.GetProperty(AbacConstants.PropertyNames.OrganizationId, BindingFlags.Public | BindingFlags.Instance);
+
+            if (orgIdProp != null)
+            {
+                var propAccess = Expression.Property(parameter, orgIdProp);
+                var targetType = Nullable.GetUnderlyingType(orgIdProp.PropertyType) ?? orgIdProp.PropertyType;
+
+                if (userOrgAndSubIds.Count == 1)
+                {
+                    var userOrgId = userOrgAndSubIds.First();
+                    Expression constExpr = targetType == typeof(Guid)
+                        ? Expression.Constant(userOrgId, orgIdProp.PropertyType)
+                        : Expression.Constant(userOrgId.ToString(), orgIdProp.PropertyType);
+
+                    var lambda = Expression.Lambda<Func<T, bool>>(
+                        Expression.Equal(propAccess, constExpr),
+                        parameter
+                    );
+
+                    return query.Where(lambda);
+                }
+                else
+                {
+                    var containsMethod = typeof(Enumerable)
+                        .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                        .First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
+                        .MakeGenericMethod(targetType);
+
+                    var typedList = Array.CreateInstance(targetType, userOrgAndSubIds.Count);
+                    for (int i = 0; i < userOrgAndSubIds.Count; i++)
+                    {
+                        typedList.SetValue(targetType == typeof(Guid) ? userOrgAndSubIds[i] : userOrgAndSubIds[i].ToString(), i);
                     }
 
                     var listConst = Expression.Constant(typedList);
