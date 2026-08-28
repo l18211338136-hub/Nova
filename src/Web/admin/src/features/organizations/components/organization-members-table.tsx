@@ -52,12 +52,12 @@ export function OrganizationMembersTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">成员名称</TableHead>
-              <TableHead>主机构</TableHead>
-              <TableHead>职务 / 岗位</TableHead>
-              <TableHead>角色标识</TableHead>
-              <TableHead>加入时间</TableHead>
-              <TableHead className="text-right">操作</TableHead>
+              <TableHead className="w-[220px]">成员名称</TableHead>
+              <TableHead className="w-[120px]">主机构</TableHead>
+              <TableHead className="w-[150px]">职务 / 岗位</TableHead>
+              <TableHead className="w-[120px]">角色标识</TableHead>
+              <TableHead className="w-[120px]">加入时间</TableHead>
+              <TableHead className="text-right w-[80px]">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

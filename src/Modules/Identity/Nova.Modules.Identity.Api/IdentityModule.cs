@@ -14,6 +14,8 @@ using Nova.Framework.Persistence.Extensions;
 using Nova.Contracts.TrashBin;
 using Nova.Framework.Persistence.TrashBin;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Nova.Contracts.Security;
+using Nova.Modules.Identity.Application.Services;
 
 namespace Nova.Modules.Identity.Api;
 
@@ -41,6 +43,7 @@ public class IdentityModule : IModule
 
         services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<IdentityDbContext>());
         services.AddScoped<ITrashBinService>(sp => new TrashBinService(sp.GetRequiredService<IdentityDbContext>()));
+        services.AddScoped<IIdentityIntegrationService, IdentityIntegrationService>();
 
         services.AddIdentityCore<User>(options =>
         {

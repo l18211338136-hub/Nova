@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building, ShieldCheck, Users } from 'lucide-react'
+import { Building, ShieldCheck, Users, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   OrganizationDto,
@@ -53,6 +53,7 @@ export default function OrganizationsFeature() {
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [nodeToDelete, setNodeToDelete] = useState<string | null>(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
 
   const handleRemoveMember = async (userId: string) => {
     if (!selectedDetail?.id) return
@@ -120,6 +121,7 @@ export default function OrganizationsFeature() {
 
   const handleSelectNode = async (node: OrganizationTreeDto) => {
     setSelectedNode(node)
+    setIsLoadingDetail(true)
     try {
       const resDetail = await organizationById(node.id!)
       const detail = (resDetail?.data as any) || resDetail
@@ -177,6 +179,8 @@ export default function OrganizationsFeature() {
         dataScope: 2,
         abacPoliciesJson: '[]',
       })
+    } finally {
+      setIsLoadingDetail(false)
     }
   }
 
@@ -338,29 +342,40 @@ export default function OrganizationsFeature() {
           </div>
 
           {/* Right Side: Detail & Tabs */}
-          <div className="col-span-8 h-full flex flex-col bg-card border rounded-lg p-5 min-h-0 overflow-hidden">
-            {selectedDetail ? (
-              <div className="space-y-4 flex-1 flex flex-col">
+          <div className="col-span-8 h-full flex flex-col bg-card border rounded-lg p-5 min-h-0 overflow-hidden relative">
+            {selectedNode ? (
+              <div
+                className={`space-y-4 flex-1 flex flex-col transition-opacity duration-200 ${
+                  isLoadingDetail ? 'opacity-50 pointer-events-none' : 'opacity-100'
+                }`}
+              >
                 <div className="flex items-center justify-between border-b pb-3">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold">{selectedDetail.name}</h2>
-                      {selectedDetail.type && (
+                      <h2 className="text-lg font-bold">{selectedNode.name}</h2>
+                      {selectedNode.type && (
                         <DictTag
                           code="sys_org_type"
-                          value={selectedDetail.type}
-                          fallbackLabel={selectedDetail.type}
+                          value={selectedNode.type}
+                          fallbackLabel={selectedNode.type}
                           className="text-xs font-normal"
                         />
                       )}
                       <Badge variant="secondary" className="text-xs">
-                        层级: L{selectedDetail.level}
+                        层级: L{selectedNode.level}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      机构编码: {selectedDetail.code || '未设置'} | 成员数: {members.length} 人
+                      机构编码: {selectedNode.code || '未设置'} | 成员数: {members.length} 人
                     </p>
                   </div>
+                  
+                  {isLoadingDetail && (
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      加载中...
+                    </div>
+                  )}
                 </div>
 
                 <Tabs defaultValue="members" className="flex-1 flex flex-col">
@@ -419,13 +434,15 @@ export default function OrganizationsFeature() {
                     </TabsContent>
 
                     <TabsContent value="settings" className="m-0">
-                      <OrganizationSettingsTab
-                        organization={selectedDetail}
-                        onSave={async (updated) => {
-                          await handleSaveModal({ ...selectedDetail, ...updated })
-                        }}
-                        onDelete={handleDelete}
-                      />
+                      {selectedDetail && (
+                        <OrganizationSettingsTab
+                          organization={selectedDetail}
+                          onSave={async (updated) => {
+                            await handleSaveModal({ ...selectedDetail, ...updated })
+                          }}
+                          onDelete={handleDelete}
+                        />
+                      )}
                     </TabsContent>
                   </div>
                 </Tabs>

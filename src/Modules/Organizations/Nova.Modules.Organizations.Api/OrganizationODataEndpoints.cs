@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.ModelBuilder;
 using Nova.Contracts.Security;
 using Nova.Framework.Authorization.Abac;
@@ -137,8 +138,8 @@ public static class OrganizationODataEndpoints
         .WithSummary("组织详情")
         .WithName("GetOrganizationById");
 
-        // 4. 查询机构成员列表 (GET /api/organizations/{id}/members)
-        endpoints.MapGet("/api/organizations/{id:guid}/members", async (Guid id, IOrganizationDbContext db, CancellationToken cancellationToken) =>
+        // 4. 获取组织成员列表 (GET /api/organizations/{id}/members)
+        endpoints.MapGet("/api/organizations/{id:guid}/members", async (Guid id, IOrganizationDbContext db, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
             var userOrgs = await db.UserOrganizations
                 .AsNoTracking()
@@ -146,19 +147,45 @@ public static class OrganizationODataEndpoints
                 .ToListAsync(cancellationToken);
 
             var org = await db.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
-
-            var members = userOrgs.Select(uo => new OrganizationMemberDto
+            
+            if (org == null)
             {
-                UserId = uo.UserId,
-                OrganizationId = uo.OrganizationId,
-                UserName = $"User_{uo.UserId.ToString()[..8]}",
-                IsPrimary = uo.IsPrimary,
-                JobTitle = uo.JobTitle,
-                IsLeader = org?.LeaderUserId == uo.UserId,
-                JoinedAt = uo.CreatedAt
+                return Results.NotFound(ApiResponse<List<OrganizationMemberDto>>.Error("组织机构不存在"));
+            }
+
+            if (!userOrgs.Any())
+            {
+                return Results.Ok(ApiResponse<List<OrganizationMemberDto>>.Success(new List<OrganizationMemberDto>()));
+            }
+
+            // 获取跨模块的用户服务，如果在微服务架构中，这里就是一个 gRPC Client 或 HttpClient
+            var identityService = httpContext.RequestServices.GetService<IIdentityIntegrationService>();
+            var userIds = userOrgs.Select(uo => uo.UserId).ToList();
+            
+            var userSummaries = identityService != null 
+                ? await identityService.GetUsersByIdsAsync(userIds, cancellationToken)
+                : new List<UserSummaryDto>();
+
+            var userDict = userSummaries.ToDictionary(u => u.Id);
+
+            var members = userOrgs.Select(uo => 
+            {
+                var hasUser = userDict.TryGetValue(uo.UserId, out var user);
+                return new OrganizationMemberDto
+                {
+                    UserId = uo.UserId,
+                    OrganizationId = uo.OrganizationId,
+                    UserName = hasUser ? user!.UserName : $"User_{uo.UserId.ToString()[..8]}",
+                    NickName = hasUser ? user!.NickName : null,
+                    Email = hasUser ? user!.Email : null,
+                    IsPrimary = uo.IsPrimary,
+                    JobTitle = uo.JobTitle,
+                    IsLeader = org?.LeaderUserId == uo.UserId,
+                    JoinedAt = uo.CreatedAt
+                };
             }).ToList();
 
-            return ApiResponse<List<OrganizationMemberDto>>.Success(members);
+            return Results.Ok(ApiResponse<List<OrganizationMemberDto>>.Success(members));
         })
         .Produces<ApiResponse<List<OrganizationMemberDto>>>(200)
         .RequireAuthorization()
