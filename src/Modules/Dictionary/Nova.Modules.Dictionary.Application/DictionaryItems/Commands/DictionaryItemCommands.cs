@@ -12,7 +12,7 @@ using Nova.Modules.Dictionary.Domain.DictionaryItems;
 namespace Nova.Modules.Dictionary.Application.DictionaryItems.Commands;
 
 [ApiEndpoint("POST", "/api/dictionary/items", typeof(ApiResponse<Guid>), "Dictionaries", Summary = "创建数据")]
-[RequirePermission("Dictionary.Items.Create")]
+[RequirePermission("Dictionary.Management.Create")]
 public record CreateDictionaryItemCommand
 {
     public Guid TypeId { get; init; }
@@ -26,7 +26,7 @@ public record CreateDictionaryItemCommand
 }
 
 [ApiEndpoint("PUT", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "更新数据")]
-[RequirePermission("Dictionary.Items.Update")]
+[RequirePermission("Dictionary.Management.Update")]
 public record UpdateDictionaryItemCommand
 {
     public Guid Id { get; init; }
@@ -40,7 +40,7 @@ public record UpdateDictionaryItemCommand
 }
 
 [ApiEndpoint("DELETE", "/api/dictionary/items/{Id}", typeof(ApiResponse<bool>), "Dictionaries", Summary = "删除数据")]
-[RequirePermission("Dictionary.Items.Delete")]
+[RequirePermission("Dictionary.Management.Delete")]
 public record DeleteDictionaryItemCommand
 {
     public Guid Id { get; init; }

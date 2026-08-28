@@ -259,21 +259,21 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-2.5">
-                              {perms.map((perm) => {
-                                const action = perm.split('.').pop() || perm;
+                              {Array.from(new Set(perms.map(p => p.split('.').pop() || p))).map((action) => {
+                                const actionPerms = perms.filter(p => (p.split('.').pop() || p) === action);
                                 const label = ACTION_MAP[action] || action;
-                                const isChecked = safeValue.includes(perm);
+                                const isChecked = actionPerms.every(p => safeValue.includes(p));
 
                                 return (
                                   <div
-                                    key={perm}
+                                    key={action}
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       if (!isChecked) {
-                                        field.onChange([...safeValue, perm]);
+                                        field.onChange(Array.from(new Set([...safeValue, ...actionPerms])));
                                       } else {
-                                        field.onChange(safeValue.filter((value) => value !== perm));
+                                        field.onChange(safeValue.filter((value) => !actionPerms.includes(value)));
                                       }
                                     }}
                                     className={cn(

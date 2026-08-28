@@ -4,7 +4,7 @@ using Nova.Contracts.Security;
 namespace Nova.Contracts.TrashBin;
 
 [RequirePermission("Identity.TrashBin.Read")]
-[Description("回收站")]
+[Description("数据回收")]
 public class TrashBinItemDto
 {
     [Description("数据标识")]

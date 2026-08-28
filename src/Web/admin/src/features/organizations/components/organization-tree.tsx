@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building2, ChevronDown, ChevronRight, FolderTree, Plus, Search, Users } from 'lucide-react'
+import { Building2, ChevronDown, ChevronRight, FolderTree, Plus, Search, Users, Pencil, Trash2 } from 'lucide-react'
 import { OrganizationTreeDto } from '@/api/model'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,8 @@ interface OrganizationTreeProps {
   onSelect: (node: OrganizationTreeDto) => void
   onAddSub: (parentNode: OrganizationTreeDto) => void
   onAddRoot: () => void
+  onEdit?: (node: OrganizationTreeDto) => void
+  onDelete?: (node: OrganizationTreeDto) => void
 }
 
 export function OrganizationTree({
@@ -19,6 +21,8 @@ export function OrganizationTree({
   onSelect,
   onAddSub,
   onAddRoot,
+  onEdit,
+  onDelete,
 }: OrganizationTreeProps) {
   const [filterText, setFilterText] = useState('')
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({})
@@ -103,6 +107,34 @@ export function OrganizationTree({
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
+            {onEdit && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 p-0 hover:bg-background hover:text-primary"
+                title="编辑机构"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(node)
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 p-0 hover:bg-background hover:text-destructive"
+                title="删除机构"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(node)
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         </div>
 

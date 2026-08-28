@@ -27,6 +27,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { OrganizationTree } from './components/organization-tree'
 import { OrganizationMembersTable } from './components/organization-members-table'
 import { OrganizationPermissionsTab } from './components/organization-permissions-tab'
@@ -50,6 +51,8 @@ export default function OrganizationsFeature() {
   const [modalParentNode, setModalParentNode] = useState<OrganizationTreeDto | null>(null)
   const [modalInitialData, setModalInitialData] = useState<Partial<OrgDto> | null>(null)
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [nodeToDelete, setNodeToDelete] = useState<string | null>(null)
 
   const handleRemoveMember = async (userId: string) => {
     if (!selectedDetail?.id) return
@@ -189,6 +192,35 @@ export default function OrganizationsFeature() {
     setModalOpen(true)
   }
 
+  const handleEditNode = (node: OrganizationTreeDto) => {
+    // Note: since we only have the tree node here, some details like email/phone/remarks
+    // might be missing if they are only fetched in detail view.
+    // Ideally, we'd wait for selectedDetail or pass what we have.
+    const parentNode = node.parentId ? (findNodeInTree(treeData, node.parentId) || null) : null
+    setModalParentNode(parentNode)
+    setModalInitialData({
+      id: node.id,
+      name: node.name,
+      parentId: node.parentId,
+      code: node.code,
+      type: node.type,
+      sort: node.sort,
+      isEnabled: node.isEnabled,
+    })
+    setModalOpen(true)
+  }
+
+  const findNodeInTree = (nodes: OrganizationTreeDto[], targetId: string): OrganizationTreeDto | undefined => {
+    for (const node of nodes) {
+      if (node.id === targetId) return node
+      if (node.children) {
+        const found = findNodeInTree(node.children, targetId)
+        if (found) return found
+      }
+    }
+    return undefined
+  }
+
   const handleSaveModal = async (data?: Partial<OrgDto> | null) => {
     if (!data) return
     try {
@@ -225,17 +257,26 @@ export default function OrganizationsFeature() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('确定要删除该组织机构吗？关联的下级节点与成员需先清空。')) {
-      try {
-        await deleteOrganization(id)
-        toast.success('删除组织机构成功')
+  const handleDelete = (id: string) => {
+    setNodeToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!nodeToDelete) return
+    try {
+      await deleteOrganization(nodeToDelete)
+      toast.success('删除组织机构成功')
+      if (selectedNode?.id === nodeToDelete) {
         setSelectedNode(null)
         setSelectedDetail(null)
-        await loadTree()
-      } catch (err: any) {
-        toast.error('删除失败', { description: err?.response?.data?.title || err.message })
       }
+      await loadTree()
+    } catch (err: any) {
+      toast.error('删除失败', { description: err?.response?.data?.title || err.message })
+    } finally {
+      setDeleteConfirmOpen(false)
+      setNodeToDelete(null)
     }
   }
 
@@ -267,6 +308,8 @@ export default function OrganizationsFeature() {
               onSelect={handleSelectNode}
               onAddSub={handleAddSub}
               onAddRoot={handleAddRoot}
+              onEdit={handleEditNode}
+              onDelete={(node) => node.id && handleDelete(node.id)}
             />
           </div>
 
@@ -374,6 +417,16 @@ export default function OrganizationsFeature() {
           onOpenChange={setAddMemberModalOpen}
           existingMemberIds={members.map((m) => m.userId).filter((id): id is string => Boolean(id))}
           onConfirmAdd={handleConfirmAddMembers}
+        />
+
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          title="删除组织机构"
+          desc="确定要删除该组织机构吗？关联的下级节点与成员需先清空。"
+          confirmText="删除"
+          destructive
+          handleConfirm={handleConfirmDelete}
         />
       </Main>
     </>

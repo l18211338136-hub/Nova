@@ -1,4 +1,3 @@
-using System.Reflection;
 using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +10,8 @@ using Nova.Framework.Authorization.Abac;
 using Nova.Framework.Web.Responses;
 using Nova.Modules.Organizations.Application.Database;
 using Nova.Modules.Organizations.Application.DTOs;
+using Nova.Modules.Organizations.Domain;
+using System.Reflection;
 
 namespace Nova.Modules.Organizations.Api;
 
@@ -34,10 +35,12 @@ public static class OrganizationODataEndpoints
                 .Select(g => new { OrganizationId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.OrganizationId, x => x.Count, cancellationToken);
 
-            List<OrganizationTreeDto> BuildTree(Guid? parentId)
+            var orgIds = orgs.Select(o => o.Id).ToHashSet();
+            var rootOrgs = orgs.Where(o => o.ParentId == null || !orgIds.Contains(o.ParentId.Value)).ToList();
+
+            List<OrganizationTreeDto> BuildTree(IEnumerable<Organization> nodes)
             {
-                return orgs
-                    .Where(o => o.ParentId == parentId)
+                return nodes
                     .Select(o => new OrganizationTreeDto
                     {
                         Id = o.Id,
@@ -49,12 +52,12 @@ public static class OrganizationODataEndpoints
                         Sort = o.Sort,
                         IsEnabled = o.IsEnabled,
                         MemberCount = memberCounts.GetValueOrDefault(o.Id, 0),
-                        Children = BuildTree(o.Id)
+                        Children = BuildTree(orgs.Where(child => child.ParentId == o.Id))
                     })
                     .ToList();
             }
 
-            var tree = BuildTree(null);
+            var tree = BuildTree(rootOrgs);
             return ApiResponse<List<OrganizationTreeDto>>.Success(tree);
         })
         .Produces<ApiResponse<List<OrganizationTreeDto>>>(200)

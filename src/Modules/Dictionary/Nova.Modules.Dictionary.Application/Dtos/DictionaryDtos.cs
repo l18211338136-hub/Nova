@@ -3,8 +3,8 @@ using Nova.Contracts.Security;
 
 namespace Nova.Modules.Dictionary.Application.Dtos;
 
-[RequirePermission("Dictionary.Types.Read")]
-[Description("字典类型")]
+[RequirePermission("Dictionary.Management.Read")]
+[Description("字典管理")]
 public class DictionaryTypeDto
 {
     public Guid Id { get; set; }
@@ -17,8 +17,8 @@ public class DictionaryTypeDto
     public DateTimeOffset CreatedAt { get; set; }
 }
 
-[RequirePermission("Dictionary.Items.Read")]
-[Description("字典数据")]
+[RequirePermission("Dictionary.Management.Read")]
+[Description("字典管理")]
 public class DictionaryItemDto
 {
     public Guid Id { get; set; }

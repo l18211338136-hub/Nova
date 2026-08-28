@@ -208,15 +208,16 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
   const isPending = updateMutation.isPending
 
   const groupedPermissions = React.useMemo(() => {
-    if (!allPermissions?.data) return {}
+    if (!allPermissions?.data || !permissionGroups?.data) return {}
     return allPermissions.data.reduce((acc, perm) => {
       const parts = perm.split('.')
       const prefix = parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0]
-      if (!acc[prefix]) acc[prefix] = []
-      acc[prefix].push(perm)
+      const groupName = permissionGroups?.data?.[prefix] || prefix
+      if (!acc[groupName]) acc[groupName] = []
+      acc[groupName].push(perm)
       return acc
     }, {} as Record<string, string[]>)
-  }, [allPermissions?.data])
+  }, [allPermissions?.data, permissionGroups?.data])
 
   return (
     <Dialog
@@ -340,21 +341,21 @@ export function UsersPermissionsDialog({ currentRow, open, onOpenChange }: Props
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-2.5">
-                              {perms.map((perm) => {
-                                const action = perm.split('.').pop() || perm;
+                              {Array.from(new Set(perms.map(p => p.split('.').pop() || p))).map((action) => {
+                                const actionPerms = perms.filter(p => (p.split('.').pop() || p) === action);
                                 const label = ACTION_MAP[action] || action;
-                                const isChecked = safeValue.includes(perm);
+                                const isChecked = actionPerms.every(p => safeValue.includes(p));
 
                                 return (
                                   <div
-                                    key={perm}
+                                    key={action}
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       if (!isChecked) {
-                                        field.onChange([...safeValue, perm]);
+                                        field.onChange(Array.from(new Set([...safeValue, ...actionPerms])));
                                       } else {
-                                        field.onChange(safeValue.filter((val) => val !== perm));
+                                        field.onChange(safeValue.filter((val) => !actionPerms.includes(val)));
                                       }
                                     }}
                                     className={cn(

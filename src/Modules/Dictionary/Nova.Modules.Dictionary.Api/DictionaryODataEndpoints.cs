@@ -59,7 +59,7 @@ public static class DictionaryODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<DictionaryTypeDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Dictionary.Types.Read"))
+        .AddEndpointFilter(new PermissionFilter("Dictionary.Management.Read"))
         .WithTags("Dictionaries")
         .WithSummary("字典类型")
         .WithName("GetDictionaryTypes");
@@ -107,7 +107,7 @@ public static class DictionaryODataEndpoints
         })
         .Produces<ApiResponse<PagedResult<DictionaryItemDto>>>(200)
         .RequireAuthorization()
-        .AddEndpointFilter(new PermissionFilter("Dictionary.Items.Read"))
+        .AddEndpointFilter(new PermissionFilter("Dictionary.Management.Read"))
         .WithTags("Dictionaries")
         .WithSummary("字典数据")
         .WithName("GetDictionaryItems");

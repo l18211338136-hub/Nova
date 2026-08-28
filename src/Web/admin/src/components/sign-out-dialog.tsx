@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { useLogout } from '@/api/endpoints/auth'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface SignOutDialogProps {
   open: boolean
@@ -15,6 +16,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const location = useLocation()
   const { auth } = useAuthStore()
   const logoutMutation = useLogout()
+  const queryClient = useQueryClient()
 
   const handleSignOut = () => {
     // Revoke the refresh token on the server, then clear local state.
@@ -28,6 +30,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       {
         onSettled: () => {
           auth.reset()
+          queryClient.clear()
           // Preserve current location for redirect after sign-in
           const currentPath = location.href
           navigate({

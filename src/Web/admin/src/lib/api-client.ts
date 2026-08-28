@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import { queryClient } from '@/main';
 
 // Create a custom axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -67,6 +68,7 @@ apiClient.interceptors.response.use(
       const accessToken = useAuthStore.getState().auth.accessToken;
       if (!refreshToken || !accessToken) {
         useAuthStore.getState().auth.reset();
+        queryClient.clear();
         window.location.href = '/sign-in';
         return Promise.reject(error);
       }
@@ -97,6 +99,7 @@ apiClient.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         useAuthStore.getState().auth.reset();
+        queryClient.clear();
         window.location.href = '/sign-in';
         return Promise.reject(err);
       } finally {
