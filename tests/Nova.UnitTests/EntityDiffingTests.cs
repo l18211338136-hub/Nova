@@ -21,6 +21,8 @@ public class EntityDiffingTests
         public IEnumerable<Claim> Claims => Array.Empty<Claim>();
         public string[] Roles => new[] { "Admin" };
         public bool IsInRole(string role) => true;
+        public string? GetClaimValue(string claimType) => null;
+        public string[] GetClaimValues(string claimType) => Array.Empty<string>();
     }
 
     [Fact]

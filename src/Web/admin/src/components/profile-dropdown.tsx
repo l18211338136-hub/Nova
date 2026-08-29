@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 import { getDisplayNameInitials, getFullImageUrl } from '@/lib/utils'
 
@@ -53,6 +54,7 @@ export function ProfileDropdown() {
 
   return (
     <>
+      <NotificationBell />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>

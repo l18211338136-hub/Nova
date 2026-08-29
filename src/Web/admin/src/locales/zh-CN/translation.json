@@ -687,5 +687,7 @@
     "Confirm Reset": "确认重置",
     "Failed to reset password.": "密码重置失败。",
     "Password must be at least 6 characters.": "密码长度必须至少为 6 个字符。",
-    "Confirm password is required.": "请确认新密码。"
+    "Confirm password is required.": "请确认新密码。",
+    "No notifications yet": "暂无通知",
+    "Mark all as read": "全部已读"
 }

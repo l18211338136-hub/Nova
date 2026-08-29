@@ -673,5 +673,7 @@
     "Confirm Reset": "Confirm Reset",
     "Failed to reset password.": "Failed to reset password.",
     "Password must be at least 6 characters.": "Password must be at least 6 characters.",
-    "Confirm password is required.": "Confirm password is required."
+    "Confirm password is required.": "Confirm password is required.",
+    "No notifications yet": "No notifications yet",
+    "Mark all as read": "Mark all as read"
 }

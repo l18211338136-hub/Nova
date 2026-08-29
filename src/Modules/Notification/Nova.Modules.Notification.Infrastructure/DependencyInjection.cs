@@ -2,6 +2,8 @@ using FluentEmail.MailKitSmtp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
+using Nova.Contracts.Notification;
 using Nova.Modules.Notification.Application;
 using Nova.Modules.Notification.Infrastructure.Configuration;
 
@@ -11,6 +13,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddNotificationInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<NotificationDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddScoped<INotificationDbContext>(provider => provider.GetRequiredService<NotificationDbContext>());
+        services.AddScoped<ISystemNotificationService, SystemNotificationService>();
+
         services.AddTransient<IEmailService, EmailNotificationService>();
 
         var smtpOptions = new SmtpOptions();

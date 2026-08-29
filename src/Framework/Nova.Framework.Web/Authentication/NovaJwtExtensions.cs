@@ -33,6 +33,23 @@ public static class NovaJwtExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
             };
 
+            // SignalR authentication via Query String
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    
+                    // If the request is for our SignalR hub...
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/hubs"))
+                    {
+                        // Read the token out of the query string
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         services.AddAuthorization();

@@ -11,6 +11,7 @@ using Finbuckle.MultiTenant.EntityFrameworkCore.Stores;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Nova.Framework.Persistence.Interceptors;
+using Nova.Contracts.Constants;
 
 namespace Nova.Framework.MultiTenancy;
 
@@ -32,10 +33,10 @@ public static class MultiTenancyExtensions
         });
 
         services.AddMultiTenant<NovaTenantInfo>()
-            .WithClaimStrategy("tenantId")
+            .WithClaimStrategy(TenantConstants.TenantIdClaimType)
             .WithDelegateStrategy(async context =>
             {
-                if (context is Microsoft.AspNetCore.Http.HttpContext httpContext)
+                if (context is HttpContext httpContext)
                 {
                     if (httpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var headerTenantId))
                     {
@@ -51,10 +52,9 @@ public static class MultiTenancyExtensions
                             return queryValue;
                     }
 
-                    // 1. 从已认证的 ClaimsPrincipal 提取 tenantId（已被 JwtBearer 中间件完成签名与有效性校验）
                     if (httpContext.User.Identity?.IsAuthenticated == true)
                     {
-                        var tenantClaim = httpContext.User.FindFirst("tenantId")?.Value;
+                        var tenantClaim = httpContext.User.FindFirst(TenantConstants.TenantIdClaimType)?.Value;
                         if (!string.IsNullOrWhiteSpace(tenantClaim))
                             return tenantClaim;
                     }

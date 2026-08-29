@@ -26,6 +26,7 @@ import type {
 import type {
   ApiResponseOfApiResponseOfOrganizationDto,
   ApiResponseOfApiResponseOfboolean,
+  ApiResponseOfListOfEntityMetadataDto,
   ApiResponseOfListOfOrganizationMemberDto,
   ApiResponseOfListOfOrganizationTreeDto,
   ApiResponseOfOrganizationDto2,
@@ -830,6 +831,98 @@ export function useOrganizationPermissions<TData = Awaited<ReturnType<typeof org
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getOrganizationPermissionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+/**
+ * @summary 获取 ABAC 实体元数据
+ */
+export const abacEntityMetadata = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfListOfEntityMetadataDto>(
+      {url: `/api/organizations/metadata/entities`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getAbacEntityMetadataQueryKey = () => {
+    return [
+    `/api/organizations/metadata/entities`
+    ] as const;
+    }
+
+
+export const getAbacEntityMetadataQueryOptions = <TData = Awaited<ReturnType<typeof abacEntityMetadata>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAbacEntityMetadataQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof abacEntityMetadata>>> = ({ signal }) => abacEntityMetadata(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AbacEntityMetadataQueryResult = NonNullable<Awaited<ReturnType<typeof abacEntityMetadata>>>
+export type AbacEntityMetadataQueryError = unknown
+
+
+export function useAbacEntityMetadata<TData = Awaited<ReturnType<typeof abacEntityMetadata>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof abacEntityMetadata>>,
+          TError,
+          Awaited<ReturnType<typeof abacEntityMetadata>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAbacEntityMetadata<TData = Awaited<ReturnType<typeof abacEntityMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof abacEntityMetadata>>,
+          TError,
+          Awaited<ReturnType<typeof abacEntityMetadata>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAbacEntityMetadata<TData = Awaited<ReturnType<typeof abacEntityMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 获取 ABAC 实体元数据
+ */
+
+export function useAbacEntityMetadata<TData = Awaited<ReturnType<typeof abacEntityMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof abacEntityMetadata>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAbacEntityMetadataQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

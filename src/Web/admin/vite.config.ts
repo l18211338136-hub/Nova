@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
           target: env.API_BASE_URL,
           changeOrigin: true,
           secure: false, // Bypass SSL cert errors for localhost
+          ws: true, // Enable WebSocket proxying for SignalR
         },
         '/nova-storage': {
           target: env.API_BASE_URL,

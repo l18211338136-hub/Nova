@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Nova.Contracts.Constants;
 using Nova.Contracts.DependencyInjection;
 using Nova.Modules.Identity.Domain.Users;
 
@@ -42,7 +43,7 @@ public class TokenService : ITokenService, ITransientDependency
 
         if (!string.IsNullOrEmpty(tenantId))
         {
-            claims.Add(new Claim("tenantId", tenantId));
+            claims.Add(new Claim(TenantConstants.TenantIdClaimType, tenantId));
         }
 
         var useCached = _configuration.GetValue<bool>("Auth:UseCachedPermissions", false);

@@ -7,12 +7,14 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { PreferencesSync } from '@/components/preferences-sync'
 import { SkipToMain } from '@/components/skip-to-main'
+import { useSignalR } from '@/hooks/use-signalr'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
 }
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  useSignalR()
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   return (
     <SearchProvider>
