@@ -1,6 +1,37 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
 import { queryClient } from '@/main';
+import { CryptoService } from './crypto';
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    aesKey?: CryptoKey;
+    skipEncryption?: boolean;
+  }
+}
+
+let rsaPublicKey: string | null = null;
+async function getRsaPublicKey() {
+  if (rsaPublicKey) return rsaPublicKey;
+  if (import.meta.env.VITE_RSA_PUBLIC_KEY) {
+    rsaPublicKey = import.meta.env.VITE_RSA_PUBLIC_KEY.replace(/\\n/g, '\n');
+    return rsaPublicKey;
+  }
+  try {
+    // 按需动态导入，打破 api-client.ts 与自动生成代码之间的循环依赖
+    const { publicKey } = await import('@/api/endpoints/security');
+    
+    // 调用 Orval 生成的强类型方法
+    const res = await publicKey();
+    
+    // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.publicKey
+    rsaPublicKey = res.data?.publicKey || null;
+    return rsaPublicKey;
+  } catch (e) {
+    console.error('Failed to fetch RSA public key', e);
+    return null;
+  }
+}
 
 // Create a custom axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -27,11 +58,45 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = useAuthStore.getState().auth.accessToken;
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+
+    // 只有 POST, PUT, PATCH 请求，且带有 data 的情况才加密 (跳过 FormData 文件上传)
+    if (
+      config.data && 
+      !(config.data instanceof FormData) && 
+      !config.skipEncryption && 
+      ['post', 'put', 'patch'].includes(config.method || '')
+    ) {
+      const pubKey = await getRsaPublicKey();
+      if (pubKey) {
+        // 1. 生成本次请求专用的随机 AES 密钥
+        const aesKey = await CryptoService.generateAesKey();
+        
+        // 2. 将 AES 密钥保存到 config 中，传递给响应拦截器
+        config.aesKey = aesKey;
+
+        // 3. 导出并使用 RSA 加密 AES 密钥，塞进 Header
+        const rawAesKey = await CryptoService.exportAesKey(aesKey);
+        const encryptedAesKeyBase64 = await CryptoService.encryptAesKeyWithRsa(rawAesKey, pubKey);
+        
+        if (config.headers && typeof config.headers.set === 'function') {
+          config.headers.set('X-Encryption-Key', encryptedAesKeyBase64);
+          config.headers.set('Content-Type', 'application/json');
+        } else if (config.headers) {
+          config.headers['X-Encryption-Key'] = encryptedAesKeyBase64;
+          config.headers['Content-Type'] = 'application/json';
+        }
+
+        // 4. 使用 AES 加密真实的业务 Payload
+        const encryptedBodyBase64 = await CryptoService.encryptDataWithAes(config.data, aesKey);
+        config.data = encryptedBodyBase64;
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -41,7 +106,19 @@ apiClient.interceptors.request.use(
 
 // Response interceptor
 apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
+  async (response: AxiosResponse) => {
+    // 检查 config 中是否带有本次请求的 AES 密钥，且返回的是否是纯文本密文
+    const aesKey = (response.config as any).aesKey as CryptoKey;
+    if (aesKey && typeof response.data === 'string' && response.data.length > 0) {
+      try {
+        const decryptedData = await CryptoService.decryptDataWithAes(response.data, aesKey);
+        response.data = decryptedData;
+      } catch (e) {
+        console.error('Failed to decrypt response payload', e);
+        // 如果解密失败，直接抛出异常避免走后续业务逻辑
+        return Promise.reject(new Error('Failed to decrypt response'));
+      }
+    }
     return response;
   },
   async (error: AxiosError) => {

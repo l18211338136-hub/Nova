@@ -8,6 +8,7 @@ using Nova.Framework.Web.Extensions;
 using Nova.Framework.Web.Middlewares;
 using Nova.Framework.Web.Modular;
 using Nova.Framework.Web.OpenApi;
+using Nova.Framework.Web.Security;
 using Nova.WebApi.Extensions;
 using Scalar.AspNetCore;
 
@@ -46,6 +47,9 @@ app.UseHttpsRedirection();
 app.UseNovaCors();
 app.UseNovaLocalStorage();
 
+// 必须放在此处，确保所有的 Payload（请求/响应）被加解密后再交给下游中间件处理
+app.UseNovaPayloadEncryption();
+
 // 多租户与 JWT 认证必须在全局审计日志中间件之前执行，确保 HttpContext 中能够正确提取已解析的 TenantInfo 和 User Claims
 app.UseNovaMultiTenancy();
 app.UseAuthorization();
@@ -58,5 +62,6 @@ await app.ApplyDatabaseMigrationsAsync();
 app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization"));
 app.UseNovaHealthChecks();
 app.MapModuleEndpoints();
+app.MapPayloadEncryptionEndpoints();
 
 app.Run();
