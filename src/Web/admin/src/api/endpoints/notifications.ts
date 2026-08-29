@@ -24,6 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ApiResponseOfClearReadNotificationsResult,
+  ApiResponseOfDeleteNotificationResult,
   ApiResponseOfMarkAllNotificationsAsReadResult,
   ApiResponseOfMarkNotificationAsReadResult,
   ApiResponseOfPagedResultOfSystemNotificationDto,
@@ -330,4 +332,128 @@ export const useSendTestNotification = <TError = unknown,
         TContext
       > => {
       return useMutation(getSendTestNotificationMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 删除通知
+ */
+export const deleteNotification = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfDeleteNotificationResult>(
+      {url: `/api/notifications/my/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteNotificationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotification>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteNotification>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteNotification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteNotification>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteNotification(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteNotification>>>
+
+    export type DeleteNotificationMutationError = unknown
+
+    /**
+ * @summary 删除通知
+ */
+export const useDeleteNotification = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotification>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteNotification>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteNotificationMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 清空已读
+ */
+export const clearReadNotifications = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfClearReadNotificationsResult>(
+      {url: `/api/notifications/my/clear-read`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getClearReadNotificationsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearReadNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearReadNotifications>>, TError,void, TContext> => {
+
+const mutationKey = ['clearReadNotifications'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearReadNotifications>>, void> = () => {
+
+
+          return  clearReadNotifications(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearReadNotificationsMutationResult = NonNullable<Awaited<ReturnType<typeof clearReadNotifications>>>
+
+    export type ClearReadNotificationsMutationError = unknown
+
+    /**
+ * @summary 清空已读
+ */
+export const useClearReadNotifications = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearReadNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearReadNotifications>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearReadNotificationsMutationOptions(options), queryClient);
     }

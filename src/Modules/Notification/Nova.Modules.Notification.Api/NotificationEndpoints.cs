@@ -147,5 +147,43 @@ public static class NotificationEndpoints
         .Produces<ApiResponse<SendTestNotificationResult>>(200)
         .WithName("SendTestNotification")
         .WithSummary("发送测试");
+
+        group.MapDelete("/my/{id}", async (Guid id, INotificationDbContext dbContext, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            // ExecuteDeleteAsync for better performance
+            await dbContext.SystemNotifications
+                .Where(n => n.Id == id && n.ReceiverUserId == userId)
+                .ExecuteDeleteAsync();
+
+            return Results.Ok(ApiResponse<DeleteNotificationResult>.Success(new DeleteNotificationResult { Success = true }));
+        })
+        .Produces<ApiResponse<DeleteNotificationResult>>(200)
+        .WithName("DeleteNotification")
+        .WithSummary("删除通知");
+
+        group.MapDelete("/my/clear-read", async (INotificationDbContext dbContext, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            // ExecuteDeleteAsync for better performance
+            await dbContext.SystemNotifications
+                .Where(n => n.ReceiverUserId == userId && n.IsRead)
+                .ExecuteDeleteAsync();
+
+            return Results.Ok(ApiResponse<ClearReadNotificationsResult>.Success(new ClearReadNotificationsResult { Success = true }));
+        })
+        .Produces<ApiResponse<ClearReadNotificationsResult>>(200)
+        .WithName("ClearReadNotifications")
+        .WithSummary("清空已读");
     }
 }

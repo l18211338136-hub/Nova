@@ -689,5 +689,8 @@
     "Password must be at least 6 characters.": "密码长度必须至少为 6 个字符。",
     "Confirm password is required.": "请确认新密码。",
     "No notifications yet": "暂无通知",
-    "Mark all as read": "全部已读"
+    "Mark all as read": "全部已读",
+    "Clear Read": "清空已读",
+    "Delete": "删除",
+    "Notifications": "通知"
 }

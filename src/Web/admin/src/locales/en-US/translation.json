@@ -675,5 +675,8 @@
     "Password must be at least 6 characters.": "Password must be at least 6 characters.",
     "Confirm password is required.": "Confirm password is required.",
     "No notifications yet": "No notifications yet",
-    "Mark all as read": "Mark all as read"
+    "Mark all as read": "Mark all as read",
+    "Clear Read": "Clear Read",
+    "Delete": "Delete",
+    "Notifications": "Notifications"
 }

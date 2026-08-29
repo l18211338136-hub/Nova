@@ -30,3 +30,13 @@ public record SendTestNotificationResult
 {
     public Guid NotificationId { get; init; }
 }
+
+public record DeleteNotificationResult
+{
+    public bool Success { get; init; }
+}
+
+public record ClearReadNotificationsResult
+{
+    public bool Success { get; init; }
+}

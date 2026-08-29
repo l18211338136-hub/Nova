@@ -26,6 +26,8 @@ import {
   useMyNotifications,
   useMarkNotificationAsRead,
   useMarkAllNotificationsAsRead,
+  useDeleteNotification,
+  useClearReadNotifications,
 } from '@/api/endpoints/notifications'
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 
@@ -98,6 +100,23 @@ export function NotificationBell() {
     },
   })
 
+  const { mutate: deleteNotification, isPending: isDeleting } = useDeleteNotification({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['getMyNotifications'] })
+        setSelectedNotification(null)
+      },
+    },
+  })
+
+  const { mutate: clearRead, isPending: isClearing } = useClearReadNotifications({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['getMyNotifications'] })
+      },
+    },
+  })
+
   const handleMarkAsRead = (notification: any) => {
     // Open details
     setSelectedNotification(notification)
@@ -109,6 +128,16 @@ export function NotificationBell() {
 
   const handleMarkAllAsRead = () => {
     markAllAsRead()
+  }
+
+  const handleClearRead = () => {
+    clearRead()
+  }
+
+  const handleDelete = () => {
+    if (selectedNotification) {
+      deleteNotification({ id: selectedNotification.id })
+    }
   }
 
   const dateLocale = i18n.language.startsWith('zh') ? zhCN : enUS
@@ -132,18 +161,32 @@ export function NotificationBell() {
       <PopoverContent className='w-80 p-0' align='end'>
         <div className='flex items-center justify-between px-4 py-3'>
           <h4 className='text-sm font-semibold'>{t('Notifications')}</h4>
-          {unreadCount > 0 && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-auto px-2 py-1 text-xs text-muted-foreground'
-              onClick={handleMarkAllAsRead}
-              disabled={isMarkingAll}
-            >
-              {isMarkingAll ? <Loader2 className='mr-1 h-3 w-3 animate-spin' /> : <Check className='mr-1 h-3 w-3' />}
-              {t('Mark all as read')}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-auto px-2 py-1 text-xs text-muted-foreground'
+                onClick={handleMarkAllAsRead}
+                disabled={isMarkingAll}
+              >
+                {isMarkingAll ? <Loader2 className='mr-1 h-3 w-3 animate-spin' /> : <Check className='mr-1 h-3 w-3' />}
+                {t('Mark all as read')}
+              </Button>
+            )}
+            {notifications.some((n: any) => n.isRead) && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-auto px-2 py-1 text-xs text-muted-foreground text-destructive hover:text-destructive'
+                onClick={handleClearRead}
+                disabled={isClearing}
+              >
+                {isClearing && <Loader2 className='mr-1 h-3 w-3 animate-spin' />}
+                {t('Clear Read')}
+              </Button>
+            )}
+          </div>
         </div>
         <Separator />
         <ScrollArea 
@@ -229,6 +272,17 @@ export function NotificationBell() {
               </pre>
             </div>
           )}
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDelete} 
+            disabled={isDeleting}
+          >
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t('Delete')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

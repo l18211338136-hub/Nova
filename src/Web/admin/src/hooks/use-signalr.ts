@@ -30,10 +30,27 @@ export function useSignalR() {
         console.log('SignalR Connected!')
         setConnection(newConnection)
         
+        // Request desktop notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission()
+        }
+        
         newConnection.on('ReceiveNotification', (notification: any) => {
-          toast(notification.title || '新通知', {
-            description: notification.content || '',
+          const title = notification.title || '新通知'
+          const content = notification.content || ''
+          
+          toast(title, {
+            description: content,
           })
+
+          // Show desktop notification if page is not focused and permitted
+          if ('Notification' in window && Notification.permission === 'granted' && !document.hasFocus()) {
+            new Notification(title, {
+              body: content,
+              icon: window.location.origin + '/vite.svg', // Fallback icon
+            })
+          }
+
           // 刷新通知列表
           queryClient.invalidateQueries({ queryKey: ['getMyNotifications'] })
         })
