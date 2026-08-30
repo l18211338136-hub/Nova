@@ -11,26 +11,39 @@ declare module 'axios' {
 }
 
 let rsaPublicKey: string | null = null;
+let pendingPublicKeyPromise: Promise<string | null> | null = null;
+
 async function getRsaPublicKey() {
   if (rsaPublicKey) return rsaPublicKey;
   if (import.meta.env.VITE_RSA_PUBLIC_KEY) {
     rsaPublicKey = import.meta.env.VITE_RSA_PUBLIC_KEY.replace(/\\n/g, '\n');
     return rsaPublicKey;
   }
-  try {
-    // 按需动态导入，打破 api-client.ts 与自动生成代码之间的循环依赖
-    const { publicKey } = await import('@/api/endpoints/security');
-    
-    // 调用 Orval 生成的强类型方法
-    const res = await publicKey();
-    
-    // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.publicKey
-    rsaPublicKey = res.data?.publicKey || null;
-    return rsaPublicKey;
-  } catch (e) {
-    console.error('Failed to fetch RSA public key', e);
-    return null;
+  
+  if (pendingPublicKeyPromise) {
+    return pendingPublicKeyPromise;
   }
+
+  pendingPublicKeyPromise = (async () => {
+    try {
+      // 按需动态导入，打破 api-client.ts 与自动生成代码之间的循环依赖
+      const { publicKey } = await import('@/api/endpoints/security');
+      
+      // 调用 Orval 生成的强类型方法
+      const res = await publicKey({ skipEncryption: true });
+      
+      // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.publicKey
+      rsaPublicKey = res.data?.publicKey || null;
+      return rsaPublicKey;
+    } catch (e) {
+      console.error('Failed to fetch RSA public key', e);
+      return null;
+    } finally {
+      pendingPublicKeyPromise = null;
+    }
+  })();
+
+  return pendingPublicKeyPromise;
 }
 
 // Create a custom axios instance
@@ -64,13 +77,8 @@ apiClient.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // 只有 POST, PUT, PATCH 请求，且带有 data 的情况才加密 (跳过 FormData 文件上传)
-    if (
-      config.data && 
-      !(config.data instanceof FormData) && 
-      !config.skipEncryption && 
-      ['post', 'put', 'patch'].includes(config.method || '')
-    ) {
+    // 凡是非文件上传的请求，统统开启安全传输通道（就算没有 Body 的 GET，也要生成钥匙给后端用于加密返回值）
+    if (!(config.data instanceof FormData) && !config.skipEncryption) {
       const pubKey = await getRsaPublicKey();
       if (pubKey) {
         // 1. 生成本次请求专用的随机 AES 密钥
@@ -91,9 +99,11 @@ apiClient.interceptors.request.use(
           config.headers['Content-Type'] = 'application/json';
         }
 
-        // 4. 使用 AES 加密真实的业务 Payload
-        const encryptedBodyBase64 = await CryptoService.encryptDataWithAes(config.data, aesKey);
-        config.data = encryptedBodyBase64;
+        // 4. 使用 AES 加密真实的业务 Payload (只有确实带有 Payload 的时候才去加密它)
+        if (config.data) {
+          const encryptedBodyBase64 = await CryptoService.encryptDataWithAes(config.data, aesKey);
+          config.data = encryptedBodyBase64;
+        }
       }
     }
 

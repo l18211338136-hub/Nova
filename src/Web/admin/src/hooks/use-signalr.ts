@@ -1,15 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 import { useAuthStore } from '@/stores/auth-store'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
+let globalConnection: signalR.HubConnection | null = null;
+let connectionPromise: Promise<void> | null = null;
+
 export function useSignalR() {
   const { accessToken } = useAuthStore((state) => state.auth)
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(globalConnection)
   const queryClient = useQueryClient()
+
   useEffect(() => {
-    if (!accessToken) return
+    if (!accessToken) {
+      if (globalConnection) {
+        globalConnection.stop()
+        globalConnection = null;
+        connectionPromise = null;
+        setConnection(null)
+      }
+      return
+    }
+
+    if (globalConnection || connectionPromise) {
+      if (globalConnection) setConnection(globalConnection)
+      return
+    }
 
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl((import.meta.env.VITE_API_URL || '') + '/api/hubs/notifications', {
@@ -18,16 +35,11 @@ export function useSignalR() {
       .withAutomaticReconnect()
       .build()
 
-    let isMounted = true;
-
     async function startConnection() {
       try {
         await newConnection.start()
-        if (!isMounted) {
-            await newConnection.stop()
-            return
-        }
         console.log('SignalR Connected!')
+        globalConnection = newConnection;
         setConnection(newConnection)
         
         // Request desktop notification permission
@@ -56,16 +68,14 @@ export function useSignalR() {
         })
       } catch (e) {
         console.error('SignalR Connection Error: ', e)
+        connectionPromise = null; // 失败后允许重试
       }
     }
 
-    startConnection()
+    connectionPromise = startConnection()
 
     return () => {
-      isMounted = false;
-      if (newConnection.state === signalR.HubConnectionState.Connected) {
-        newConnection.stop()
-      }
+      // 避免在开发环境 StrictMode 下频繁断开重连，交由全局管理生命周期
     }
   }, [accessToken, queryClient])
 

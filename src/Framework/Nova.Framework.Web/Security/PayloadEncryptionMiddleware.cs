@@ -82,13 +82,22 @@ public class PayloadEncryptionMiddleware(RequestDelegate next, IConfiguration co
         using var responseBodyMemoryStream = new MemoryStream();
         context.Response.Body = responseBodyMemoryStream;
 
-        // 执行下游所有的 Controller 和中间件业务逻辑
-        await _next(context);
+        try
+        {
+            // 执行下游所有的 Controller 和中间件业务逻辑
+            await _next(context);
+        }
+        finally
+        {
+            // 3. 恢复 Response Body (即使出现异常，也保证流能被正确复原，防止外层读写已释放的内存流)
+            context.Response.Body = originalResponseBodyStream;
+        }
 
-        // 3. 加密 Response Body (如果业务逻辑成功执行并返回了数据)
-        context.Response.Body = originalResponseBodyStream;
+        // 仅对 JSON 或纯文本响应进行加密，防止破坏文件下载流 (如 application/octet-stream, pdf, excel 等)
+        var isJsonResponse = context.Response.ContentType?.Contains("application/json") == true || 
+                             context.Response.ContentType?.Contains("text/plain") == true;
 
-        if (responseBodyMemoryStream.Length > 0 && context.Response.StatusCode is >= 200 and < 300)
+        if (responseBodyMemoryStream.Length > 0 && context.Response.StatusCode is >= 200 and < 300 && isJsonResponse)
         {
             var responseBytes = responseBodyMemoryStream.ToArray();
             
