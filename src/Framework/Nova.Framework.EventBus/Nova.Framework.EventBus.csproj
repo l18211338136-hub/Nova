@@ -7,7 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="Finbuckle.MultiTenant.AspNetCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Shared\Nova.Contracts\Nova.Contracts.csproj" />
+    <ProjectReference Include="..\Nova.Framework.Persistence\Nova.Framework.Persistence.csproj" />
+    <ProjectReference Include="..\Nova.Framework.MultiTenancy\Nova.Framework.MultiTenancy.csproj" />
   </ItemGroup>
 
 </Project>

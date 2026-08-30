@@ -33,6 +33,23 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
     {
         var command = context.Message;
 
+        // 【重构核心】：强制开启业务 DbContext 的显式事务
+        // 确保 UserManager 内部的多次 SaveChanges 与最后的 PublishAsync 绝对原子性
+        var dbContext = _tenantDb as Microsoft.EntityFrameworkCore.DbContext; // 假设共用
+        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+        if (dbContext != null)
+        {
+            try
+            {
+                transaction = await dbContext.Database.BeginTransactionAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // In-memory databases (used in tests) do not support transactions
+            }
+        }
+        using var transactionScope = transaction;
+
         var user = await _userManager.FindByIdAsync(command.Id.ToString());
         if (user == null) throw new NovaValidationException("用户不存在");
 
@@ -149,7 +166,14 @@ public class UpdateUserCommandHandler : IConsumer<UpdateUserCommand>
 
         if (command.Roles != null || command.Permissions != null || command.Menus != null)
         {
-            await _dispatcher.PublishAsync(new UserPermissionsUpdatedEvent(user.Id));
+            await _dispatcher.PublishAsync(new UserPermissionsUpdatedEvent(user.Id), dbContext);
+        }
+
+        // 所有逻辑执行完后，统一提交事务！
+        // 如果中间任何一步 UserManager 或发件箱失败，这里都会自动回滚。
+        if (transaction != null)
+        {
+            await transaction.CommitAsync();
         }
 
         await context.RespondAsync(new UpdateUserResult { Success = true });

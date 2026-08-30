@@ -1,6 +1,8 @@
 using Nova.Framework.Infrastructure.Extensions;
+using Nova.Framework.Persistence.Extensions;
 using Nova.Framework.Jobs;
 using Nova.Framework.MultiTenancy;
+using Nova.Framework.EventBus.Outbox;
 using Nova.Framework.Web.Authentication;
 using Nova.Framework.Web.Cors;
 using Nova.Framework.Web.CQRS;
@@ -11,6 +13,7 @@ using Nova.Framework.Web.OpenApi;
 using Nova.Framework.Web.Security;
 using Nova.WebApi.Extensions;
 using Scalar.AspNetCore;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +28,14 @@ builder.Services.AddOpenApi("v1", options =>
     options.AddSchemaTransformer<ServerInjectedPropertySchemaTransformer>();
 });
 
+
+
 builder.Services.AddNovaCors(builder.Configuration);
 builder.Services.AddNovaJwtAuthentication(builder.Configuration);
 builder.Services.AddNovaOData();
 builder.Services.AddModules(builder.Configuration);
 builder.Services.AddNovaMultiTenancy(builder.Configuration);
+builder.Services.AddNovaOutbox(builder.Configuration);
 builder.Services.AddNovaJobs(builder.Configuration);
 builder.Services.AddNovaHealthChecks(builder.Configuration);
 
@@ -60,6 +66,7 @@ app.UseMiddleware<GlobalAuditLoggingMiddleware>();
 await app.ApplyDatabaseMigrationsAsync();
 
 app.UseNovaJobs(requireAuth: app.Configuration.GetValue<bool>("NovaJobs:RequireAuthorization"));
+
 app.UseNovaHealthChecks();
 app.MapModuleEndpoints();
 app.MapPayloadEncryptionEndpoints();

@@ -346,7 +346,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "nobody@test.com",
@@ -370,7 +370,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "user@test.com",
@@ -403,7 +403,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "multi@test.com",
@@ -427,7 +427,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = "not-a-jwt",
@@ -452,7 +452,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -478,7 +478,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,
@@ -509,7 +509,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>());
+        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new EmailLoginCommand
         {
             Email = "email@test.com",
@@ -536,7 +536,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>());
+        var handler = new EmailLoginCommandHandler(scopeFactory, tenantDb, cache, Substitute.For<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var ctx = HandlerTestHarness.CreateConsumeContext(new EmailLoginCommand
         {
             Email = "email2@test.com",
@@ -717,7 +717,7 @@ public class BTrackHandlerTests
         harness.SetTenant(outer.ServiceProvider);
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>());
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, harness.Provider.GetRequiredService<IDomainEventDispatcher>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
 
         // 前 3 次错误密码：仅提示"账号或密码错误"
         for (var i = 0; i < 3; i++)
@@ -756,7 +756,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
 
         // 两次错误密码
         for (var i = 0; i < 2; i++)
@@ -797,7 +797,7 @@ public class BTrackHandlerTests
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
         // 登出：吊销该刷新令牌
-        var logoutHandler = new LogoutCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var logoutHandler = new LogoutCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var logoutCtx = HandlerTestHarness.CreateConsumeContext(new LogoutCommand
         {
             AccessToken = accessToken,
@@ -809,7 +809,7 @@ public class BTrackHandlerTests
         Assert.True(logoutResp!.Success);
 
         // 用已吊销的刷新令牌刷新 -> 应失败
-        var refreshHandler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
+        var refreshHandler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         await Assert.ThrowsAsync<NovaValidationException>(() => refreshHandler.Consume(
             HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
             {
@@ -833,7 +833,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var chgCtx = HandlerTestHarness.CreateConsumeContext(new ChangePasswordCommand
         {
             CurrentUserId = user.Id,
@@ -847,7 +847,7 @@ public class BTrackHandlerTests
         Assert.True(resp!.Success);
 
         // 旧密码已失效，新密码可登录
-        var loginHandler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var loginHandler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var loginCtx = HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "chg@test.com",
@@ -874,7 +874,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var handler = new ChangePasswordCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         await Assert.ThrowsAsync<NovaValidationException>(() => handler.Consume(
             HandlerTestHarness.CreateConsumeContext(new ChangePasswordCommand
             {
@@ -900,7 +900,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher);
+        var handler = new LoginCommandHandler(scopeFactory, tenantDb, dispatcher, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         await handler.Consume(HandlerTestHarness.CreateConsumeContext(new LoginCommand
         {
             Account = "audit@test.com",
@@ -931,7 +931,7 @@ public class BTrackHandlerTests
         var tenantDb = outer.ServiceProvider.GetRequiredService<NovaTenantDbContext>();
         var dispatcher = harness.Provider.GetRequiredService<IDomainEventDispatcher>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>());
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, harness.Provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(), Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
         var rotCtx = HandlerTestHarness.CreateConsumeContext(new RefreshTokenCommand
         {
             AccessToken = accessToken,

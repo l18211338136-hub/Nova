@@ -1,11 +1,28 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nova.Framework.Persistence.Interceptors;
+using Nova.Framework.Persistence.Outbox;
 
 namespace Nova.Framework.Persistence.Extensions;
 
 public static class PersistenceExtensions
 {
+    public static IServiceCollection AddNovaOutbox(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<OutboxDbContext>((sp, options) =>
+        {
+            var tenantInfo = sp.GetService<Finbuckle.MultiTenant.Abstractions.IMultiTenantContextAccessor>()?.MultiTenantContext?.TenantInfo;
+            
+            // 使用反射获取 ConnectionString，以避免底层 Persistence 层去反向依赖 MultiTenancy 层产生循环引用
+            var tenantConnString = tenantInfo?.GetType().GetProperty("ConnectionString")?.GetValue(tenantInfo) as string;
+            var connectionString = tenantConnString ?? configuration.GetConnectionString("DefaultConnection");
+
+            options.UseNpgsql(connectionString);
+            options.AddNovaInterceptors(sp);
+        });
+        return services;
+    }
     public static DbContextOptionsBuilder AddNovaInterceptors(
         this DbContextOptionsBuilder options,
         IServiceProvider serviceProvider)

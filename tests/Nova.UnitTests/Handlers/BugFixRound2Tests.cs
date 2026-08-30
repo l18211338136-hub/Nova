@@ -178,7 +178,7 @@ public class BugFixRound2Tests
         var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
         var scopeFactory = harness.Provider.GetRequiredService<IServiceScopeFactory>();
 
-        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, config);
+        var handler = new RefreshTokenCommandHandler(scopeFactory, tenantDb, dispatcher, config, Substitute.For<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
 
         // 构造一个签名被篡改的假 Token 字符串
         var tamperedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.tampered_signature_string";

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Nova.Framework.Web\Nova.Framework.Web.csproj" />
+    <ProjectReference Include="..\Nova.Framework.EventBus\Nova.Framework.EventBus.csproj" />
   </ItemGroup>
 
 </Project>

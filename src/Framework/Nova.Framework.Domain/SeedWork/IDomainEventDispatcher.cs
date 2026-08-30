@@ -10,4 +10,10 @@ namespace Nova.Framework.Domain.SeedWork;
 public interface IDomainEventDispatcher
 {
     Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// 支持事务性发件箱的发布方法。
+    /// 传入当前的 DbContext (作为 transactionContext)，将事件保存至独立发件箱中，并与业务 DbContext 共享物理事务提交。
+    /// </summary>
+    Task PublishAsync<TTransactionContext>(IDomainEvent domainEvent, TTransactionContext transactionContext, CancellationToken cancellationToken = default) where TTransactionContext : class;
 }

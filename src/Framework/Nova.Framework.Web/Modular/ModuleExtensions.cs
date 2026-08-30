@@ -46,6 +46,13 @@ public static class ModuleExtensions
             cfg.ConfigureMediator((context, mediatorCfg) =>
             {
                 mediatorCfg.UseConsumeFilter(typeof(ValidationFilter<>), context);
+                
+                // 动态注册 InboxFilter 以实现收件箱幂等去重
+                var inboxFilterType = Type.GetType("Nova.Framework.EventBus.Outbox.InboxFilter`1, Nova.Framework.EventBus");
+                if (inboxFilterType != null)
+                {
+                    mediatorCfg.UseConsumeFilter(inboxFilterType, context);
+                }
             });
         });
 

@@ -313,6 +313,7 @@ public class BugFixUserRoleTests
         await dispatcher.Received(1).PublishAsync(
             Arg.Is<Nova.Modules.Identity.Application.Events.UserPermissionsUpdatedEvent>(
                 e => e.UserId == user.Id),
+            Arg.Any<Microsoft.EntityFrameworkCore.DbContext>(),
             Arg.Any<CancellationToken>());
     }
 }

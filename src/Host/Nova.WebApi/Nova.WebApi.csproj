@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\Framework\Nova.Framework.Web\Nova.Framework.Web.csproj" />
     <ProjectReference Include="..\..\Framework\Nova.Framework.MultiTenancy\Nova.Framework.MultiTenancy.csproj" />
     <ProjectReference Include="..\..\Framework\Nova.Framework.Jobs\Nova.Framework.Jobs.csproj" />
+    <ProjectReference Include="..\..\Framework\Nova.Framework.EventBus\Nova.Framework.EventBus.csproj" />
   </ItemGroup>
 
   <ItemGroup>

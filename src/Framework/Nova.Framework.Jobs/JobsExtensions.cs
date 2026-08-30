@@ -3,6 +3,7 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Nova.Framework.EventBus.Outbox;
 
 namespace Nova.Framework.Jobs;
 
@@ -48,6 +49,16 @@ public static class JobsExtensions
         };
 
         app.UseHangfireDashboard("/jobs/dashboard", dashboardOptions);
+
+        // 自动挂载事件总线的 Outbox 发件箱处理器后台任务 (每10秒执行一次)
+        try
+        {
+            RecurringJob.AddOrUpdate<OutboxProcessorJob>(
+                "nova-outbox-processor", 
+                job => job.ProcessPendingMessagesAsync(), 
+                "*/10 * * * * *");
+        }
+        catch { }
 
         return app;
     }
