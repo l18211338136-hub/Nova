@@ -184,14 +184,11 @@ public class TrashBinService : ITrashBinService
 
     private async Task<bool> HardDeleteForTypeAsync<T>(Guid id, CancellationToken cancellationToken) where T : class, IFullAuditedEntity
     {
-        var entity = await _dbContext.Set<T>()
+        int deletedCount = await _dbContext.Set<T>()
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id, cancellationToken);
+            .Where(e => EF.Property<Guid>(e, "Id") == id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        if (entity == null) return false;
-
-        _dbContext.Set<T>().Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return true;
+        return deletedCount > 0;
     }
 }
