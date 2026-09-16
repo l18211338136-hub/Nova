@@ -31,7 +31,12 @@ public class GlobalAuditLoggingMiddleware
             path.StartsWith("/api/identity/auth-audit-logs", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/nova-storage", StringComparison.OrdinalIgnoreCase) ||
             path.Contains("/storage/files/", StringComparison.OrdinalIgnoreCase) ||
-            path.Contains("favicon"))
+            path.Contains("favicon") ||
+            // SSE 长连接（如 MCP 网关 /api/mcp/sse）必须透传响应流：
+            // 本中间件会把 Response.Body 换成 MemoryStream，等 _next 结束才回拷真实流，
+            // 而 SSE 的 _next 在连接断开前永不结束，缓冲会导致 endpoint/message 事件永远到不了客户端
+            context.Request.Headers.Accept.ToString()
+                .Contains("text/event-stream", StringComparison.OrdinalIgnoreCase))
         {
             await _next(context);
             return;

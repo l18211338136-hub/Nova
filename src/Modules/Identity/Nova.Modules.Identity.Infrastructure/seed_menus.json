@@ -58,6 +58,22 @@
     ]
   },
   {
+    "name": "AI 服务",
+    "path": "/ai",
+    "component": "Layout",
+    "icon": "Bot",
+    "sort": 90,
+    "children": [
+      {
+        "name": "MCP 服务",
+        "path": "/mcp",
+        "component": "features/mcp",
+        "icon": "Server",
+        "sort": 1
+      }
+    ]
+  },
+  {
     "name": "日志管理",
     "path": "/logs",
     "component": "Layout",

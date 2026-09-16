@@ -37,6 +37,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedRolesIndexRouteImport } from './routes/_authenticated/roles/index'
 import { Route as AuthenticatedOrganizationsIndexRouteImport } from './routes/_authenticated/organizations/index'
 import { Route as AuthenticatedMenusIndexRouteImport } from './routes/_authenticated/menus/index'
+import { Route as AuthenticatedMcpIndexRouteImport } from './routes/_authenticated/mcp/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDictionariesIndexRouteImport } from './routes/_authenticated/dictionaries/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
@@ -195,6 +196,11 @@ const AuthenticatedMenusIndexRoute = AuthenticatedMenusIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedMenusRouteRoute,
 } as any)
+const AuthenticatedMcpIndexRoute = AuthenticatedMcpIndexRouteImport.update({
+  id: '/mcp/',
+  path: '/mcp/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/dictionaries/': typeof AuthenticatedDictionariesIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/mcp/': typeof AuthenticatedMcpIndexRoute
   '/menus/': typeof AuthenticatedMenusIndexRoute
   '/organizations/': typeof AuthenticatedOrganizationsIndexRoute
   '/roles/': typeof AuthenticatedRolesIndexRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/dictionaries': typeof AuthenticatedDictionariesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/mcp': typeof AuthenticatedMcpIndexRoute
   '/menus': typeof AuthenticatedMenusIndexRoute
   '/organizations': typeof AuthenticatedOrganizationsIndexRoute
   '/roles': typeof AuthenticatedRolesIndexRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/dictionaries/': typeof AuthenticatedDictionariesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/mcp/': typeof AuthenticatedMcpIndexRoute
   '/_authenticated/menus/': typeof AuthenticatedMenusIndexRoute
   '/_authenticated/organizations/': typeof AuthenticatedOrganizationsIndexRoute
   '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/chats/'
     | '/dictionaries/'
     | '/help-center/'
+    | '/mcp/'
     | '/menus/'
     | '/organizations/'
     | '/roles/'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/dictionaries'
     | '/help-center'
+    | '/mcp'
     | '/menus'
     | '/organizations'
     | '/roles'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/'
     | '/_authenticated/dictionaries/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/mcp/'
     | '/_authenticated/menus/'
     | '/_authenticated/organizations/'
     | '/_authenticated/roles/'
@@ -739,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMenusIndexRouteImport
       parentRoute: typeof AuthenticatedMenusRouteRoute
     }
+    '/_authenticated/mcp/': {
+      id: '/_authenticated/mcp/'
+      path: '/mcp'
+      fullPath: '/mcp/'
+      preLoaderRoute: typeof AuthenticatedMcpIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
@@ -904,6 +923,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDictionariesIndexRoute: typeof AuthenticatedDictionariesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedMcpIndexRoute: typeof AuthenticatedMcpIndexRoute
   AuthenticatedOrganizationsIndexRoute: typeof AuthenticatedOrganizationsIndexRoute
   AuthenticatedStorageIndexRoute: typeof AuthenticatedStorageIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
@@ -923,6 +943,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedDictionariesIndexRoute: AuthenticatedDictionariesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedMcpIndexRoute: AuthenticatedMcpIndexRoute,
   AuthenticatedOrganizationsIndexRoute: AuthenticatedOrganizationsIndexRoute,
   AuthenticatedStorageIndexRoute: AuthenticatedStorageIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,

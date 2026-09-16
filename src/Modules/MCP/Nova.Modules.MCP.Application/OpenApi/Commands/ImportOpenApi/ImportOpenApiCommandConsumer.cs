@@ -1,4 +1,6 @@
 using MassTransit;
+using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
@@ -32,6 +34,26 @@ public class ImportOpenApiCommandConsumer : IConsumer<ImportOpenApiCommand>
 
         // 2. 使用解析器将 Swagger 翻译为 MCP 标准格式
         var tools = _generator.GenerateToolsFromSwagger(request.SwaggerJson, request.BaseUrl);
+
+        // 2.1 若指定了 SelectedOperations（"METHOD 路径"），则仅保留用户勾选的接口
+        if (request.SelectedOperations is { Count: > 0 })
+        {
+            var basePath = request.BaseUrl.TrimEnd('/');
+            var selected = request.SelectedOperations
+                .Where(o => !string.IsNullOrWhiteSpace(o))
+                .Select(o => o.Trim().ToUpperInvariant())
+                .ToHashSet();
+
+            tools = tools
+                .Where(t =>
+                {
+                    var path = t.Profile.TargetUrl.StartsWith(basePath, StringComparison.Ordinal)
+                        ? t.Profile.TargetUrl[basePath.Length..]
+                        : t.Profile.TargetUrl;
+                    return selected.Contains($"{t.Profile.TargetMethod} {path}".ToUpperInvariant());
+                })
+                .ToList();
+        }
 
         // 3. 将解析出的每一个接口包装为 McpTool 落库
         foreach (var toolDef in tools)

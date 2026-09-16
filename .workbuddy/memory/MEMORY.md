@@ -18,7 +18,9 @@
 - 文档：Scalar + OpenAPI；前端：src/Web/admin（React19+Vite+shadcn-admin+Orval 生成 API client）。
 
 ## 关键架构约定（重要）
-- 模块发现、DI 注册、Consumer/Validator/Endpoint/权限收集**全部靠反射扫描 `Nova.*.dll`**，新增模块零改 Host。
+- **模块发现、DI 注册、Consumer/Validator/Endpoint/权限收集**全部靠反射扫描 `Nova.*.dll`，新增模块零改 Host。
+- **MVC Controller 模块（首个 = MCP，2026-09-16 修复）**：`AddModules` 用 `AddMvcCore()+AddApplicationPart()` 只让控制器进 OpenAPI，**不会**进路由表——`MapModuleEndpoints()` 里必须 `endpoints.MapControllers()`（已加）。Controller 上的 `[RequirePermission]` 由全局 MVC 过滤器 `RequirePermissionActionFilter`（Nova.Framework.Authorization，AddModules 里 AddMvcOptions 挂载）执行，与声明式端点的 `PermissionFilter`（IEndpointFilter）语义一致；**坑**：OpenAPI 文档能看到路由 ≠ 路由可用，404 且连 405/401 都不是 = 端点没映射。
+- **SSE 端点 vs 审计中间件（2026-09-16 修复）**：`GlobalAuditLoggingMiddleware` 会把 `Response.Body` 换成 MemoryStream、`_next` 结束才回拷——SSE 长连接的 `_next` 永不结束，导致 `event: endpoint` 等事件永远到不了客户端（表现为客户端 connect 超时）。修复：该中间件排除「请求 Accept 含 text/event-stream」的请求（`McpController.GetSseConnection` 的 SSE 依赖此透传）。**新增任何流式端点（SSE/WebSocket 流式响应）都要检查此坑**。`PayloadEncryptionMiddleware` 仅在请求带 `X-Encryption-Key` 时才缓冲响应，控制台/AI 客户端明文通信不受影响。
 - 声明式端点：`record Command` 上打 `[ApiEndpoint]` + `[RequirePermission]` 即自动生成路由/文档/鉴权/统一响应，无 Controller。
 - 权限自发现闭环：反射扫 `[RequirePermission]` 同步代码/数据库/前端三方权限。
 - 软删除与多租户过滤器共存：用 EF Core 10 命名查询过滤器 API 避免冲突。
@@ -28,10 +30,11 @@
 - **API client 由 Orval 自动生成**：配置 `orval.config.ts`（client=react-query, httpClient=axios, mutator=`src/lib/api-client.ts`）。从运行中的 dev server 的 `${API_BASE_URL}/openapi/v1.json` 读取（不是本地 openapi.json）。重生成：`pnpm gen-api`（需后端先 `dotnet run` 提供 OpenAPI）。
 - **路由**：TanStack Router，文件式路由 + `src/routeTree.gen.ts` 自动生成（`@tanstack/router-plugin/vite`）。新增页面只需放 `src/routes/...` 路由文件，`pnpm dev`/`vite build` 会自动重生成 routeTree。**`tsc -b` 不生成 routeTree**。
 - **侧边栏是「后端菜单驱动」**：`app-sidebar.tsx` 调 `useGetMyMenus` 渲染动态菜单（后端按权限下发，含 Users/Roles/Menus/Tenants）。静态 `sidebarData.navGroups` 当前被隐藏。新增需要出现在侧边栏的页面，要么后端播种对应 Menu（与 Users 同级），要么在 `app-sidebar.tsx` 追加静态分组。
-- **列表页模式**：`useTableUrlState`（URL 同步分页/筛选/排序）+ `buildODataFilter/buildODataOrderBy`（`@/lib/odata`）+ `DataTableToolbar/DataTablePagination/DataTableColumnFilter`（`@/components/data-table`）+ `useXxxColumns`（`meta.filterType` 仅支持 `'number'|'boolean'|'date'|'text'`，字符串筛选用 `'text'`）。
+- **列表页模式**：`useTableUrlState`（URL 同步分页/筛选/排序）+ `buildODataFilter/buildODataOrderBy`（`@/lib/odata`）+ `DataTableToolbar/DataTablePagination/DataTableColumnFilter`（`@/components/data-table`）+ `useXxxColumns`（`meta.filterType` 仅支持 `'number'|'boolean'|'date'|'text'`，字符串筛选用 `'text'`）。**每列必须加 `meta.title: t('...')`**——视图「切换列」下拉取 `meta?.title ?? t(column.id)`，不加会显示原始字段名。
 - **Mutation 模式**：`useXxx` 生成 hook，`mutate({ data: {...} }, { onSuccess, onError })`，`toast` 来自 `sonner`。
 - **令牌**：`src/stores/auth-store.ts`（zustand，access/refresh 存 cookie）；`src/lib/api-client.ts` 自动带 Bearer，401 时排队刷新令牌。
-- **已知问题**：`pnpm exec tsc -b` 当前对若干**既有**文件报错（sidebar-data 未用导入、tenants/users/roles 若干组件），属历史债务；`pnpm dev`（esbuild 不类型检查）与 `vite build`（esbuild）可正常跑。
+- **UI 坑（Textarea 会自动长高）**：`src/components/ui/textarea.tsx` 是 shadcn v4 默认样式，带 `field-sizing-content` → 高度随内容自动增长（`rows` 只是最小值）。凡是要「固定高度/可滚动」的文本域（如 MCP 导入对话框的 Swagger JSON 框）必须显式覆盖为 `field-sizing-fixed h-44 resize-none overflow-y-auto`。`cn()` 用的 tailwind-merge 3.5 认识 `field-sizing` 冲突组，会正确丢弃内置的 `content`。同类：`DialogContent` 默认**无** max-height，长内容对话框会溢出视口（既有先例：`audit/components/operation-log-detail-dialog.tsx` 用 `h-[80vh] flex flex-col overflow-hidden`）。
+- **已知问题**：`pnpm exec tsc -b` 当前对若干**既有**文件报错（sidebar-data 未用导入、tenants/users/roles 若干组件），属历史债务；`pnpm dev`（esbuild 不类型检查）与 `vite build`（esbuild）可正常跑。注：`pnpm exec tsc --noEmit -p tsconfig.json`（不用 -b）实测 0 错误，更适合做改动校验。
 
 ## 测试体系（2026-07-31 补齐）
 - ✅ **Nova.UnitTests**：58 个全绿。含基础设施 24 个 + **A 档 Handler 11 个**（Menu/Tenant，轻依赖）+ **B 档 Handler 23 个**（Identity 重依赖集成测试，见 `tests/Nova.UnitTests/Handlers/IdentityIntegrationHarness.cs` + `BTrackHandlerTests.cs`）。
