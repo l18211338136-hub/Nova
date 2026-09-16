@@ -24,12 +24,12 @@ public static class MultiTenancyExtensions
 
         services.AddDbContext<NovaTenantDbContext>((sp, options) =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection") 
-                ?? "Host=localhost;Database=nova_db;Username=postgres;Password=123456";
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
             options.UseNpgsql(connectionString);
             options.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
             // 规范化写入 timestamptz 的本地 DateTime 参数为 UTC（修复 OData 日期筛选报错）
             options.AddInterceptors(sp.GetRequiredService<UtcDateTimeParameterInterceptor>());
+
         });
 
         services.AddMultiTenant<NovaTenantInfo>()
