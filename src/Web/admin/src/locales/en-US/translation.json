@@ -724,5 +724,10 @@
     "Mark all as read": "Mark all as read",
     "Clear Read": "Clear Read",
     "Delete": "Delete",
-    "Notifications": "Notifications"
+    "Notifications": "Notifications",
+    "Delete MCP Server": "Delete MCP Server",
+    "Delete MCP Tool": "Delete MCP Tool",
+    "MCP server deleted successfully": "MCP server deleted successfully",
+    "MCP tool deleted successfully": "MCP tool deleted successfully",
+    "Delete failed.": "Delete failed."
 }

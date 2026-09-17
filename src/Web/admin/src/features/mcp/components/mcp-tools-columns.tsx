@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
 import { type McpToolDto } from '../types'
+import { McpRowActions } from './mcp-row-actions'
 
 export const useMcpToolsColumns = () => {
   const { t } = useTranslation()
@@ -135,6 +136,20 @@ export const useMcpToolsColumns = () => {
         meta: {
           title: t('Created At'),
           filterType: 'date',
+        },
+      },
+      {
+        id: 'actions',
+        header: () => <div className='text-end'>{t('Actions')}</div>,
+        cell: ({ row }) => (
+          <div className='flex justify-end'>
+            <McpRowActions row={row} kind='tool' />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        meta: {
+          className: 'w-[60px]',
         },
       },
     ],

@@ -24,6 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ApiResponseOfDeleteMcpServerResult,
+  ApiResponseOfDeleteMcpToolResult,
   ImportOpenApi,
   MessagesParams
 } from '../model';
@@ -52,6 +54,130 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
+ * @summary 删除 MCP 工具
+ */
+export const deleteMcpTool = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfDeleteMcpToolResult>(
+      {url: `/api/mcp/tools/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteMcpToolMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMcpTool>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMcpTool>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteMcpTool'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMcpTool>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMcpTool(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMcpToolMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMcpTool>>>
+
+    export type DeleteMcpToolMutationError = unknown
+
+    /**
+ * @summary 删除 MCP 工具
+ */
+export const useDeleteMcpTool = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMcpTool>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMcpTool>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteMcpToolMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 删除 MCP 服务
+ */
+export const deleteMcpServer = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ApiResponseOfDeleteMcpServerResult>(
+      {url: `/api/mcp/servers/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteMcpServerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMcpServer>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMcpServer>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteMcpServer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMcpServer>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMcpServer(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMcpServerMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMcpServer>>>
+
+    export type DeleteMcpServerMutationError = unknown
+
+    /**
+ * @summary 删除 MCP 服务
+ */
+export const useDeleteMcpServer = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMcpServer>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMcpServer>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteMcpServerMutationOptions(options), queryClient);
+    }
+    /**
  * @summary 建立连接
  */
 export const sse = (

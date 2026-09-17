@@ -13,4 +13,6 @@ export interface ImportOpenApi {
   swaggerUrl?: string | null;
   /** @nullable */
   authToken?: string | null;
+  /** @nullable */
+  selectedOperations?: string[] | null;
 }

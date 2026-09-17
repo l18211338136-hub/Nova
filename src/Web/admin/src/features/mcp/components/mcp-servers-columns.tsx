@@ -4,6 +4,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
 import { type McpServerDto } from '../types'
+import { McpRowActions } from './mcp-row-actions'
 
 export const useMcpServersColumns = () => {
   const { t } = useTranslation()
@@ -70,6 +71,20 @@ export const useMcpServersColumns = () => {
         meta: {
           title: t('Created At'),
           filterType: 'date',
+        },
+      },
+      {
+        id: 'actions',
+        header: () => <div className='text-end'>{t('Actions')}</div>,
+        cell: ({ row }) => (
+          <div className='flex justify-end'>
+            <McpRowActions row={row} kind='server' />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        meta: {
+          className: 'w-[60px]',
         },
       },
     ],

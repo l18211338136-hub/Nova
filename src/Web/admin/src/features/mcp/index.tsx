@@ -11,6 +11,7 @@ import { McpPrimaryButtons } from './components/mcp-primary-buttons'
 import { McpServersTable } from './components/mcp-servers-table'
 import { McpToolsTable } from './components/mcp-tools-table'
 import { McpImportDialog } from './components/mcp-import-dialog'
+import { McpDeleteDialog } from './components/mcp-delete-dialog'
 
 const route = getRouteApi('/_authenticated/mcp/')
 
@@ -55,6 +56,8 @@ export function Mcp() {
       </Main>
 
       <McpImportDialog />
+      <McpDeleteDialog kind='server' />
+      <McpDeleteDialog kind='tool' />
     </McpProvider>
   )
 }
