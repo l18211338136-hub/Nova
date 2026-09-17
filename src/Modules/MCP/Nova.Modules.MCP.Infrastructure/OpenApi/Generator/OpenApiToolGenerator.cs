@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
@@ -13,6 +14,9 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
     {
         public List<McpToolDefinition> GenerateToolsFromSwagger(string swaggerJson, string baseUrl)
         {
+            // 兼容降级：Microsoft.OpenApi.Readers 低版本不支持 3.1.x，将其替换为 3.0.1 以绕过版本检查
+            swaggerJson = Regex.Replace(swaggerJson, @"""openapi""\s*:\s*""3\.1\.[0-9]+""", "\"openapi\": \"3.0.1\"");
+
             var reader = new OpenApiStringReader();
             var document = reader.Read(swaggerJson, out var diagnostic);
             var tools = new List<McpToolDefinition>();
@@ -28,11 +32,11 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
 
                     var method = operation.Key.ToString().ToUpper();
                     
-                    string toolName = op.OperationId?.ToLower() ?? string.Empty;
-                    if (string.IsNullOrEmpty(toolName))
-                    {
-                        toolName = $"{method}_{pathItem.Key}".Replace("/", "_").Replace("{", "").Replace("}", "").ToLower();
-                    }
+                    string rawName = string.IsNullOrEmpty(op.OperationId) 
+                        ? $"{method}_{pathItem.Key}" 
+                        : op.OperationId;
+                    
+                    string toolName = SanitizeToolName(rawName);
 
                     string description = string.IsNullOrWhiteSpace(op.Summary) ? 
                         (op.Description ?? $"Execute {method} to {pathItem.Key}") : op.Summary;
@@ -50,37 +54,34 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                         foreach (var param in op.Parameters)
                         {
                             string paramName = param.Name;
-                            string type = MapSchemaType(param.Schema?.Type);
+                            mcpProperties[paramName] = GetMcpSchema(param.Schema, document);
                             
-                            mcpProperties[paramName] = new { type = type, description = param.Description };
                             if (param.Required) mcpRequired.Add(paramName);
 
                             profile.ParameterMap[paramName] = new ParameterMapping
                             {
                                 TargetKey = paramName,
                                 In = param.In.ToString()?.ToLower() ?? "query",
-                                Type = type
+                                Type = MapSchemaType(param.Schema?.Type)
                             };
                         }
                     }
 
                     if (op.RequestBody?.Content != null && op.RequestBody.Content.TryGetValue("application/json", out var mediaType))
                     {
-                        var bodySchema = mediaType.Schema;
+                        var bodySchema = ResolveSchema(mediaType.Schema, document);
                         if (bodySchema?.Properties != null)
                         {
                             foreach (var prop in bodySchema.Properties)
                             {
                                 string propName = prop.Key;
-                                string type = MapSchemaType(prop.Value.Type);
-                                
-                                mcpProperties[propName] = new { type = type, description = prop.Value.Description };
+                                mcpProperties[propName] = GetMcpSchema(prop.Value, document);
                                 
                                 profile.ParameterMap[propName] = new ParameterMapping
                                 {
                                     TargetKey = propName,
                                     In = "body",
-                                    Type = type
+                                    Type = MapSchemaType(prop.Value.Type)
                                 };
                             }
 
@@ -107,6 +108,88 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
             }
 
             return tools;
+        }
+
+        private string SanitizeToolName(string name)
+        {
+            var sanitized = Regex.Replace(name, @"[^a-zA-Z0-9_-]", "_");
+            return sanitized.Length > 64 ? sanitized.Substring(0, 64) : sanitized;
+        }
+
+        private OpenApiSchema? ResolveSchema(OpenApiSchema? schema, OpenApiDocument document)
+        {
+            if (schema == null) return null;
+            if (schema.Reference != null && document.Components?.Schemas != null)
+            {
+                if (document.Components.Schemas.TryGetValue(schema.Reference.Id, out var resolved))
+                {
+                    return resolved;
+                }
+            }
+            return schema;
+        }
+
+        private object GetMcpSchema(OpenApiSchema? schema, OpenApiDocument doc, HashSet<string>? visited = null)
+        {
+            if (schema == null) return new { type = "string" };
+            
+            visited ??= new HashSet<string>();
+
+            if (schema.Reference != null && !string.IsNullOrEmpty(schema.Reference.Id))
+            {
+                if (visited.Contains(schema.Reference.Id))
+                {
+                    return new { type = "object", description = $"Circular reference to {schema.Reference.Id}" };
+                }
+                visited.Add(schema.Reference.Id);
+            }
+
+            var resolved = ResolveSchema(schema, doc);
+            if (resolved == null) return new { type = "string" };
+
+            string type = MapSchemaType(resolved.Type);
+            
+            if (type == "object" && resolved.Properties != null && resolved.Properties.Count > 0)
+            {
+                var props = new Dictionary<string, object>();
+                foreach (var prop in resolved.Properties)
+                {
+                    props[prop.Key] = GetMcpSchema(prop.Value, doc, new HashSet<string>(visited));
+                }
+                
+                var objSchema = new Dictionary<string, object>
+                {
+                    ["type"] = "object",
+                    ["properties"] = props
+                };
+                
+                if (!string.IsNullOrEmpty(resolved.Description))
+                    objSchema["description"] = resolved.Description;
+                    
+                if (resolved.Required != null && resolved.Required.Any())
+                    objSchema["required"] = resolved.Required.ToList();
+                    
+                return objSchema;
+            }
+            else if (type == "array" && resolved.Items != null)
+            {
+                var arrSchema = new Dictionary<string, object>
+                {
+                    ["type"] = "array",
+                    ["items"] = GetMcpSchema(resolved.Items, doc, new HashSet<string>(visited))
+                };
+                
+                if (!string.IsNullOrEmpty(resolved.Description))
+                    arrSchema["description"] = resolved.Description;
+                    
+                return arrSchema;
+            }
+
+            var basicSchema = new Dictionary<string, object> { ["type"] = type };
+            if (!string.IsNullOrEmpty(resolved.Description))
+                basicSchema["description"] = resolved.Description;
+                
+            return basicSchema;
         }
 
         private string MapSchemaType(string? openApiType)

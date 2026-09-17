@@ -15,10 +15,12 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
     public class HttpToolExecutor
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor;
 
-        public HttpToolExecutor(IHttpClientFactory httpClientFactory)
+        public HttpToolExecutor(IHttpClientFactory httpClientFactory, Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor)
         {
             _httpClientFactory = httpClientFactory;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<string> ExecuteAsync(ExecutionProfile profile, JsonNode llmArguments, CancellationToken cancellationToken = default)
@@ -26,6 +28,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
             string requestUrl = profile.TargetUrl;
             var queryParams = new List<string>();
             var bodyParams = new Dictionary<string, object>();
+            var headerParams = new Dictionary<string, string>();
             
             if (llmArguments is JsonObject argsObject)
             {
@@ -54,6 +57,10 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
                         case "body":
                             bodyParams[mapping.TargetKey] = GetRealValue(paramValue);
                             break;
+
+                        case "header":
+                            headerParams[mapping.TargetKey] = rawValue;
+                            break;
                     }
                 }
             }
@@ -71,9 +78,38 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
                 request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
             }
 
-            if (!string.IsNullOrEmpty(profile.AuthToken))
+            // ===== 身份透传方案（网关层拦截） =====
+            // 优先提取双 Token 架构下的专门透传业务 Token
+            var userToken = _httpContextAccessor.HttpContext?.Request.Headers["X-Forwarded-Authorization"].ToString();
+            
+            if (!string.IsNullOrEmpty(userToken))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", profile.AuthToken);
+                // 如果有专门透传的用户 Token，强制覆盖发给业务 API
+                request.Headers.Remove("Authorization");
+                request.Headers.TryAddWithoutValidation("Authorization", userToken);
+            }
+            else
+            {
+                // 否则，兜底使用当前请求头自带的 Authorization（如单系统测试客户端）
+                var userAuthHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+                if (!string.IsNullOrEmpty(userAuthHeader))
+                {
+                    request.Headers.Remove("Authorization");
+                    request.Headers.TryAddWithoutValidation("Authorization", userAuthHeader);
+                }
+            }
+            // ==========================================
+
+            foreach (var header in headerParams)
+            {
+                // 如果网关层已经透传了真正的 Authorization Token，则丢弃任何由参数映射过来的 Authorization，防止重复/覆盖
+                if (string.Equals(header.Key, "Authorization", StringComparison.OrdinalIgnoreCase) && 
+                    request.Headers.Contains("Authorization"))
+                {
+                    continue;
+                }
+                
+                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
             var client = _httpClientFactory.CreateClient("McpDynamicClient");
