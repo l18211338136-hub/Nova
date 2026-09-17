@@ -168,7 +168,9 @@ export function EntityDiffTable({ search, navigate }: DataTableProps) {
         'flex flex-1 flex-col gap-4 min-w-0 w-full min-h-0'
       )}
     >
-      <DataTableToolbar table={table} hideSearch={true} filters={[]} />
+      <div className='absolute right-0 top-0 z-10'>
+        <DataTableViewOptions table={table} />
+      </div>
       <div className='rounded-md border w-full flex-1 overflow-hidden'>
         <Table className='table-fixed w-full'>
           <TableHeader>

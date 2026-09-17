@@ -42,7 +42,7 @@ export function AuditLogs() {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'security' | 'operation' | 'entityDiff')} className='flex flex-1 flex-col gap-4 min-w-0 w-full overflow-hidden'>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'security' | 'operation' | 'entityDiff')} className='flex flex-1 flex-col gap-4 min-w-0 w-full overflow-hidden relative'>
           <TabsList className='grid w-full max-w-lg grid-cols-3 h-10 p-1'>
             <TabsTrigger value='operation' className='gap-2 px-3 text-xs sm:text-sm font-medium'>
               <List className='h-4 w-4' />

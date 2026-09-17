@@ -22,7 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { DataTablePagination } from '@/components/data-table'
+import { DataTableViewOptions } from '@/components/data-table/view-options'
 import { type AuthAuditLogDto as AuthAuditLog } from '@/api/model'
 import { useAuthAuditLogs } from '@/api/endpoints/audit'
 import { useAuditColumns } from './audit-columns'
@@ -135,7 +136,9 @@ export function AuditTable({ search, navigate }: DataTableProps) {
         'flex flex-1 flex-col gap-4 min-w-0 w-full min-h-0'
       )}
     >
-      <DataTableToolbar table={table} hideSearch={true} filters={[]} />
+      <div className='absolute right-0 top-0 z-10'>
+        <DataTableViewOptions table={table} />
+      </div>
       <div className='rounded-md border w-full flex-1 overflow-hidden'>
         <Table className='table-fixed w-full'>
           <TableHeader>
