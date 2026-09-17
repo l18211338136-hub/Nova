@@ -14,6 +14,7 @@ using Nova.Framework.Web.Security;
 using Nova.WebApi.Extensions;
 using Scalar.AspNetCore;
 using Hangfire;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,23 @@ app.UseNovaPayloadEncryption();
 // 多租户与 JWT 认证必须在全局审计日志中间件之前执行，确保 HttpContext 中能够正确提取已解析的 TenantInfo 和 User Claims
 app.UseNovaMultiTenancy();
 app.UseAuthorization();
+
+// MCP 导入：Swagger 文档可能很大（企业级 API 常超 Kestrel 默认的 30MB 请求体上限）。
+// 在审计中间件读取请求体之前，仅对解析接口单独放宽上限，避免触发 BadHttpRequestException。
+// 其余接口仍保持默认限制；审计日志本身已截断到 64KB，不受大请求体影响。
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/mcp/parse", StringComparison.OrdinalIgnoreCase))
+    {
+        var maxBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (maxBodySizeFeature is not null)
+        {
+            maxBodySizeFeature.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+        }
+    }
+
+    await next();
+});
 
 app.UseMiddleware<GlobalAuditLoggingMiddleware>();
 

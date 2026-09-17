@@ -27,7 +27,8 @@ import type {
   ApiResponseOfDeleteMcpServerResult,
   ApiResponseOfDeleteMcpToolResult,
   ImportOpenApi,
-  MessagesParams
+  MessagesParams,
+  ParseSwagger
 } from '../model';
 
 import { customInstance } from '../../lib/api-client';
@@ -395,6 +396,70 @@ export const useImport = <TError = unknown,
         TContext
       > => {
       return useMutation(getImportMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary 解析接口
+ */
+export const parse = (
+    parseSwagger: ParseSwagger,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/mcp/parse`, method: 'POST',
+      headers: {'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true', },
+      data: parseSwagger, signal
+    },
+      options);
+    }
+
+
+
+
+export const getParseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof parse>>, TError,{data: ParseSwagger}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof parse>>, TError,{data: ParseSwagger}, TContext> => {
+
+const mutationKey = ['parse'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof parse>>, {data: ParseSwagger}> = (props) => {
+          const {data} = props ?? {};
+
+          return  parse(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ParseMutationResult = NonNullable<Awaited<ReturnType<typeof parse>>>
+    export type ParseMutationBody = ParseSwagger
+    export type ParseMutationError = unknown
+
+    /**
+ * @summary 解析接口
+ */
+export const useParse = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof parse>>, TError,{data: ParseSwagger}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof parse>>,
+        TError,
+        {data: ParseSwagger},
+        TContext
+      > => {
+      return useMutation(getParseMutationOptions(options), queryClient);
     }
     /**
  * @summary 服务列表

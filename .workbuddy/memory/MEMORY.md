@@ -45,6 +45,7 @@
 - 本机 VS 与 Defender/索引器抢 `bin/obj`，`dotnet test` 写 `Nova.UnitTests.xml` 会 CS0016 Access is denied。
 - 解法：唯一时间戳 `-p:ArtifactsPath="D:/Github/Nova/artifacts-run-$ts"` + `-p:GenerateDocumentationFile=false` + `--disable-build-servers -p:UseSharedCompilation=false -p:_msCoverageSourceRootTargetName=__none__`。临时产物建议加 `.gitignore`。
 - 剩余：无 CI/CD、无 Docker、未引入覆盖率（coverlet.collector 已移除以避免沙箱写入问题）。
+- 沙箱 bash 缺 `APPDATA`（空）→ dotnet NuGet 全挂 "path1 null"，需 export APPDATA=C:\Users\Administrator\AppData\Roaming；沙箱代理（HTTP_PROXY=127.0.0.1:59213）会被 dotnet run 后端继承，出站 HTTP 对 127.0.0.1 目标 502，启动后端前要 unset proxy；`dotnet run --no-build` 用旧产物（改后端须先 build Host）；默认 launch profile 是 http:5036，要 `--launch-profile https`。测试登录：X-Tenant-Id: tenant1 + root/qwe@123!。
 - 敏感信息明文硬编码于 `appsettings.json` 与 `NovaIdentityConstants.cs`（JWT 密钥、DB 密码、QQ 邮箱授权码、root 密码 qwe@123!）。
 - `DesignTimeDbContextFactoryBase` 查找 `Nova.sln` 但仓库只有 `Nova.slnx`，会 fallback 到 currentDir（潜在 bug）。
 - 大量 `catch {}` 静默吞异常；`Nova.WebApi.csproj` 项目引用冗余（通配符后又逐个列出）。

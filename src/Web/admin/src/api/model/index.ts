@@ -149,6 +149,7 @@ export * from './pagedResultOfSystemNotificationDto';
 export * from './pagedResultOfTenantDto';
 export * from './pagedResultOfTrashBinItemDto';
 export * from './pagedResultOfUserDto';
+export * from './parseSwagger';
 export * from './preSignedUrlRequestItem';
 export * from './preSignedUrlResponseItem';
 export * from './profileDto';

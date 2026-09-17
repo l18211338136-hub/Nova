@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Nova.Framework.Web.Controllers;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
 using Nova.Modules.Mcp.Application.OpenApi.Commands.ImportOpenApi;
+using Nova.Modules.Mcp.Application.OpenApi.Commands.ParseSwagger;
 using Nova.Modules.Mcp.Application.Dtos;
 using Nova.Modules.Mcp.Infrastructure.Persistence;
 using Mapster;
@@ -101,6 +102,20 @@ namespace Nova.Modules.Mcp.Api.Controllers
         {
             var response = await SendRequestAsync<ImportOpenApiCommand, ImportOpenApiCommandResponse>(command);
             return Ok(new { success = true, serverId = response.ServerId });
+        }
+
+        /// <summary>
+        /// 3.1 解析 Swagger（地址 / JSON 二选一）
+        /// 返回最终用于解析的 Swagger JSON 与全部接口操作，供前端回填与勾选
+        /// </summary>
+        [HttpPost("parse")]
+        [EndpointSummary("解析接口")]
+        [Authorize]
+        [RequirePermission("Mcp.Servers.Import")]
+        public async Task<IActionResult> ParseSwagger([FromBody] ParseSwaggerCommand command)
+        {
+            var response = await SendRequestAsync<ParseSwaggerCommand, ParseSwaggerCommandResponse>(command);
+            return Ok(ApiResponse<ParseSwaggerCommandResponse>.Success(response));
         }
 
         /// <summary>

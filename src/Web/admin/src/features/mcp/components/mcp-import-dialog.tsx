@@ -36,87 +36,54 @@ import {
   type ParsedSwaggerOperation,
 } from '../types'
 import { useMcpContext } from './mcp-provider'
+import { useParseSwagger } from '../hooks/use-parse-swagger'
 
 const getFormSchema = (t: (key: string) => string) =>
-  z.object({
-    serverName: z.string().min(1, t('Server Name is required.')),
-    baseUrl: z
-      .string()
-      .min(1, t('Base URL is required.'))
-      .url(t('Please enter a valid URL.')),
-    swaggerUrl: z.string().optional(),
-    swaggerJson: z.string().min(1, t('Swagger JSON is required.')),
-    authToken: z.string().optional(),
-  })
+  z
+    .object({
+      serverName: z.string().min(1, t('Server Name is required.')),
+      baseUrl: z
+        .string()
+        .min(1, t('Base URL is required.'))
+        .url(t('Please enter a valid URL.')),
+      swaggerUrl: z.string().optional(),
+      swaggerJson: z.string().optional(),
+      authToken: z.string().optional(),
+    })
+    .superRefine((values, ctx) => {
+      // Swagger 地址 / Swagger JSON 二选一：任填其一即可解析
+      const hasUrl = !!values.swaggerUrl?.trim()
+      const hasJson = !!values.swaggerJson?.trim()
+      if (!hasUrl && !hasJson) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['swaggerUrl'],
+          message: t('Fill in either Swagger URL or Swagger JSON.'),
+        })
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['swaggerJson'],
+          message: t('Fill in either Swagger URL or Swagger JSON.'),
+        })
+        return
+      }
+      if (
+        hasUrl &&
+        !z.string().url().safeParse(values.swaggerUrl!.trim()).success
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['swaggerUrl'],
+          message: t('Please enter a valid URL.'),
+        })
+      }
+    })
 
 type ImportForm = z.infer<ReturnType<typeof getFormSchema>>
-
-const OPERATION_METHODS = [
-  'get',
-  'post',
-  'put',
-  'delete',
-  'patch',
-  'head',
-  'options',
-] as const
 
 interface OperationGroup {
   name: string
   ops: ParsedSwaggerOperation[]
-}
-
-/** 分组名：优先取 OpenAPI 的 tags[0]，否则按路径前缀（/api/App/user → /api/App）。 */
-const deriveGroup = (
-  path: string,
-  tags?: string[] | { name?: string }[]
-): string => {
-  if (Array.isArray(tags) && tags.length > 0) {
-    const first = tags[0]
-    const name = typeof first === 'string' ? first : first?.name
-    if (name) return name
-  }
-  const segs = path.split('/').filter(Boolean)
-  if (segs.length === 0) return '/'
-  if (segs[0].toLowerCase() === 'api' && segs.length > 1)
-    return `/${segs[0]}/${segs[1]}`
-  return `/${segs[0]}`
-}
-
-/** 从 OpenAPI/Swagger JSON 文档中解析出全部接口操作（兼容 OpenAPI 3 与 Swagger 2.0 的 paths 结构）。 */
-const parseOperations = (json: string): ParsedSwaggerOperation[] => {
-  const doc = JSON.parse(json) as {
-    paths?: Record<
-      string,
-      Record<
-        string,
-        {
-          summary?: string
-          description?: string
-          tags?: string[] | { name?: string }[]
-        } | undefined
-      >
-    >
-  }
-  const paths = doc?.paths
-  if (!paths || typeof paths !== 'object') return []
-
-  const ops: ParsedSwaggerOperation[] = []
-  for (const [path, item] of Object.entries(paths)) {
-    if (!item || typeof item !== 'object') continue
-    for (const method of OPERATION_METHODS) {
-      const op = item[method]
-      if (!op || typeof op !== 'object') continue
-      ops.push({
-        key: `${method.toUpperCase()} ${path}`,
-        method: method.toUpperCase(),
-        path,
-        summary: op.summary || op.description || '',
-        group: deriveGroup(path, op.tags),
-      })
-    }
-  }
-  return ops
 }
 
 const METHOD_STYLES: Record<string, string> = {
@@ -132,6 +99,7 @@ export function McpImportDialog() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const importMutation = useImport()
+  const parseMutation = useParseSwagger()
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<1 | 2>(1)
@@ -197,27 +165,51 @@ export function McpImportDialog() {
   }
 
   const handleParse = () => {
-    const json = form.getValues('swaggerJson')
-    if (!json) {
-      toast.error(t('Swagger JSON is required.'))
-      return
-    }
-    let ops: ParsedSwaggerOperation[]
-    try {
-      ops = parseOperations(json)
-    } catch {
-      toast.error(t('Failed to parse Swagger JSON.'))
-      return
-    }
-    if (ops.length === 0) {
-      toast.error(t('No endpoints found in the document.'))
-      return
-    }
-    setOperations(ops)
-    setSelected(new Set(ops.map((op) => op.key)))
-    setSearch('')
-    setCollapsed(new Set())
-    setStep(2)
+    form.trigger().then((valid) => {
+      if (!valid) return
+      const values = form.getValues()
+      parseMutation.mutate(
+        {
+          swaggerUrl: values.swaggerUrl?.trim() || null,
+          swaggerJson: values.swaggerJson?.trim() || null,
+          authToken: values.authToken?.trim() || null,
+        },
+        {
+          onSuccess: (data) => {
+            const operations = data?.operations ?? []
+            if (operations.length === 0) {
+              toast.error(t('No endpoints found in the document.'))
+              return
+            }
+            const ops: ParsedSwaggerOperation[] = operations.map((op) => ({
+              key: `${op.method.toUpperCase()} ${op.path}`,
+              method: op.method.toUpperCase(),
+              path: op.path,
+              summary: op.summary ?? '',
+              group: op.group || '/',
+            }))
+            // 把最终用于解析的 Swagger JSON 回填到最下方文本框，
+            // 无论来源是 Swagger 地址还是手动粘贴/上传，此处保持一致
+            form.setValue('swaggerJson', data?.swaggerJson ?? '')
+            setOperations(ops)
+            setSelected(new Set(ops.map((op) => op.key)))
+            setSearch('')
+            setCollapsed(new Set())
+            setStep(2)
+          },
+          onError: (err) => {
+            const axiosErr = err as {
+              response?: { data?: { message?: string } }
+              message?: string
+            }
+            toast.error(
+              axiosErr?.response?.data?.message ??
+                t('Failed to parse Swagger.')
+            )
+          },
+        }
+      )
+    })
   }
 
   const toggleOperation = (key: string, checked: boolean) => {
@@ -271,7 +263,7 @@ export function McpImportDialog() {
       serverName: values.serverName,
       baseUrl: values.baseUrl,
       swaggerUrl: values.swaggerUrl || null,
-      swaggerJson: values.swaggerJson,
+      swaggerJson: values.swaggerJson ?? '',
       authToken: values.authToken || null,
       selectedOperations: [...selected],
     }
@@ -392,6 +384,9 @@ export function McpImportDialog() {
                       )}
                     />
                   </div>
+                  <p className='text-xs text-muted-foreground'>
+                    {t('Fill in either Swagger URL or Swagger JSON.')}
+                  </p>
                   <FormField
                     control={form.control}
                     name='swaggerJson'
@@ -438,9 +433,15 @@ export function McpImportDialog() {
               <Button
                 type='button'
                 onClick={handleParse}
-                disabled={!form.watch('swaggerJson')}
+                disabled={
+                  parseMutation.isPending ||
+                  (!form.watch('swaggerUrl')?.trim() &&
+                    !form.watch('swaggerJson')?.trim())
+                }
               >
-                {t('Parse endpoints')}
+                {parseMutation.isPending
+                  ? t('Parsing...')
+                  : t('Parse endpoints')}
               </Button>
             </DialogFooter>
           </>
