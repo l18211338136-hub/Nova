@@ -99,6 +99,7 @@ export function UserAuthForm({
 
     setIsSendingCode(true)
     try {
+      await resolveTenant({ account: email })
       const res = await sendCode({ data: { email } })
       if (res.code === 200) {
         toast.success(t('Verification code sent successfully.'))
@@ -116,10 +117,11 @@ export function UserAuthForm({
   async function onSubmitPassword(data: z.infer<typeof passwordFormSchema>) {
     setIsLoading(true)
     try {
+      await resolveTenant({ account: data.account })
       const response = await login({
         data: { account: data.account, password: data.password }
       })
-      handleLoginSuccess(response)
+      await handleLoginSuccess(response)
     } catch (error: any) {
       handleServerError(error)
     } finally {
@@ -130,10 +132,11 @@ export function UserAuthForm({
   async function onSubmitCode(data: z.infer<typeof codeFormSchema>) {
     setIsLoading(true)
     try {
+      await resolveTenant({ account: data.email })
       const response = await emailLogin({
         data: { email: data.email, code: data.emailCode }
       })
-      handleLoginSuccess(response)
+      await handleLoginSuccess(response)
     } catch (error: any) {
       handleServerError(error)
     } finally {
@@ -141,7 +144,7 @@ export function UserAuthForm({
     }
   }
 
-  function handleLoginSuccess(response: any) {
+  async function handleLoginSuccess(response: any) {
     const resData = response.data
     if (response.code === 200 && resData && resData.token) {
       auth.setAccessToken(resData.token)
@@ -149,8 +152,7 @@ export function UserAuthForm({
         auth.setRefreshToken(resData.refreshToken)
       }
       toast.success(`${t('Welcome back')}!`)
-      // 强制跳转到首页，忽略之前的重定向路径，避免登录后跳入特定管理页面
-      navigate({ to: '/', replace: true })
+      await navigate({ to: redirectTo || '/', replace: true })
     } else {
       toast.error(response.message || t('Error signing in'))
     }
