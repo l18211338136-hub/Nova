@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { DataTablePagination } from '@/components/data-table'
+import { DataTableViewOptions } from '@/components/data-table/view-options'
 import { type McpToolDto } from '../types'
 import { useMcpTools } from '../hooks/use-mcp-servers'
 import { useMcpToolsColumns } from './mcp-tools-columns'
@@ -103,7 +104,9 @@ export function McpToolsTable({ search, navigate }: DataTableProps) {
         'flex flex-1 flex-col gap-4'
       )}
     >
-      <DataTableToolbar table={table} hideSearch={true} filters={[]} />
+      <div className='absolute right-0 top-0 z-10'>
+        <DataTableViewOptions table={table} />
+      </div>
       <div className='overflow-hidden rounded-md border'>
         <Table className='table-fixed'>
           <TableHeader>

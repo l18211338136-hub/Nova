@@ -34,22 +34,26 @@ export function Mcp() {
             <h2 className='text-2xl font-bold tracking-tight'>
               {t('MCP Servers')}
             </h2>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground text-sm'>
               {t('Manage your MCP servers and tools here.')}
             </p>
           </div>
           <McpPrimaryButtons />
         </div>
 
-        <Tabs defaultValue='servers' className='flex flex-1 flex-col gap-4'>
-          <TabsList>
-            <TabsTrigger value='servers'>{t('MCP Servers')}</TabsTrigger>
-            <TabsTrigger value='tools'>{t('MCP Tools')}</TabsTrigger>
+        <Tabs defaultValue='servers' className='flex flex-1 flex-col gap-4 min-w-0 w-full overflow-hidden relative'>
+          <TabsList className='grid w-full max-w-[240px] grid-cols-2 h-10 p-1'>
+            <TabsTrigger value='servers' className='px-3 text-xs sm:text-sm font-medium'>
+              {t('MCP Servers')}
+            </TabsTrigger>
+            <TabsTrigger value='tools' className='px-3 text-xs sm:text-sm font-medium'>
+              {t('MCP Tools')}
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value='servers' className='flex flex-1 flex-col'>
+          <TabsContent value='servers' className='flex-1 flex flex-col m-0 min-w-0 w-full overflow-hidden outline-none'>
             <McpServersTable search={search} navigate={navigate} />
           </TabsContent>
-          <TabsContent value='tools' className='flex flex-1 flex-col'>
+          <TabsContent value='tools' className='flex-1 flex flex-col m-0 min-w-0 w-full overflow-hidden outline-none'>
             <McpToolsTable search={search} navigate={navigate} />
           </TabsContent>
         </Tabs>

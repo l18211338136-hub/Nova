@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { servers as fetchServers, tools as fetchTools } from '@/api/endpoints/mcp'
 import type { ApiResponse, PagedResult, McpServerDto, McpToolDto } from '../types'
 
@@ -13,6 +13,7 @@ export function useMcpServers(params: Record<string, unknown>) {
       (await fetchServers({ params })) as unknown as ApiResponse<
         PagedResult<McpServerDto>
       >,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -23,5 +24,6 @@ export function useMcpTools(params: Record<string, unknown>) {
       (await fetchTools({ params })) as unknown as ApiResponse<
         PagedResult<McpToolDto>
       >,
+    placeholderData: keepPreviousData,
   })
 }

@@ -54,6 +54,10 @@ app.UseHttpsRedirection();
 app.UseNovaCors();
 app.UseNovaLocalStorage();
 
+// MCP 导入：Swagger 文档可能很大（企业级 API 常超 30MB 限制）。
+// 因为 PayloadEncryptionMiddleware 会提前读取 Body，所以必须在更早的阶段针对特定路由放宽限制。
+app.UseEndpointRequestBodySizeLimit("/api/mcp/parse", 100 * 1024 * 1024);
+
 // 必须放在此处，确保所有的 Payload（请求/响应）被加解密后再交给下游中间件处理
 app.UseNovaPayloadEncryption();
 
@@ -61,22 +65,7 @@ app.UseNovaPayloadEncryption();
 app.UseNovaMultiTenancy();
 app.UseAuthorization();
 
-// MCP 导入：Swagger 文档可能很大（企业级 API 常超 Kestrel 默认的 30MB 请求体上限）。
-// 在审计中间件读取请求体之前，仅对解析接口单独放宽上限，避免触发 BadHttpRequestException。
-// 其余接口仍保持默认限制；审计日志本身已截断到 64KB，不受大请求体影响。
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/api/mcp/parse", StringComparison.OrdinalIgnoreCase))
-    {
-        var maxBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
-        if (maxBodySizeFeature is not null)
-        {
-            maxBodySizeFeature.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
-        }
-    }
 
-    await next();
-});
 
 app.UseMiddleware<GlobalAuditLoggingMiddleware>();
 

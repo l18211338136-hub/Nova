@@ -165,6 +165,8 @@
     "MCP Tools":  "MCP 工具",
     "Manage your MCP servers and tools here.":  "在这里管理你的 MCP 服务与工具。",
     "Import MCP Server":  "导入 MCP 服务",
+    "URL Import": "URL 导入",
+    "JSON Import": "JSON 导入",
     "Server Name":  "服务名称",
     "Base URL":  "基础地址",
     "Swagger URL":  "Swagger 地址",

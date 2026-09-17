@@ -163,6 +163,8 @@
     "MCP Tools":  "MCP Tools",
     "Manage your MCP servers and tools here.":  "Manage your MCP servers and tools here.",
     "Import MCP Server":  "Import MCP Server",
+    "URL Import": "URL Import",
+    "JSON Import": "JSON Import",
     "Server Name":  "Server Name",
     "Base URL":  "Base URL",
     "Swagger URL":  "Swagger URL",

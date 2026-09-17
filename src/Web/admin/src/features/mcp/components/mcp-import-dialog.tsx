@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -58,12 +59,12 @@ const getFormSchema = (t: (key: string) => string) =>
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['swaggerUrl'],
-          message: t('Fill in either Swagger URL or Swagger JSON.'),
+          message: t('Please provide a Swagger URL.'),
         })
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['swaggerJson'],
-          message: t('Fill in either Swagger URL or Swagger JSON.'),
+          message: t('Please provide the Swagger JSON content.'),
         })
         return
       }
@@ -320,9 +321,10 @@ export function McpImportDialog() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className='space-y-4 px-0.5'
                 >
-                  <FormField
-                    control={form.control}
-                    name='serverName'
+                  <div className='rounded-lg border bg-card p-4 shadow-sm space-y-4'>
+                    <FormField
+                      control={form.control}
+                      name='serverName'
                     render={({ field }) => (
                       <FormItem className='space-y-1.5'>
                         <FormLabel>{t('Server Name')}</FormLabel>
@@ -349,83 +351,101 @@ export function McpImportDialog() {
                       </FormItem>
                     )}
                   />
-                  <div className='grid gap-4 sm:grid-cols-2'>
-                    <FormField
-                      control={form.control}
-                      name='swaggerUrl'
-                      render={({ field }) => (
-                        <FormItem className='space-y-1.5'>
-                          <FormLabel>{t('Swagger URL')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder='https://api.example.com/swagger/v1/swagger.json'
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name='authToken'
-                      render={({ field }) => (
-                        <FormItem className='space-y-1.5'>
-                          <FormLabel>{t('Auth Token')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder='optional'
-                              autoComplete='off'
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
-                  <p className='text-xs text-muted-foreground'>
-                    {t('Fill in either Swagger URL or Swagger JSON.')}
-                  </p>
-                  <FormField
-                    control={form.control}
-                    name='swaggerJson'
-                    render={({ field }) => (
-                      <FormItem className='space-y-1.5'>
-                        <FormLabel>{t('Swagger JSON')}</FormLabel>
-                        <FormControl>
-                          <div className='space-y-2'>
-                            <button
-                              type='button'
-                              onClick={() => fileRef.current?.click()}
-                              className='flex w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed py-4 transition-colors hover:border-primary/40 hover:bg-muted/50'
-                            >
-                              <Upload className='size-4 text-muted-foreground' />
-                              <span className='text-sm font-medium'>
-                                {t('Upload Swagger JSON')}
-                              </span>
-                              <span className='text-xs text-muted-foreground'>
-                                {t('or paste below')}
-                              </span>
-                            </button>
-                            <input
-                              ref={fileRef}
-                              type='file'
-                              accept='.json,application/json'
-                              className='hidden'
-                              onChange={onFileChange}
-                            />
-                            <Textarea
-                              placeholder='{ ... OpenAPI / Swagger JSON ... }'
-                              className='field-sizing-fixed h-32 resize-none overflow-y-auto font-mono text-xs'
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  
+                  <div className='rounded-lg border bg-card p-4 shadow-sm'>
+                    <Tabs defaultValue="url" className="w-full" onValueChange={(v) => {
+                       if (v === 'url') form.setValue('swaggerJson', '', { shouldValidate: true })
+                       if (v === 'json') {
+                           form.setValue('swaggerUrl', '', { shouldValidate: true })
+                           form.setValue('authToken', '', { shouldValidate: true })
+                       }
+                    }}>
+                      <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsTrigger value="url">{t('URL Import')}</TabsTrigger>
+                        <TabsTrigger value="json">{t('JSON Import')}</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="url" className="space-y-4 outline-none mt-0 h-[212px]">
+                        <div className='grid gap-4 sm:grid-cols-2 items-start'>
+                          <FormField
+                            control={form.control}
+                            name='swaggerUrl'
+                            render={({ field }) => (
+                              <FormItem className='space-y-1.5'>
+                                <FormLabel>{t('Swagger URL')}</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder='https://api.example.com/swagger/v1/swagger.json'
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name='authToken'
+                            render={({ field }) => (
+                              <FormItem className='space-y-1.5'>
+                                <FormLabel>{t('Auth Token')}</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder='optional'
+                                    autoComplete='off'
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="json" className="space-y-4 outline-none mt-0 h-[212px]">
+                        <FormField
+                          control={form.control}
+                          name='swaggerJson'
+                          render={({ field }) => (
+                            <FormItem className='space-y-1.5'>
+                              <div className="flex items-center justify-between pb-1">
+                                <FormLabel>{t('Swagger JSON')}</FormLabel>
+                                <Button 
+                                  size='sm' 
+                                  variant='ghost' 
+                                  type='button' 
+                                  onClick={() => fileRef.current?.click()} 
+                                  className='h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground'
+                                >
+                                  <Upload className='size-3' />
+                                  {t('Upload File')}
+                                </Button>
+                              </div>
+                              <FormControl>
+                                <div className='relative'>
+                                  <input
+                                    ref={fileRef}
+                                    type='file'
+                                    accept='.json,application/json'
+                                    className='hidden'
+                                    onChange={onFileChange}
+                                  />
+                                  <Textarea
+                                    placeholder='{ ... OpenAPI / Swagger JSON ... }'
+                                    className='field-sizing-fixed h-40 resize-none overflow-y-auto font-mono text-xs bg-muted/30 focus-visible:bg-background'
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
                 </form>
               </Form>
             </div>
