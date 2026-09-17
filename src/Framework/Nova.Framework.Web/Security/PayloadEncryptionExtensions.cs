@@ -8,7 +8,7 @@ using Nova.Framework.Web.Security.Cryptography;
 
 namespace Nova.Framework.Web.Security;
 
-public record PublicKeyDto(string PublicKey);
+public record PublicKeyDto(string PublicKey, bool IsEnabled = true);
 
 public static class PayloadEncryptionExtensions
 {
@@ -66,12 +66,13 @@ public static class PayloadEncryptionExtensions
     {
         endpoints.MapGet("/api/security/public-key", (IConfiguration configuration) =>
         {
+            var isEnabled = configuration.GetValue<bool>("Encryption:Enabled", true);
             var publicKey = configuration["Encryption:RsaPublicKey"];
-            if (string.IsNullOrEmpty(publicKey))
+            if (isEnabled && string.IsNullOrEmpty(publicKey))
             {
                 return Results.NotFound(ApiResponse.Error("RSA keys are not configured."));
             }
-            return Results.Ok(ApiResponse<PublicKeyDto>.Success(new PublicKeyDto(publicKey)));
+            return Results.Ok(ApiResponse<PublicKeyDto>.Success(new PublicKeyDto(publicKey ?? "", isEnabled)));
         })
         .WithTags("Security")
         .WithName("GetPublicKey")

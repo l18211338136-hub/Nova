@@ -10,21 +10,31 @@ declare module 'axios' {
   }
 }
 
-let rsaPublicKey: string | null = null;
-let pendingPublicKeyPromise: Promise<string | null> | null = null;
+interface EncryptionConfig {
+  publicKey: string | null;
+  isEnabled: boolean;
+}
 
-async function getRsaPublicKey() {
-  if (rsaPublicKey) return rsaPublicKey;
+let cachedEncryptionConfig: EncryptionConfig | null = null;
+let pendingConfigPromise: Promise<EncryptionConfig> | null = null;
+
+async function getEncryptionConfig(): Promise<EncryptionConfig> {
+  if (cachedEncryptionConfig) return cachedEncryptionConfig;
+  
   if (import.meta.env.VITE_RSA_PUBLIC_KEY) {
-    rsaPublicKey = import.meta.env.VITE_RSA_PUBLIC_KEY.replace(/\\n/g, '\n');
-    return rsaPublicKey;
+    const isEnabled = import.meta.env.VITE_ENABLE_ENCRYPTION !== 'false';
+    cachedEncryptionConfig = {
+      publicKey: import.meta.env.VITE_RSA_PUBLIC_KEY.replace(/\\n/g, '\n'),
+      isEnabled
+    };
+    return cachedEncryptionConfig;
   }
   
-  if (pendingPublicKeyPromise) {
-    return pendingPublicKeyPromise;
+  if (pendingConfigPromise) {
+    return pendingConfigPromise;
   }
 
-  pendingPublicKeyPromise = (async () => {
+  pendingConfigPromise = (async () => {
     try {
       // 按需动态导入，打破 api-client.ts 与自动生成代码之间的循环依赖
       const { publicKey } = await import('@/api/endpoints/security');
@@ -32,18 +42,23 @@ async function getRsaPublicKey() {
       // 调用 Orval 生成的强类型方法
       const res = await publicKey({ skipEncryption: true });
       
-      // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.publicKey
-      rsaPublicKey = res.data?.publicKey || null;
-      return rsaPublicKey;
+      // 注意：后端的 PublicKeyDto 已经增加了 isEnabled 字段
+      // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.isEnabled 和 data.publicKey
+      // @ts-expect-error backend dto update not yet reflected in generated types
+      const isEnabled = res.data?.isEnabled ?? true;
+      const pubKey = res.data?.publicKey || null;
+      
+      cachedEncryptionConfig = { publicKey: pubKey, isEnabled };
+      return cachedEncryptionConfig;
     } catch (e) {
-      console.error('Failed to fetch RSA public key', e);
-      return null;
+      console.error('Failed to fetch encryption config', e);
+      return { publicKey: null, isEnabled: false };
     } finally {
-      pendingPublicKeyPromise = null;
+      pendingConfigPromise = null;
     }
   })();
 
-  return pendingPublicKeyPromise;
+  return pendingConfigPromise;
 }
 
 // Create a custom axios instance
@@ -77,9 +92,17 @@ apiClient.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // 凡是非文件上传的请求，统统开启安全传输通道（就算没有 Body 的 GET，也要生成钥匙给后端用于加密返回值）
-    if (!(config.data instanceof FormData) && !config.skipEncryption) {
-      const pubKey = await getRsaPublicKey();
+    // 对于明确跳过加密的请求（如获取公钥本身的请求），或者文件上传，直接放行，避免产生死循环死锁
+    if (config.skipEncryption || config.data instanceof FormData) {
+      return config;
+    }
+
+    // 从后端统一获取加密配置开关与公钥
+    const configData = await getEncryptionConfig();
+
+    // 如果开启了加密，则生成本次请求的加密信封
+    if (configData.isEnabled) {
+      const pubKey = configData.publicKey;
       if (pubKey) {
         // 1. 生成本次请求专用的随机 AES 密钥
         const aesKey = await CryptoService.generateAesKey();

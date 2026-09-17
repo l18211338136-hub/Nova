@@ -14,10 +14,11 @@ public class PayloadEncryptionMiddleware(RequestDelegate next, IConfiguration co
 
     public async Task InvokeAsync(HttpContext context)
     {
+        var isEnabled = _configuration.GetValue<bool>("Encryption:Enabled", true); // 默认开启
         var privateKeyPem = _configuration["Encryption:RsaPrivateKey"];
         
-        // 如果未配置私钥，则跳过加密中间件
-        if (string.IsNullOrEmpty(privateKeyPem))
+        // 如果开关关闭，或者未配置私钥，则跳过加密中间件
+        if (!isEnabled || string.IsNullOrEmpty(privateKeyPem))
         {
             await _next(context);
             return;
