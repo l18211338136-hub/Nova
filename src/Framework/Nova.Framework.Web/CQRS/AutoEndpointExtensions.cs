@@ -173,14 +173,14 @@ public static class AutoEndpointExtensions
         var rateLimitAttr = typeof(TCommand).GetCustomAttribute<DistributedRateLimitAttribute>();
         if (rateLimitAttr != null)
         {
-            builder.AddEndpointFilter(new DistributedRateLimitingFilter(rateLimitAttr));
+            //builder.AddEndpointFilter(new DistributedRateLimitingFilter(rateLimitAttr));
         }
 
         // 分布式防重/幂等自动检测与挂载
         var idempotentAttr = typeof(TCommand).GetCustomAttribute<IdempotentAttribute>();
         if (idempotentAttr != null)
         {
-            builder.AddEndpointFilter(new IdempotentFilter(idempotentAttr));
+            //builder.AddEndpointFilter(new IdempotentFilter(idempotentAttr));
         }
 
         builder.Produces<ApiResponse<TResponse>>(StatusCodes.Status200OK);
