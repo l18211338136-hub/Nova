@@ -12,10 +12,12 @@ using Nova.Framework.Web.Modular;
 using Nova.Framework.Persistence.Extensions;
 using Nova.Framework.Persistence.Interceptors;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
+using Nova.Modules.Mcp.Application.Dtos;
 using Nova.Modules.Mcp.Infrastructure.Persistence;
 using Nova.Modules.Mcp.Infrastructure.OpenApi.Generator;
 using Nova.Modules.Mcp.Infrastructure.Providers.Http;
 using Nova.Modules.Mcp.Infrastructure.Server.Engine;
+using Nova.Modules.Mcp.Infrastructure.Services;
 
 namespace Nova.Modules.MCP.Api;
 
@@ -46,6 +48,12 @@ public class MCPModule : IModule
         services.AddTransient<HttpToolExecutor>();
         services.AddSingleton<IMcpServerEngine, McpServerEngine>();
 
+        // Application 层契约 → Infrastructure 层实现（依赖倒置）
+        services.AddScoped<IMcpKeyService, McpKeyService>();
+        services.AddScoped<IMcpPagedQueryService<McpKeyDto>, McpKeyQueryService>();
+        services.AddScoped<IMcpPagedQueryService<McpServerDto>, McpServerQueryService>();
+        services.AddScoped<IMcpPagedQueryService<McpToolDto>, McpToolQueryService>();
+
         // 注册 HttpToolExecutor 专用的 HttpClient
         services.AddHttpClient("McpDynamicClient", client => 
         {
@@ -55,6 +63,7 @@ public class MCPModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        // Controllers are automatically mapped by the framework
+        // 密钥查询已改为 MVC 控制器（Controllers/McpKeyController），
+        // 由框架的 MapModuleEndpoints() 统一 MapControllers() 发现，无需在此注册。
     }
 }

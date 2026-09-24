@@ -20,6 +20,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Persistence
 
         public DbSet<McpServer> McpServers { get; set; }
         public DbSet<McpTool> McpTools { get; set; }
+        public DbSet<McpKey> McpKeys { get; set; }
 
         public McpDbContext(ITenantInfo tenantInfo, DbContextOptions<McpDbContext> options)
             : base(options)
@@ -70,11 +71,11 @@ namespace Nova.Modules.Mcp.Infrastructure.Persistence
                 b.Property(t => t.Description).HasMaxLength(2000);
                 b.Property(t => t.HttpMethod).IsRequired().HasMaxLength(20);
                 b.Property(t => t.RoutePath).IsRequired().HasMaxLength(500);
-                
+
                 // 将大文本字段用于存储 JSON 结构
                 b.Property(t => t.InputSchema).HasColumnType("text");
                 b.Property(t => t.ParameterMap).HasColumnType("text");
-                
+
                 // 关联外键
                 b.HasOne<McpServer>()
                  .WithMany()
@@ -83,7 +84,19 @@ namespace Nova.Modules.Mcp.Infrastructure.Persistence
 
                 b.IsMultiTenant();
             });
-            
+
+            builder.Entity<McpKey>(b =>
+            {
+                b.ToTable("McpKeys");
+                b.HasKey(k => k.Id);
+                b.Property(k => k.Name).IsRequired().HasMaxLength(100);
+                b.Property(k => k.KeyValue).IsRequired().HasMaxLength(1000);
+                b.Property(k => k.ExpiresAt).HasColumnType("timestamp with time zone");
+
+                b.IsMultiTenant();
+            });
+
+
             // 自动应用所有实现了 IFullAuditedEntity/ISoftDelete 的软删除全局过滤
             builder.ApplySoftDeleteQueryFilter();
         }

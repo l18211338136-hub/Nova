@@ -8,7 +8,6 @@
 /**
  * @nullable
  */
-export type PublicKeyDto = {
-  publicKey: string;
-  isEnabled?: boolean;
+export type UpdateMcpKeyResult = {
+  id?: string;
 } | null;

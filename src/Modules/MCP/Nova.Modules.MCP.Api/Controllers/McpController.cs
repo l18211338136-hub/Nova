@@ -1,15 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.OData.ModelBuilder;
 using Nova.Framework.Web.Controllers;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
 using Nova.Modules.Mcp.Application.OpenApi.Commands.ImportOpenApi;
 using Nova.Modules.Mcp.Application.OpenApi.Commands.ParseSwagger;
 using Nova.Modules.Mcp.Application.Dtos;
-using Nova.Modules.Mcp.Infrastructure.Persistence;
-using Mapster;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.OData.ModelBuilder;
-using Microsoft.EntityFrameworkCore;
+using Nova.Modules.Mcp.Api.Common;
 using Nova.Framework.Web.Responses;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
@@ -20,17 +18,23 @@ namespace Nova.Modules.Mcp.Api.Controllers
     /// <summary>
     /// MCP 协议标准网关控制器
     /// 处理第三方 AI 客户端的 SSE 连接与 JSON-RPC 消息分发
+    ///
+    /// 分层约定：本控制器属于最外层（Web API），只做「协议转换 + 编排调用」，
+    /// 不含任何业务规则与数据访问实现——密钥提取/校验、查询与分页
+    /// 均由 Application 层定义的契约（IMcpKeyService / IMcpPagedQueryService）委托给 Infrastructure 层实现。
     /// </summary>
     [ApiController]
     [Route("api/mcp")]
-    // [Authorize] // TODO: 视情况加上你们现有的鉴权标签，校验第三方 API Key
+    // [Authorize] // 免登录：第三方客户端以 MCP Key 鉴权（见 IMcpKeyService）
     public class McpController : NovaControllerBase
     {
         private readonly IMcpServerEngine _mcpEngine;
-        
-        public McpController(IMcpServerEngine mcpEngine)
+        private readonly IMcpKeyService _mcpKeyService;
+
+        public McpController(IMcpServerEngine mcpEngine, IMcpKeyService mcpKeyService)
         {
             _mcpEngine = mcpEngine;
+            _mcpKeyService = mcpKeyService;
         }
 
         /// <summary>
@@ -41,6 +45,15 @@ namespace Nova.Modules.Mcp.Api.Controllers
         [EndpointSummary("建立连接")]
         public async Task GetSseConnection()
         {
+            // 免登录访问：以 MCP Key 代替 JWT 鉴权（具体实现在 Infrastructure 层）
+            var key = _mcpKeyService.ExtractKeyFromRequest(Request);
+            if (string.IsNullOrWhiteSpace(key) || !await _mcpKeyService.ValidateAsync(key, HttpContext.RequestAborted))
+            {
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await Response.WriteAsync("Unauthorized: 缺少或无效的 MCP Key。");
+                return;
+            }
+
             // 必须设置正确的 SSE 响应头
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
@@ -70,6 +83,13 @@ namespace Nova.Modules.Mcp.Api.Controllers
             if (string.IsNullOrEmpty(sessionId))
             {
                 return BadRequest("Missing sessionId.");
+            }
+
+            // 免登录访问：以 MCP Key 代替 JWT 鉴权（具体实现在 Infrastructure 层）
+            var key = _mcpKeyService.ExtractKeyFromRequest(Request);
+            if (string.IsNullOrWhiteSpace(key) || !await _mcpKeyService.ValidateAsync(key, HttpContext.RequestAborted))
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: 缺少或无效的 MCP Key。");
             }
 
             using var reader = new StreamReader(Request.Body);
@@ -125,42 +145,18 @@ namespace Nova.Modules.Mcp.Api.Controllers
         [EndpointSummary("服务列表")]
         [Authorize]
         [RequirePermission("Mcp.Servers.Read")]
-        public async Task<IActionResult> GetServers([FromServices] IMcpDbContext db)
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<McpServerDto>>), StatusCodes.Status200OK, "application/json")]
+        public async Task<IActionResult> GetServers(
+            [FromServices] IMcpPagedQueryService<McpServerDto> queryService)
         {
-            var query = db.McpServers.ProjectToType<McpServerDto>();
+            // 1) 协议翻译（OData）：最外层职责
+            var bound = McpODataBinder.Bind(queryService.Query(), Request);
 
-            var builder = new ODataConventionModelBuilder();
-            builder.EntitySet<McpServerDto>("McpServers");
-            var edmModel = builder.GetEdmModel();
+            // 2) 分页执行：委托给 Infrastructure 层实现
+            var paged = await queryService.ToPagedResultAsync(
+                bound.Query, bound.Skip, bound.Top, HttpContext.RequestAborted);
 
-            var odataContext = new ODataQueryContext(edmModel, typeof(McpServerDto), null);
-            var odataQuery = new ODataQueryOptions<McpServerDto>(odataContext, Request);
-
-            var filteredQuery = (IQueryable<McpServerDto>)odataQuery.ApplyTo(query, ignoreQueryOptions: AllowedQueryOptions.Top | AllowedQueryOptions.Skip);
-
-            long totalCount = await filteredQuery.LongCountAsync();
-
-            if (odataQuery.Skip != null)
-                filteredQuery = filteredQuery.Skip(odataQuery.Skip.Value);
-            
-            if (odataQuery.Top != null)
-                filteredQuery = filteredQuery.Take(odataQuery.Top.Value);
-
-            var items = await filteredQuery.ToArrayAsync();
-
-            int? top = odataQuery.Top?.Value;
-            int? skip = odataQuery.Skip?.Value;
-            int? page = (skip.HasValue && top.HasValue && top.Value > 0) ? (skip.Value / top.Value) + 1 : 1;
-
-            var pagedResult = new PagedResult<McpServerDto>
-            {
-                Total = totalCount,
-                Items = items,
-                Page = page,
-                PageSize = top > 0 ? top : null
-            };
-
-            return Ok(ApiResponse<PagedResult<McpServerDto>>.Success(pagedResult));
+            return Ok(ApiResponse<PagedResult<McpServerDto>>.Success(McpODataBinder.ToWebResult(paged)));
         }
 
         /// <summary>
@@ -170,42 +166,18 @@ namespace Nova.Modules.Mcp.Api.Controllers
         [EndpointSummary("工具列表")]
         [Authorize]
         [RequirePermission("Mcp.Tools.Read")]
-        public async Task<IActionResult> GetTools([FromServices] IMcpDbContext db)
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<McpToolDto>>), StatusCodes.Status200OK, "application/json")]
+        public async Task<IActionResult> GetTools(
+            [FromServices] IMcpPagedQueryService<McpToolDto> queryService)
         {
-            var query = db.McpTools.ProjectToType<McpToolDto>();
+            // 1) 协议翻译（OData）：最外层职责
+            var bound = McpODataBinder.Bind(queryService.Query(), Request);
 
-            var builder = new ODataConventionModelBuilder();
-            builder.EntitySet<McpToolDto>("McpTools");
-            var edmModel = builder.GetEdmModel();
+            // 2) 分页执行：委托给 Infrastructure 层实现
+            var paged = await queryService.ToPagedResultAsync(
+                bound.Query, bound.Skip, bound.Top, HttpContext.RequestAborted);
 
-            var odataContext = new ODataQueryContext(edmModel, typeof(McpToolDto), null);
-            var odataQuery = new ODataQueryOptions<McpToolDto>(odataContext, Request);
-
-            var filteredQuery = (IQueryable<McpToolDto>)odataQuery.ApplyTo(query, ignoreQueryOptions: AllowedQueryOptions.Top | AllowedQueryOptions.Skip);
-
-            long totalCount = await filteredQuery.LongCountAsync();
-
-            if (odataQuery.Skip != null)
-                filteredQuery = filteredQuery.Skip(odataQuery.Skip.Value);
-            
-            if (odataQuery.Top != null)
-                filteredQuery = filteredQuery.Take(odataQuery.Top.Value);
-
-            var items = await filteredQuery.ToArrayAsync();
-
-            int? top = odataQuery.Top?.Value;
-            int? skip = odataQuery.Skip?.Value;
-            int? page = (skip.HasValue && top.HasValue && top.Value > 0) ? (skip.Value / top.Value) + 1 : 1;
-
-            var pagedResult = new PagedResult<McpToolDto>
-            {
-                Total = totalCount,
-                Items = items,
-                Page = page,
-                PageSize = top > 0 ? top : null
-            };
-
-            return Ok(ApiResponse<PagedResult<McpToolDto>>.Success(pagedResult));
+            return Ok(ApiResponse<PagedResult<McpToolDto>>.Success(McpODataBinder.ToWebResult(paged)));
         }
     }
 }

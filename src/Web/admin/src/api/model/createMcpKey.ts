@@ -5,10 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * @nullable
- */
-export type PublicKeyDto = {
-  publicKey: string;
-  isEnabled?: boolean;
-} | null;
+export interface CreateMcpKey {
+  /** 密钥名称 */
+  name?: string;
+}

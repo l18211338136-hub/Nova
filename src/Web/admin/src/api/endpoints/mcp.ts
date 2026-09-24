@@ -26,6 +26,8 @@ import type {
 import type {
   ApiResponseOfDeleteMcpServerResult,
   ApiResponseOfDeleteMcpToolResult,
+  ApiResponseOfPagedResultOfMcpServerDto,
+  ApiResponseOfPagedResultOfMcpToolDto,
   ImportOpenApi,
   MessagesParams,
   ParseSwagger
@@ -470,7 +472,7 @@ export const servers = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<ApiResponseOfPagedResultOfMcpServerDto>(
       {url: `/api/mcp/servers`, method: 'GET', signal
     },
       options);
@@ -562,7 +564,7 @@ export const tools = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<ApiResponseOfPagedResultOfMcpToolDto>(
       {url: `/api/mcp/tools`, method: 'GET', signal
     },
       options);

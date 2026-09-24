@@ -66,10 +66,26 @@
     "children": [
       {
         "name": "MCP 服务",
-        "path": "/mcp",
-        "component": "features/mcp",
+        "path": "/ai/mcp",
+        "component": "Layout",
         "icon": "Server",
-        "sort": 1
+        "sort": 1,
+        "children": [
+          {
+            "name": "服务管理",
+            "path": "/mcp",
+            "component": "features/mcp",
+            "icon": "Server",
+            "sort": 1
+          },
+          {
+            "name": "MCP 密钥",
+            "path": "/mcp-keys",
+            "component": "features/mcp-keys",
+            "icon": "KeyRound",
+            "sort": 2
+          }
+        ]
       }
     ]
   },

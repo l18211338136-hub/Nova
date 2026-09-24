@@ -9,6 +9,7 @@ public interface IMcpDbContext
 {
     DbSet<McpServer> McpServers { get; }
     DbSet<McpTool> McpTools { get; }
-    
+    DbSet<McpKey> McpKeys { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

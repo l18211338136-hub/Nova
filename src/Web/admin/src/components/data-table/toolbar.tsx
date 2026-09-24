@@ -20,6 +20,8 @@ type DataTableToolbarProps<TData> = {
     }[]
   }[]
   hideSearch?: boolean
+  /** Optional action rendered on the right side, next to the view-options button (same horizontal line). */
+  toolbarAction?: React.ReactNode
 }
 
 export function DataTableToolbar<TData>({
@@ -28,6 +30,7 @@ export function DataTableToolbar<TData>({
   searchKey,
   filters = [],
   hideSearch = false,
+  toolbarAction,
 }: DataTableToolbarProps<TData>) {
   const isFiltered =
     table.getState().columnFilters.length > 0 || table.getState().globalFilter
@@ -86,7 +89,10 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      <div className='flex items-center gap-2'>
+        {toolbarAction}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   )
 }
