@@ -1,12 +1,9 @@
-using System;
-using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Nova.Framework.MultiTenancy;
 using Nova.Framework.MultiTenancy.EntityFrameworkCore;
 using Nova.Framework.Web.Modular;
 using Nova.Framework.Persistence.Extensions;
@@ -29,10 +26,12 @@ public class MCPModule : IModule
     {
         services.TryAddSingleton<UtcDateTimeParameterInterceptor>();
 
+        // MCP 使用独立数据库（nova_mcp_db）：所有租户共享同一物理库，
+        // 靠 McpServer/McpTool/McpKey 上的 TenantId 列做逻辑隔离（实体已 IsMultiTenant）。
+        // 未配置 McpConnection 时回退到 DefaultConnection，保证本地/旧环境仍可运行。
         services.AddDbContext<McpDbContext>((sp, options) =>
         {
-            var tenantInfo = sp.GetRequiredService<IMultiTenantContextAccessor>().MultiTenantContext?.TenantInfo as NovaTenantInfo;
-            var connectionString = tenantInfo?.ConnectionString
+            var connectionString = configuration.GetConnectionString("McpConnection")
                 ?? configuration.GetConnectionString("DefaultConnection");
 
             options.UseNpgsql(connectionString);
