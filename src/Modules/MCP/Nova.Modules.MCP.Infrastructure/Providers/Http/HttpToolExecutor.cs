@@ -81,7 +81,12 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
             // ===== 身份透传方案（网关层拦截） =====
             // 优先提取双 Token 架构下的专门透传业务 Token
             var userToken = _httpContextAccessor.HttpContext?.Request.Headers["X-Forwarded-Authorization"].ToString();
-            
+
+            if (!string.IsNullOrWhiteSpace(userToken) && !userToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                userToken = $"Bearer {userToken}";
+            }
+
             if (!string.IsNullOrEmpty(userToken))
             {
                 // 如果有专门透传的用户 Token，强制覆盖发给业务 API

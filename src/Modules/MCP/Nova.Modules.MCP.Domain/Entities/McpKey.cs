@@ -60,7 +60,7 @@ public class McpKey : FullAuditedEntity<Guid>
         !IsDeleted && !IsExpired(utcNow);
 
     /// <summary>
-    /// 生成高强度 URL 安全的随机密钥，前缀 mcp_ 便于识别。
+    /// 生成高强度 URL 安全的随机密钥，前缀 mcp- 便于识别。
     /// </summary>
     private static string GenerateKeyValue()
     {
@@ -71,6 +71,6 @@ public class McpKey : FullAuditedEntity<Guid>
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
-        return $"mcp_{token}";
+        return $"mcp-{token}";
     }
 }

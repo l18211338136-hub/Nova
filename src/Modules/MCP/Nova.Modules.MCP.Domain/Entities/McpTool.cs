@@ -6,7 +6,7 @@ namespace Nova.Modules.Mcp.Domain.Entities;
 public class McpTool : FullAuditedEntity<Guid>
 {
     public Guid ServerId { get; private set; }
-    
+
     public string Name { get; private set; } = default!;
     
     public string Description { get; private set; } = default!;

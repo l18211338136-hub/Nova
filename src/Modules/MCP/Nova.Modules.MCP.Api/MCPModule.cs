@@ -45,6 +45,12 @@ public class MCPModule : IModule
         // 注册 MCP 核心服务
         services.AddTransient<IOpenApiToolGenerator, OpenApiToolGenerator>();
         services.AddTransient<HttpToolExecutor>();
+        // 引擎必须注册为单例：SSE 长连接（HoldSseConnectionAsync）与
+        // POST /messages（HandleMessageAsync）是两个独立的 HTTP 请求，
+        // 会话字典 _activeSessions 必须跨请求共享，否则 POST 找不到 SSE 注册的
+        // channel 会返回 false → 400。引擎已移除 HttpContext 捕获，改为通过
+        // IServiceScopeFactory 在每次处理时新建 Scope 解析 IMcpDbContext，
+        // 因此单例是安全的（无 per-request 状态泄漏）。
         services.AddSingleton<IMcpServerEngine, McpServerEngine>();
 
         // Application 层契约 → Infrastructure 层实现（依赖倒置）
