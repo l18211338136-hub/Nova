@@ -44,6 +44,7 @@ const ACTION_MAP: Record<string, string> = {
   'Upload': '上传',
   'Download': '下载',
   'InstantUpload': '秒传',
+  'Import': '导入',
 }
 
 const formSchema = z.object({

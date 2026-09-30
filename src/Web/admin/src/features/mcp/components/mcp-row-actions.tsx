@@ -50,7 +50,7 @@ export function McpRowActions<T extends { id?: string; name: string }>({
       <DropdownMenuContent align='end' className='w-40'>
         <DropdownMenuItem
           onClick={() => {
-            setCurrentRow(row.original as McpServerDto | McpToolDto)
+            setCurrentRow(row.original as unknown as McpServerDto | McpToolDto)
             setOpen(kind === 'server' ? 'delete-server' : 'delete-tool')
           }}
           className='text-red-500 focus:text-red-500'

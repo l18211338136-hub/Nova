@@ -129,46 +129,70 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
             return schema;
         }
 
-        private object GetMcpSchema(OpenApiSchema? schema, OpenApiDocument doc, HashSet<string>? visited = null)
+        private object GetMcpSchema(OpenApiSchema? schema, OpenApiDocument doc, HashSet<string>? visited = null, Dictionary<string, object>? memo = null)
         {
             if (schema == null) return new { type = "string" };
-            
+
             visited ??= new HashSet<string>();
+            memo ??= new Dictionary<string, object>();
 
             if (schema.Reference != null && !string.IsNullOrEmpty(schema.Reference.Id))
             {
-                if (visited.Contains(schema.Reference.Id))
+                var id = schema.Reference.Id;
+                // 已完成展开的组件直接复用，避免共享 $ref 在多处被反复内联导致指数级膨胀 / OOM
+                if (memo.TryGetValue(id, out var cached)) return cached;
+                // 仅当该组件正处于展开调用栈中才视为循环引用，防止无限递归
+                if (visited.Contains(id))
                 {
-                    return new { type = "object", description = $"Circular reference to {schema.Reference.Id}" };
+                    return new { type = "object", description = $"Circular reference to {id}" };
                 }
-                visited.Add(schema.Reference.Id);
+                visited.Add(id);
+                var resolved = ResolveSchema(schema, doc);
+                object result;
+                if (resolved == null)
+                {
+                    result = new { type = "string" };
+                }
+                else
+                {
+                    result = ExpandBody(resolved, doc, visited, memo);
+                }
+                // 展开完成即移出栈，允许在兄弟分支中再次引用（走 memo 复用，不再重复膨胀）
+                visited.Remove(id);
+                memo[id] = result;
+                return result;
             }
 
+            return ExpandBody(schema, doc, visited, memo);
+        }
+
+        private object ExpandBody(OpenApiSchema schema, OpenApiDocument doc, HashSet<string> visited, Dictionary<string, object> memo)
+        {
             var resolved = ResolveSchema(schema, doc);
             if (resolved == null) return new { type = "string" };
 
             string type = MapSchemaType(resolved.Type);
-            
+
             if (type == "object" && resolved.Properties != null && resolved.Properties.Count > 0)
             {
                 var props = new Dictionary<string, object>();
                 foreach (var prop in resolved.Properties)
                 {
-                    props[prop.Key] = GetMcpSchema(prop.Value, doc, new HashSet<string>(visited));
+                    props[prop.Key] = GetMcpSchema(prop.Value, doc, visited, memo);
                 }
-                
+
                 var objSchema = new Dictionary<string, object>
                 {
                     ["type"] = "object",
                     ["properties"] = props
                 };
-                
+
                 if (!string.IsNullOrEmpty(resolved.Description))
                     objSchema["description"] = resolved.Description;
-                    
+
                 if (resolved.Required != null && resolved.Required.Any())
                     objSchema["required"] = resolved.Required.ToList();
-                    
+
                 return objSchema;
             }
             else if (type == "array" && resolved.Items != null)
@@ -176,19 +200,19 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                 var arrSchema = new Dictionary<string, object>
                 {
                     ["type"] = "array",
-                    ["items"] = GetMcpSchema(resolved.Items, doc, new HashSet<string>(visited))
+                    ["items"] = GetMcpSchema(resolved.Items, doc, visited, memo)
                 };
-                
+
                 if (!string.IsNullOrEmpty(resolved.Description))
                     arrSchema["description"] = resolved.Description;
-                    
+
                 return arrSchema;
             }
 
             var basicSchema = new Dictionary<string, object> { ["type"] = type };
             if (!string.IsNullOrEmpty(resolved.Description))
                 basicSchema["description"] = resolved.Description;
-                
+
             return basicSchema;
         }
 

@@ -373,7 +373,14 @@ public static class IdentityODataEndpoints
 
         endpoints.MapGet("/api/identity/permissions/groups", () =>
         {
-            var groups = new Dictionary<string, string>();
+            // 显式映射模块分组名，避免依赖反射顺序导致分组名不确定。
+            // 名称必须与侧边栏菜单名称一致，权限分配时才能自动推导并联动对应菜单。
+            var groups = new Dictionary<string, string>
+            {
+                { "Mcp.Servers", "服务管理" },
+                { "Mcp.Tools", "服务管理" },
+                { "Mcp.Keys", "MCP 密钥" },
+            };
             var dllFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "Nova.*.dll");
 
             foreach (var file in dllFiles)

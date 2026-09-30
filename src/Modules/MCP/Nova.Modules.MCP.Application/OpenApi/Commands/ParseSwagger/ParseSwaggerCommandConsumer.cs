@@ -71,7 +71,7 @@ public class ParseSwaggerCommandConsumer : IConsumer<ParseSwaggerCommand>
             throw new InvalidOperationException("SwaggerUrl 不是合法的绝对地址。");
         }
 
-        var client = _httpClientFactory.CreateClient("McpDynamicClient");
+        var client = _httpClientFactory.CreateClient("McpSwaggerFetchClient");
         using var httpRequest = new HttpRequestMessage(HttpMethod.Get, uri);
         if (!string.IsNullOrWhiteSpace(authToken))
         {

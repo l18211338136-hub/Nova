@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useCreateMcpKey } from '@/api/endpoints/mcp-keys'
+import { copyToClipboard } from '@/lib/clipboard'
 
 const getFormSchema = (t: (arg: string) => string) =>
   z.object({
@@ -75,8 +76,11 @@ export function McpKeysCreateDialog({
           toast.success(t('MCP key created successfully'))
           form.reset()
         },
-        onError: (err: { response?: { data?: { message?: string } } }) =>
-          toast.error(err?.response?.data?.message || t('Failed to create MCP key.')),
+        onError: (err: unknown) =>
+          toast.error(
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+              t('Failed to create MCP key.')
+          ),
       }
     )
   }
@@ -84,7 +88,7 @@ export function McpKeysCreateDialog({
   const handleCopy = async () => {
     if (!generatedKey) return
     try {
-      await navigator.clipboard.writeText(generatedKey)
+      await copyToClipboard(generatedKey)
       setCopied(true)
       toast.success(t('Copied'))
       window.setTimeout(() => setCopied(false), 2000)

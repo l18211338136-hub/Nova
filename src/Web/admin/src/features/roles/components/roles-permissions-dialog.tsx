@@ -43,6 +43,7 @@ const ACTION_MAP: Record<string, string> = {
   'Upload': '上传',
   'Download': '下载',
   'InstantUpload': '秒传',
+  'Import': '导入',
 }
 
 const formSchema = z.object({
@@ -183,11 +184,12 @@ export function RolesPermissionsDialog({ currentRow, open, onOpenChange }: Props
     return allPermissions.data.reduce((acc, perm) => {
       const parts = perm.split('.')
       const prefix = parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0]
-      if (!acc[prefix]) acc[prefix] = []
-      acc[prefix].push(perm)
+      const groupName = permissionGroups?.data?.[prefix] || prefix
+      if (!acc[groupName]) acc[groupName] = []
+      acc[groupName].push(perm)
       return acc
     }, {} as Record<string, string[]>)
-  }, [allPermissions?.data])
+  }, [allPermissions?.data, permissionGroups?.data])
 
 
 

@@ -41,7 +41,8 @@ namespace Nova.Modules.Mcp.Api.Controllers
         [RequirePermission("Mcp.Servers.Import")]
         public async Task<IActionResult> ImportOpenApi([FromBody] ImportOpenApiCommand command)
         {
-            var response = await SendRequestAsync<ImportOpenApiCommand, ImportOpenApiCommandResponse>(command);
+            // 拉取数兆 Swagger 文档 + 生成工具链耗时较长，放宽中介请求超时（默认 30s 会提前中止）
+            var response = await SendRequestAsync<ImportOpenApiCommand, ImportOpenApiCommandResponse>(command, TimeSpan.FromMinutes(5));
             return Ok(new { success = true, serverId = response.ServerId });
         }
 
@@ -54,7 +55,8 @@ namespace Nova.Modules.Mcp.Api.Controllers
         [RequirePermission("Mcp.Servers.Import")]
         public async Task<IActionResult> ParseSwagger([FromBody] ParseSwaggerCommand command)
         {
-            var response = await SendRequestAsync<ParseSwaggerCommand, ParseSwaggerCommandResponse>(command);
+            // 远端 Swagger 文档可能数兆、伴随网络延迟，放宽中介请求超时（默认 30s 会提前中止）
+            var response = await SendRequestAsync<ParseSwaggerCommand, ParseSwaggerCommandResponse>(command, TimeSpan.FromMinutes(5));
             return Ok(ApiResponse<ParseSwaggerCommandResponse>.Success(response));
         }
 

@@ -48,4 +48,8 @@
     <ProjectReference Include="..\..\Framework\Nova.Framework.Infrastructure\Nova.Framework.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

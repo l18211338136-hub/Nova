@@ -18,6 +18,8 @@ export function useSignalR() {
         globalConnection.stop()
         globalConnection = null;
         connectionPromise = null;
+        // 外部单例连接状态同步回 React state：令牌失效时主动清空本地连接引用
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConnection(null)
       }
       return
@@ -38,7 +40,6 @@ export function useSignalR() {
     async function startConnection() {
       try {
         await newConnection.start()
-        console.log('SignalR Connected!')
         globalConnection = newConnection;
         setConnection(newConnection)
         
@@ -47,7 +48,7 @@ export function useSignalR() {
           Notification.requestPermission()
         }
         
-        newConnection.on('ReceiveNotification', (notification: any) => {
+        newConnection.on('ReceiveNotification', (notification: { title?: string; content?: string }) => {
           const title = notification.title || '新通知'
           const content = notification.content || ''
           
@@ -67,6 +68,7 @@ export function useSignalR() {
           queryClient.invalidateQueries({ queryKey: ['getMyNotifications'] })
         })
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('SignalR Connection Error: ', e)
         connectionPromise = null; // 失败后允许重试
       }

@@ -265,42 +265,41 @@ public class IdentityDbInitializer : IDbInitializer, IScopedDependency
         };
 
         var existingMenus = await _dbContext.Menus.ToListAsync(cancellationToken);
-        var allMenus = new List<Menu>();
 
-        foreach (var rootSeed in seedMenus)
+        // 递归播种，支持任意层级（root -> child -> grandchild ...）。
+        // 原先只处理两层，导致「AI 服务 / MCP 服务 / 服务管理、MCP 密钥」这类
+        // 三层结构的孙级菜单从未写入数据库，从而无法出现在侧边栏。
+        async Task SeedNode(MenuSeedDto seed, Guid? parentId)
         {
-            // 根据 Path 路由地址做全局判重
-            var rootMenu = existingMenus.FirstOrDefault(m => m.Path == rootSeed.Path);
-            if (rootMenu == null)
+            // 非宿主租户跳过仅宿主菜单
+            if (!isRootTenantEarly && hostOnlyMenuPaths.Contains(seed.Path))
             {
-                rootMenu = Menu.Create(rootSeed.Name, rootSeed.Path, rootSeed.Component, rootSeed.Icon, null, rootSeed.Sort);
-                _dbContext.Menus.Add(rootMenu);
-                existingMenus.Add(rootMenu);
+                return;
             }
-            allMenus.Add(rootMenu);
 
-            if (rootSeed.Children != null)
+            // 根据 Path 路由地址做全局判重
+            var menu = existingMenus.FirstOrDefault(m => m.Path == seed.Path);
+            if (menu == null)
             {
-                foreach (var childSeed in rootSeed.Children)
-                {
-                    // 非宿主租户跳过仅宿主菜单，不插入数据库
-                    if (!isRootTenantEarly && hostOnlyMenuPaths.Contains(childSeed.Path))
-                    {
-                        continue;
-                    }
+                menu = Menu.Create(seed.Name, seed.Path, seed.Component, seed.Icon, parentId, seed.Sort);
+                _dbContext.Menus.Add(menu);
+                existingMenus.Add(menu);
+            }
 
-                    // 根据 Path 路由地址做全局判重
-                    var childMenu = existingMenus.FirstOrDefault(m => m.Path == childSeed.Path);
-                    if (childMenu == null)
-                    {
-                        childMenu = Menu.Create(childSeed.Name, childSeed.Path, childSeed.Component, childSeed.Icon, rootMenu.Id, childSeed.Sort);
-                        _dbContext.Menus.Add(childMenu);
-                        existingMenus.Add(childMenu);
-                    }
-                    allMenus.Add(childMenu);
+            if (seed.Children != null)
+            {
+                foreach (var childSeed in seed.Children)
+                {
+                    await SeedNode(childSeed, menu.Id);
                 }
             }
         }
+
+        foreach (var rootSeed in seedMenus)
+        {
+            await SeedNode(rootSeed, null);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var rootRole = await _roleManager.FindByNameAsync(NovaIdentityConstants.Roles.Root);

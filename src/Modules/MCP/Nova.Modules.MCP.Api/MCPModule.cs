@@ -59,10 +59,17 @@ public class MCPModule : IModule
         services.AddScoped<IMcpPagedQueryService<McpServerDto>, McpServerQueryService>();
         services.AddScoped<IMcpPagedQueryService<McpToolDto>, McpToolQueryService>();
 
-        // 注册 HttpToolExecutor 专用的 HttpClient
+        // 注册 HttpToolExecutor 专用的 HttpClient（工具执行，超时保持较短）
         services.AddHttpClient("McpDynamicClient", client => 
         {
             client.Timeout = TimeSpan.FromSeconds(30); 
+        });
+
+        // 注册 Swagger 文档拉取专用的 HttpClient：文档可能数兆且伴随网络延迟，
+        // 超时放宽到 5 分钟，避免大文档在下载途中被中断（不复用 McpDynamicClient 的 30s）。
+        services.AddHttpClient("McpSwaggerFetchClient", client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(5);
         });
     }
 

@@ -37,8 +37,11 @@ export function McpKeysDeleteDialog({
           onOpenChange(false)
           queryClient.invalidateQueries({ queryKey: ['mcp-keys'] })
         },
-        onError: (err: { response?: { data?: { message?: string } } }) =>
-          toast.error(err?.response?.data?.message || t('Failed to delete MCP key.')),
+        onError: (err: unknown) =>
+          toast.error(
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+              t('Failed to delete MCP key.')
+          ),
         onSettled: () => setIsLoading(false),
       }
     )

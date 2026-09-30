@@ -24,11 +24,18 @@ namespace Nova.Framework.Web.Controllers
         /// <summary>
         /// 发送 Request/Response 模式的 CQRS 命令或查询
         /// </summary>
-        protected async Task<TResponse> SendRequestAsync<TRequest, TResponse>(TRequest request)
+        /// <param name="request">CQRS 命令/查询对象</param>
+        /// <param name="requestTimeout">
+        /// 可选的中介请求超时。长耗时命令（如拉取数兆 Swagger 文档）需显式放宽，
+        /// 否则沿用 MassTransit 默认 30s 超时，大文档在高延迟网络下会被提前中止。
+        /// </param>
+        protected async Task<TResponse> SendRequestAsync<TRequest, TResponse>(TRequest request, TimeSpan? requestTimeout = null)
             where TRequest : class
             where TResponse : class
         {
-            var client = ClientFactory.CreateRequestClient<TRequest>();
+            var client = requestTimeout.HasValue
+                ? ClientFactory.CreateRequestClient<TRequest>(requestTimeout.Value)
+                : ClientFactory.CreateRequestClient<TRequest>();
             var response = await client.GetResponse<TResponse>(request);
             return response.Message;
         }

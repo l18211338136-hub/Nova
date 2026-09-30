@@ -6,6 +6,7 @@ import { Check, Copy, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { copyToClipboard } from '@/lib/clipboard'
 
 type McpKeyCellProps = {
   value?: string
@@ -29,7 +30,7 @@ export function McpKeyCell({ value }: McpKeyCellProps) {
   const handleCopy = async () => {
     if (!value) return
     try {
-      await navigator.clipboard.writeText(value)
+      await copyToClipboard(value)
       setCopied(true)
       toast.success(t('Copied'))
       window.setTimeout(() => setCopied(false), 2000)

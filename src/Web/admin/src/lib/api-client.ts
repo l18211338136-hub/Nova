@@ -44,7 +44,6 @@ async function getEncryptionConfig(): Promise<EncryptionConfig> {
       
       // 注意：后端的 PublicKeyDto 已经增加了 isEnabled 字段
       // res 经过 customInstance 解包后已经是真正的 ApiResponse，所以读取 data.isEnabled 和 data.publicKey
-      // @ts-expect-error backend dto update not yet reflected in generated types
       const isEnabled = res.data?.isEnabled ?? true;
       const pubKey = res.data?.publicKey || null;
       
