@@ -40,7 +40,7 @@ namespace Nova.Modules.Mcp.Domain.ValueObjects
         public string TargetKey { get; set; } = string.Empty;
 
         /// <summary>
-        /// 参数存放的位置: "path", "query", "body", "header", "formData"
+        /// 参数存放的位置: "path", "query", "body", "header", "formData"，支持以 "|" 组合多位置（如 "path|body"）
         /// </summary>
         public string In { get; set; } = string.Empty;
 
