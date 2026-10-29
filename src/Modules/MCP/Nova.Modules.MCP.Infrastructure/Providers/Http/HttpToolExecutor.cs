@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -43,6 +43,24 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
                     }
 
                     string rawValue = paramValue.ToString();
+
+                    // 只要 URL 模板带有该参数的占位符，优先强制替换 URL 占位符（忽略大小写）
+                    if (requestUrl.Contains($"{{{mapping.TargetKey}}}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        requestUrl = System.Text.RegularExpressions.Regex.Replace(
+                            requestUrl,
+                            $"\\{{{System.Text.RegularExpressions.Regex.Escape(mapping.TargetKey)}\\}}",
+                            rawValue,
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    }
+                    else if (requestUrl.Contains($"{{{mcpKey}}}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        requestUrl = System.Text.RegularExpressions.Regex.Replace(
+                            requestUrl,
+                            $"\\{{{System.Text.RegularExpressions.Regex.Escape(mcpKey)}\\}}",
+                            rawValue,
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    }
 
                     switch (mapping.In.ToLower())
                     {

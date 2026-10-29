@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -77,10 +77,12 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                                 string propName = prop.Key;
                                 mcpProperties[propName] = GetMcpSchema(prop.Value, document);
                                 
+                                bool isPathParam = profile.TargetUrl.Contains($"{{{propName}}}", StringComparison.OrdinalIgnoreCase) ||
+                                                   (profile.ParameterMap.TryGetValue(propName, out var exist) && string.Equals(exist.In, "path", StringComparison.OrdinalIgnoreCase));
                                 profile.ParameterMap[propName] = new ParameterMapping
                                 {
                                     TargetKey = propName,
-                                    In = "body",
+                                    In = isPathParam ? "path" : "body",
                                     Type = MapSchemaType(prop.Value.Type)
                                 };
                             }
