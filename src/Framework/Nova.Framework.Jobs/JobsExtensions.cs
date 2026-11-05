@@ -14,14 +14,30 @@ public static class JobsExtensions
     /// </summary>
     public static IServiceCollection AddNovaJobs(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
+        var rawConnectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+
+        // 为公网/长驻后台任务自动补齐 TCP KeepAlive 与空闲连接淘汰，防止云端 NAT 静默断流
+        var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder(rawConnectionString)
+        {
+            KeepAlive = 30,                 // 每 30 秒发送 TCP KeepAlive 探测包
+            ConnectionIdleLifetime = 60,    // 空闲连接超过 60 秒主动回收，避免拿到死连接
+            ConnectionPruningInterval = 10, // 每 10 秒清理一次过期空闲连接
+        };
+
 
         services.AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(connectionString)));
+            .UsePostgreSqlStorage(
+                c => c.UseNpgsqlConnection(connBuilder.ConnectionString),
+                new PostgreSqlStorageOptions
+                {
+                    DistributedLockTimeout = TimeSpan.FromMinutes(1),
+                    QueuePollInterval = TimeSpan.FromSeconds(5),
+                }));
 
         // 启动 Hangfire Server（后台任务执行器）
         services.AddHangfireServer(options =>
