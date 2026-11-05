@@ -50,6 +50,6 @@
     <PackageVersion Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.6.0" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.20" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.20" />
-    <PackageVersion Include="Hangfire.PostgreSql" Version="1.20.10" />
+    <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
   </ItemGroup>
 </Project>
