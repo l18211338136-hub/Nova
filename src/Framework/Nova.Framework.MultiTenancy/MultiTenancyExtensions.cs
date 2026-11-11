@@ -71,6 +71,8 @@ public static class MultiTenancyExtensions
             return accessor.MultiTenantContext?.TenantInfo!;
         });
 
+        services.AddScoped<IDbInitializer, OutboxDbInitializer>();
+
         return services;
     }
 

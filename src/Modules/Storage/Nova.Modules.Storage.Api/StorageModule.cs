@@ -8,17 +8,21 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Nova.Contracts.Security;
 using Nova.Contracts.Storage;
 using Nova.Framework.MultiTenancy;
+using Nova.Framework.MultiTenancy.EntityFrameworkCore;
+using Nova.Framework.Persistence.Extensions;
 using Nova.Framework.Persistence.Interceptors;
 using Nova.Framework.Web.Modular;
 using Nova.Framework.Web.Responses;
 using Nova.Modules.Storage.Application.Database;
 using Nova.Modules.Storage.Domain.Files;
+using Nova.Modules.Storage.Infrastructure;
 using Nova.Modules.Storage.Infrastructure.Jobs;
 using Nova.Modules.Storage.Infrastructure.Persistence;
 using Nova.Modules.Storage.Infrastructure.Providers;
@@ -56,14 +60,19 @@ public class StorageModule : IModule
         services.AddTransient<CleanUnboundFilesJob>();
 
         // 注册 StorageDbContext 并开启自动审计拦截与 Finbuckle 自动多租户隔离
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<StorageDbContext>((sp, options) =>
         {
+            var tenantInfo = sp.GetService<IMultiTenantContextAccessor>()?.MultiTenantContext?.TenantInfo as NovaTenantInfo;
+            var connectionString = tenantInfo?.ConnectionString
+                ?? configuration.GetConnectionString("DefaultConnection");
+
             options.UseNpgsql(connectionString);
-            options.AddInterceptors(sp.GetRequiredService<AuditableEntitySaveChangesInterceptor>());
+            options.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
+            options.AddNovaInterceptors(sp);
         });
 
         services.AddScoped<IStorageDbContext>(sp => sp.GetRequiredService<StorageDbContext>());
+        services.AddScoped<IDbInitializer, StorageDbInitializer>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

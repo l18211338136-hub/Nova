@@ -93,14 +93,70 @@ public static class DatabaseExtensions
             var contextSetter = scope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
             contextSetter.MultiTenantContext = new ManualTenantContext { TenantInfo = rootTenant };
 
-            var initializers = scope.ServiceProvider.GetServices<IDbInitializer>();
+            var initializers = scope.ServiceProvider.GetServices<IDbInitializer>().ToList();
+            foreach (var initializer in initializers)
+            {
+                logger.LogInformation("[Nova.Database] Migrating {InitializerName} for Root tenant...", initializer.GetType().Name);
+                await initializer.MigrateAsync(default);
+            }
+
             foreach (var initializer in initializers)
             {
                 logger.LogInformation("[Nova.Database] Executing seeders for {InitializerName}...", initializer.GetType().Name);
-                await initializer.MigrateAsync(default);
                 await initializer.SeedAsync(default);
             }
             logger.LogInformation("[Nova.Database] Root tenant seeding completed.");
+
+            // === Migrate RetailConnection and any distinct tenant databases on startup ===
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var defaultConn = configuration.GetConnectionString("DefaultConnection");
+            var retailConn = configuration.GetConnectionString("RetailConnection");
+
+            var tenantConnStrings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(retailConn) && !string.Equals(retailConn, defaultConn, StringComparison.OrdinalIgnoreCase))
+            {
+                tenantConnStrings.Add(retailConn);
+            }
+
+            var allTenants = await tenantStore.GetAllAsync();
+            foreach (var t in allTenants)
+            {
+                if (!string.IsNullOrWhiteSpace(t.ConnectionString) && !string.Equals(t.ConnectionString, defaultConn, StringComparison.OrdinalIgnoreCase))
+                {
+                    tenantConnStrings.Add(t.ConnectionString);
+                }
+            }
+
+            foreach (var connStr in tenantConnStrings)
+            {
+                try
+                {
+                    using var tenantMigrationScope = app.ApplicationServices.CreateScope();
+                    var tenantSetter = tenantMigrationScope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
+                    tenantSetter.MultiTenantContext = new ManualTenantContext
+                    {
+                        TenantInfo = new NovaTenantInfo
+                        {
+                            Id = "migration-probe",
+                            Identifier = "migration-probe",
+                            Name = "MigrationProbe",
+                            ConnectionString = connStr,
+                            IsActive = true
+                        }
+                    };
+
+                    var tenantInitializers = tenantMigrationScope.ServiceProvider.GetServices<IDbInitializer>().ToList();
+                    foreach (var initializer in tenantInitializers)
+                    {
+                        logger.LogInformation("[Nova.Database] Migrating tenant database using {InitializerName}...", initializer.GetType().Name);
+                        await initializer.MigrateAsync(default);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "[Nova.Database] Failed to migrate tenant database connection.");
+                }
+            }
         }
         catch (Exception ex)
         {

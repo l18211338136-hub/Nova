@@ -83,32 +83,23 @@ public class CreateUserCommandHandler : IConsumer<CreateUserCommand>
 
         if (_tenantInfo != null)
         {
-            // 同时写入邮箱映射与用户名映射，支持用 UserName 或 Email 两种方式登录
-            if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.Email && m.TenantId == _tenantInfo.Identifier))
+            // 同时写入邮箱、用户名、手机号映射（去重，防止 UserName 与 Email 相同时在同一批次内重复插入报错）
+            var accountsToMap = new[] { user.Email, user.UserName, user.PhoneNumber }
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            foreach (var account in accountsToMap)
             {
-                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == account && m.TenantId == _tenantInfo.Identifier))
                 {
-                    Account = user.Email,
-                    TenantId = _tenantInfo.Identifier!
-                });
-            }
-            if (!await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.UserName && m.TenantId == _tenantInfo.Identifier))
-            {
-                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
-                {
-                    Account = user.UserName,
-                    TenantId = _tenantInfo.Identifier!
-                });
-            }
-            // 若填写了手机号，也写入手机号映射，支持用手机号登录
-            if (!string.IsNullOrWhiteSpace(user.PhoneNumber)
-                && !await _tenantDbContext.GlobalUserTenantMappings.AnyAsync(m => m.Account == user.PhoneNumber && m.TenantId == _tenantInfo.Identifier))
-            {
-                _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
-                {
-                    Account = user.PhoneNumber,
-                    TenantId = _tenantInfo.Identifier!
-                });
+                    _tenantDbContext.GlobalUserTenantMappings.Add(new GlobalUserTenantMapping
+                    {
+                        Account = account,
+                        TenantId = _tenantInfo.Identifier!
+                    });
+                }
             }
             await _tenantDbContext.SaveChangesAsync();
         }

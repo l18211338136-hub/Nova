@@ -73,10 +73,16 @@ public class RegisterUserCommandHandler : IConsumer<RegisterUserCommand>
         var initSetter = initScope.ServiceProvider.GetRequiredService<IMultiTenantContextSetter>();
         initSetter.MultiTenantContext = new MultiTenantContext<NovaTenantInfo>(tenantInfo);
 
-        var initializers = initScope.ServiceProvider.GetServices<Nova.Framework.MultiTenancy.IDbInitializer>();
+        var initializers = initScope.ServiceProvider.GetServices<Nova.Framework.MultiTenancy.IDbInitializer>().ToList();
+        // 第一阶段：先完成所有模块的数据库表结构迁移（确保 audit.EntityChangeLogs、OutboxMessages 等表全部就绪）
         foreach (var initializer in initializers)
         {
             await initializer.MigrateAsync(default);
+        }
+
+        // 第二阶段：表结构全部就绪后，再执行各模块的种子数据填充（此时触发审计拦截器写入日志不会因表不存在而报错）
+        foreach (var initializer in initializers)
+        {
             await initializer.SeedAsync(default);
         }
 

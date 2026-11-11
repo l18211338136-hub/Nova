@@ -36,7 +36,6 @@ public class DictionaryModule : IModule
         });
 
         services.AddScoped<IDictionaryDbContext>(sp => sp.GetRequiredService<DictionaryDbContext>());
-        services.AddScoped<IDbInitializer, DictionaryDbInitializer>();
 
         Mapster.TypeAdapterConfig<DictionaryType, DictionaryTypeDto>.NewConfig().Map(dest => dest.SortOrder, src => src.Sort);
         Mapster.TypeAdapterConfig<DictionaryItem, DictionaryItemDto>.NewConfig().Map(dest => dest.SortOrder, src => src.Sort);

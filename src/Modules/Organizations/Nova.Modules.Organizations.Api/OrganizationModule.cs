@@ -1,6 +1,7 @@
 using Finbuckle.MultiTenant.Abstractions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -30,11 +31,11 @@ public class OrganizationModule : IModule
                 ?? configuration.GetConnectionString("DefaultConnection");
 
             options.UseNpgsql(connectionString);
+            options.ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
             options.AddNovaInterceptors(sp);
         });
 
         services.AddScoped<IOrganizationDbContext>(sp => sp.GetRequiredService<OrganizationDbContext>());
-        services.AddScoped<IDbInitializer, OrganizationDbInitializer>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

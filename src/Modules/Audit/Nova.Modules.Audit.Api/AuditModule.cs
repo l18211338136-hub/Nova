@@ -37,6 +37,7 @@ public class AuditModule : IModule
         });
 
         services.AddScoped<IAuditDbContext>(sp => sp.GetRequiredService<AuditDbContext>());
+        services.AddScoped<IDbInitializer, Nova.Modules.Audit.Infrastructure.AuditDbInitializer>();
 
         services.AddHostedService<LogProcessorHostedService>();
     }
