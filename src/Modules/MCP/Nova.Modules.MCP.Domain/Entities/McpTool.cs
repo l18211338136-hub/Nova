@@ -46,7 +46,7 @@ public class McpTool : FullAuditedEntity<Guid>
             Name = name.Trim(),
             Description = description.Trim(),
             HttpMethod = httpMethod.Trim().ToUpperInvariant(),
-            RoutePath = routePath.Trim(),
+            RoutePath = routePath.Trim().StartsWith('/') ? routePath.Trim() : "/" + routePath.Trim(),
             InputSchema = inputSchema,
             ParameterMap = parameterMap,
             IsPublic = isPublic,

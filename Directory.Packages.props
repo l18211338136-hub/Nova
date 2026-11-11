@@ -51,5 +51,6 @@
     <PackageVersion Include="Hangfire.Core" Version="1.8.20" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.20" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
   </ItemGroup>
 </Project>

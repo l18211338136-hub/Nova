@@ -165,9 +165,30 @@ namespace Nova.Modules.Mcp.Infrastructure.Providers.Http
 
             var sw = Stopwatch.StartNew();
             var client = _httpClientFactory.CreateClient("McpDynamicClient");
-            var response = await client.SendAsync(request, cancellationToken);
-            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            sw.Stop();
+            HttpResponseMessage response;
+            string responseContent;
+
+            try
+            {
+                response = await client.SendAsync(request, cancellationToken);
+                responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                sw.Stop();
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(
+                    ex,
+                    "MCP HTTP Request FAILED => ({ElapsedMs}ms)\n  ClientIp: {ClientIp}\n  TargetUrl: {Method} {Url}\n  ExceptionType: {ExType}\n  ErrorMessage: {Message}",
+                    sw.ElapsedMilliseconds,
+                    clientIp,
+                    profile.TargetMethod,
+                    requestUrl,
+                    ex.GetType().FullName,
+                    ex.Message);
+
+                return $"API Request Failed ({ex.GetType().Name}): {ex.Message}";
+            }
 
             if (!response.IsSuccessStatusCode)
             {

@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddNovaLogging();
+
 builder.Services.AddNovaCaching(builder.Configuration);
 
 builder.Services.AddOpenApi("v1", options =>

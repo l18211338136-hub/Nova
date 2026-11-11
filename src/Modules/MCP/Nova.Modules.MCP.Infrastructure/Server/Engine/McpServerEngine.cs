@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Nova.Modules.Mcp.Application.Common.Interfaces;
 using Nova.Modules.Mcp.Domain.Entities;
 using Nova.Modules.Mcp.Domain.ValueObjects;
@@ -21,10 +22,12 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
     {
         private readonly ConcurrentDictionary<string, Channel<string>> _activeSessions = new();
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<McpServerEngine> _logger;
 
-        public McpServerEngine(IServiceScopeFactory scopeFactory)
+        public McpServerEngine(IServiceScopeFactory scopeFactory, ILogger<McpServerEngine> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         public async Task HoldSseConnectionAsync(string sessionId, HttpResponse response, CancellationToken cancellationToken)
@@ -58,16 +61,21 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
         {
             if (!_activeSessions.TryGetValue(sessionId, out var channel))
             {
+                _logger.LogWarning("[MCP Engine] SessionId not found: {SessionId}", sessionId);
                 return false;
             }
 
+            string? id = null;
             try
             {
                 var requestNode = JsonNode.Parse(jsonRpcMessage);
                 if (requestNode == null) return true;
 
-                string? id = requestNode["id"]?.ToString();
+                id = requestNode["id"]?.ToString();
                 string? method = requestNode["method"]?.ToString();
+
+                _logger.LogInformation("[MCP Engine] HandleMessage => Session: {SessionId}, Method: {Method}, Id: {Id}, Key: {Key}",
+                    sessionId, method, id, string.IsNullOrEmpty(mcpKey) ? "(none)" : $"{mcpKey[..Math.Min(12, mcpKey.Length)]}...");
 
                 JsonNode? resultData = null;
                 switch (method)
@@ -82,6 +90,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                         resultData = await HandleCallToolAsync(requestNode["params"], mcpKey);
                         break;
                     default:
+                        _logger.LogWarning("[MCP Engine] Unhandled method: {Method}", method);
                         return true;
                 }
 
@@ -93,11 +102,30 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                 };
 
                 string responseStr = JsonSerializer.Serialize(responseObj);
+                _logger.LogInformation("[MCP Engine] Pushing response for Id: {Id}, Length: {Length}", id, responseStr.Length);
                 await channel.Writer.WriteAsync(responseStr);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "[MCP Engine] ERROR while handling message for Session: {SessionId}, Id: {Id}: {Message}",
+                    sessionId, id, ex.Message);
+
+                // 发送 JSON-RPC 错误响应给客户端，避免客户端死等超时
+                if (!string.IsNullOrEmpty(id))
+                {
+                    var errorObj = new
+                    {
+                        jsonrpc = "2.0",
+                        id = id,
+                        error = new
+                        {
+                            code = -32603,
+                            message = $"Internal error: {ex.Message}"
+                        }
+                    };
+                    await channel.Writer.WriteAsync(JsonSerializer.Serialize(errorObj));
+                }
                 return true;
             }
         }
@@ -186,6 +214,9 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
             string? toolName = paramNode["name"]?.ToString();
             var arguments = paramNode["arguments"];
 
+            _logger.LogInformation("[MCP Engine] HandleCallToolAsync => ToolName: {ToolName}, Arguments: {Arguments}",
+                toolName, arguments?.ToJsonString() ?? "(null)");
+
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<IMcpDbContext>();
             var executor = scope.ServiceProvider.GetRequiredService<HttpToolExecutor>();
@@ -197,13 +228,20 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
 
             if (mcpTool == null)
             {
+                _logger.LogWarning("[MCP Engine] McpTool '{ToolName}' NOT found or disabled/deleted in database.", toolName);
                 return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' not found or disabled." } } })!;
             }
+
+            _logger.LogInformation(
+                "[MCP Engine] McpTool Entity => Id: {ToolId}, Name: {Name}, ServerId: {ServerId}, RoutePath: {RoutePath}, Method: {Method}, IsPublic: {IsPublic}, CreatedBy: {CreatedBy}",
+                mcpTool.Id, mcpTool.Name, mcpTool.ServerId, mcpTool.RoutePath, mcpTool.HttpMethod, mcpTool.IsPublic, mcpTool.CreatedBy);
 
             // 可见性校验：公开工具任意持有 Key 可调用；非公开工具仅限「创建者关联」的 Key 调用。
             var creatorId = await ResolveCreatorIdAsync(dbContext, mcpKey);
             if (!mcpTool.IsPublic && (creatorId == null || mcpTool.CreatedBy != creatorId))
             {
+                _logger.LogWarning("[MCP Engine] McpTool '{ToolName}' is private. CreatorId: {CreatorId}, KeyCreatorId: {KeyCreatorId}",
+                    toolName, mcpTool.CreatedBy, creatorId);
                 return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' is private and not owned by this key." } } })!;
             }
 
@@ -213,18 +251,31 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                 .FirstOrDefaultAsync(s => s.Id == mcpTool.ServerId);
             if (server == null || server.IsDeleted)
             {
+                _logger.LogWarning("[MCP Engine] McpServer (Id: {ServerId}) for Tool '{ToolName}' NOT found or deleted.", mcpTool.ServerId, toolName);
                 return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Server for tool '{toolName}' not found." } } })!;
             }
 
+            _logger.LogInformation(
+                "[MCP Engine] McpServer Entity => Id: {ServerId}, Name: {ServerName}, BaseUrl: {BaseUrl}, HasAuthToken: {HasAuthToken}",
+                server.Id, server.Name, server.BaseUrl, !string.IsNullOrEmpty(server.AuthToken));
+
             var profile = new ExecutionProfile
             {
-                TargetUrl = server.BaseUrl.TrimEnd('/') + mcpTool.RoutePath,
+                TargetUrl = $"{server.BaseUrl.TrimEnd('/')}/{(mcpTool.RoutePath ?? string.Empty).TrimStart('/')}",
                 TargetMethod = mcpTool.HttpMethod,
                 AuthToken = server.AuthToken,
                 ParameterMap = JsonSerializer.Deserialize<Dictionary<string, ParameterMapping>>(mcpTool.ParameterMap) ?? new()
             };
 
+            _logger.LogInformation(
+                "[MCP Engine] Ready to execute => TargetUrl: {Method} {TargetUrl}",
+                profile.TargetMethod, profile.TargetUrl);
+
             string rawResult = await executor.ExecuteAsync(profile, arguments!);
+
+            _logger.LogInformation(
+                "[MCP Engine] Execute Finished => Tool: {ToolName}, RawResult Length: {Length}",
+                toolName, rawResult?.Length ?? 0);
 
             var callResult = new
             {
