@@ -226,8 +226,3 @@ profile.arm.json
 
 # Local Application Logs
 src/Api/Logs/
-# 本地文档工作区（通用规范树 + 迭代台账，按需自取，不入库）
-docs/local/
-
-# 本地文档/运维脚本（仅维护者本机使用，不入库）
-scripts/

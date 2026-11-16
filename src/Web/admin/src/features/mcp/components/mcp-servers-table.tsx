@@ -69,7 +69,6 @@ export function McpServersTable({ search, navigate }: DataTableProps) {
   const totalCount = apiResponse?.data?.total ?? 0
   const pageCount = Math.ceil(totalCount / pagination.pageSize)
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: isLoading ? [] : serversData,
     columns,

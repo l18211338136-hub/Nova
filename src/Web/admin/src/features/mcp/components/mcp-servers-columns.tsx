@@ -78,7 +78,7 @@ export const useMcpServersColumns = () => {
         header: () => <div className='text-end'>{t('Actions')}</div>,
         cell: ({ row }) => (
           <div className='flex justify-end'>
-            <McpRowActions row={row} />
+            <McpRowActions row={row} kind='server' />
           </div>
         ),
         enableSorting: false,

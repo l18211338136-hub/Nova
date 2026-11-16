@@ -26,11 +26,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { useCreateMcpKey } from '@/api/endpoints/mcp-keys'
 import { copyToClipboard } from '@/lib/clipboard'
-import { McpKeyScopeEditor } from './mcp-key-scope-editor'
-import { useCreateMcpKeyWithScope } from '../hooks/use-mcp-key-mutations'
-import { toPayload, validateScope } from '../lib/key-scope'
-import { DEFAULT_SCOPE, type McpKeyScopeValue } from '../types'
 
 const getFormSchema = (t: (arg: string) => string) =>
   z.object({
@@ -52,9 +49,7 @@ export function McpKeysCreateDialog({
   const queryClient = useQueryClient()
   const [generatedKey, setGeneratedKey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [scope, setScope] = useState<McpKeyScopeValue>(DEFAULT_SCOPE)
-  const [scopeError, setScopeError] = useState<string | null>(null)
-  const createMutation = useCreateMcpKeyWithScope()
+  const createMutation = useCreateMcpKey()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(getFormSchema(t)),
@@ -65,39 +60,29 @@ export function McpKeysCreateDialog({
     if (!state) {
       setGeneratedKey(null)
       setCopied(false)
-      setScope(DEFAULT_SCOPE)
-      setScopeError(null)
       form.reset()
     }
     onOpenChange(state)
   }
 
   const onSubmit = (values: FormValues) => {
-    const invalid = validateScope(scope)
-    if (invalid) {
-      setScopeError(
-        invalid.code === 'no-server'
-          ? t('Select at least one server.')
-          : t('Select at least one tool.')
-      )
-      return
-    }
-    setScopeError(null)
-
-    createMutation.mutate(toPayload(values.name, scope), {
-      onSuccess: (res) => {
-        const key = res?.data?.keyValue
-        if (key) setGeneratedKey(key)
-        queryClient.invalidateQueries({ queryKey: ['mcp-keys'] })
-        toast.success(t('MCP key created successfully'))
-        form.reset()
-      },
-      onError: (err: unknown) =>
-        toast.error(
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-            t('Failed to create MCP key.')
-        ),
-    })
+    createMutation.mutate(
+      { data: { name: values.name } },
+      {
+        onSuccess: (res) => {
+          const key = res?.data?.keyValue
+          if (key) setGeneratedKey(key)
+          queryClient.invalidateQueries({ queryKey: ['mcp-keys'] })
+          toast.success(t('MCP key created successfully'))
+          form.reset()
+        },
+        onError: (err: unknown) =>
+          toast.error(
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+              t('Failed to create MCP key.')
+          ),
+      }
+    )
   }
 
   const handleCopy = async () => {
@@ -114,7 +99,7 @@ export function McpKeysCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-2xl [&>*]:min-w-0'>
+      <DialogContent className='sm:max-w-lg'>
         {generatedKey ? (
           <>
             <DialogHeader>
@@ -160,39 +145,21 @@ export function McpKeysCreateDialog({
                   control={form.control}
                   name='name'
                   render={({ field }) => (
-                    <FormItem className='grid grid-cols-1 items-center gap-1 space-y-0 sm:grid-cols-6 sm:gap-x-4'>
-                      <FormLabel className='sm:col-span-2 sm:text-end'>
+                    <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                      <FormLabel className='col-span-2 text-end'>
                         {t('Name')}
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder='my-agent-key'
-                          className='w-full sm:col-span-4'
+                          className='col-span-4'
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage className='sm:col-span-4 sm:col-start-3' />
+                      <FormMessage className='col-span-4 col-start-3' />
                     </FormItem>
                   )}
                 />
-                <div className='space-y-2'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm font-medium'>{t('Access Scope')}</span>
-                    <span className='text-xs text-muted-foreground'>
-                      {t('This key can only call the selected servers and tools.')}
-                    </span>
-                  </div>
-                  <McpKeyScopeEditor
-                    value={scope}
-                    onChange={(next) => {
-                      setScope(next)
-                      setScopeError(null)
-                    }}
-                  />
-                  {scopeError && (
-                    <p className='text-xs text-destructive'>{scopeError}</p>
-                  )}
-                </div>
               </form>
             </Form>
             <DialogFooter>
