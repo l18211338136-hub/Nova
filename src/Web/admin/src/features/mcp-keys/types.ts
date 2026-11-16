@@ -17,16 +17,9 @@ export interface McpKeyScopeValue {
 }
 
 /**
- * 列表行。
- *
- * ⚠️ 生成的 `McpKeyDto` 还没有 `allServers` / `scopes`（后端未实现，
- * 见 `docs/local/designs/feature-designs/20261115-feat-mcp密钥授权范围/03` §3）。
- * 这里用交叉类型补齐，后端 + `pnpm gen-api` 上线后可直接改用生成模型。
+ * 列表行（直接使用 gen-api 生成的 McpKeyDto，已含 allServers 与 scopes）。
  */
-export type McpKeyRow = McpKeyDto & {
-  allServers?: boolean
-  scopes?: McpKeyScope[]
-}
+export type McpKeyRow = McpKeyDto
 
 /** POST/PUT /api/mcp/keys 的请求体（目标契约）。 */
 export interface McpKeyUpsertPayload {

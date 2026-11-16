@@ -29,7 +29,30 @@ public class UpdateMcpKeyCommandHandler : IConsumer<UpdateMcpKeyCommand>
             throw new NovaValidationException($"MCP 密钥 {message.Id} 不存在");
         }
 
-        key.Rename(message.Name);
+        var newAccesses = await McpKeyScopeHelper.BuildAndValidateAccessesAsync(
+            _dbContext,
+            key.Id,
+            message.Name,
+            message.AllServers,
+            message.Scopes,
+            context.CancellationToken);
+
+        key.Update(message.Name, message.AllServers);
+
+        var existingAccesses = await _dbContext.McpKeyAccesses
+            .Where(a => a.McpKeyId == key.Id)
+            .ToListAsync(context.CancellationToken);
+
+        if (existingAccesses.Count > 0)
+        {
+            _dbContext.McpKeyAccesses.RemoveRange(existingAccesses);
+        }
+
+        if (newAccesses.Count > 0)
+        {
+            _dbContext.McpKeyAccesses.AddRange(newAccesses);
+        }
+
         await _dbContext.SaveChangesAsync(context.CancellationToken);
 
         await context.RespondAsync(new UpdateMcpKeyResult { Id = key.Id });

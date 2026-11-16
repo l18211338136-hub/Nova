@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,7 @@ public abstract class McpPagedQueryService<TDto> : IMcpPagedQueryService<TDto> w
     public abstract IQueryable<TDto> Query();
 
     /// <inheritdoc />
-    public async Task<PagedResult<TDto>> ToPagedResultAsync(
+    public virtual async Task<PagedResult<TDto>> ToPagedResultAsync(
         IQueryable<TDto> query,
         int? skip,
         int? top,
@@ -66,8 +68,53 @@ public class McpKeyQueryService : McpPagedQueryService<McpKeyDto>
             Id = k.Id,
             Name = k.Name,
             KeyValue = k.KeyValue,
+            AllServers = k.AllServers,
             CreatedAt = k.CreatedAt
         });
+
+    public override async Task<PagedResult<McpKeyDto>> ToPagedResultAsync(
+        IQueryable<McpKeyDto> query,
+        int? skip,
+        int? top,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await base.ToPagedResultAsync(query, skip, top, cancellationToken);
+        var items = result.Items;
+        if (!items.Any()) return result;
+
+        var restrictedKeyIds = items.Where(k => !k.AllServers).Select(k => k.Id).ToList();
+        if (restrictedKeyIds.Count == 0) return result;
+
+        var accesses = await DbContext.McpKeyAccesses
+            .AsNoTracking()
+            .Where(a => restrictedKeyIds.Contains(a.McpKeyId))
+            .Select(a => new { a.McpKeyId, a.ServerId, a.ToolId })
+            .ToListAsync(cancellationToken);
+
+        var scopeByKey = accesses
+            .GroupBy(a => a.McpKeyId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.GroupBy(x => x.ServerId)
+                    .Select(sg => new McpKeyScopeDto
+                    {
+                        ServerId = sg.Key,
+                        ToolIds = sg.Any(x => x.ToolId == null)
+                            ? null
+                            : sg.Where(x => x.ToolId.HasValue).Select(x => x.ToolId!.Value).Distinct().ToList()
+                    })
+                    .ToList());
+
+        foreach (var item in items)
+        {
+            if (!item.AllServers && scopeByKey.TryGetValue(item.Id, out var scopes))
+            {
+                item.Scopes = scopes;
+            }
+        }
+
+        return result;
+    }
 }
 
 /// <summary>MCP 服务的分页查询实现。</summary>

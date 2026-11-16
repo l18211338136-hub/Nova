@@ -10,6 +10,7 @@ public interface IMcpDbContext
     DbSet<McpServer> McpServers { get; }
     DbSet<McpTool> McpTools { get; }
     DbSet<McpKey> McpKeys { get; }
+    DbSet<McpKeyAccess> McpKeyAccesses { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -17,18 +17,18 @@
 | 方法 | 路径 | 用途 | 权限 | 实现状态 |
 |:--|:--|:--|:--|:--|
 | GET | `/api/mcp/servers` | 服务列表（OData 分页） | `Mcp.Servers.Read` | ✅ |
-| PUT | `/api/mcp/servers/{id}` | 修改服务基本信息 | `Mcp.Servers.Update` | ⛔ **待实现**（含新权限码） |
+| PUT | `/api/mcp/servers/{id}` | 修改服务基本信息 | `Mcp.Servers.Update` | ✅ |
 | DELETE | `/api/mcp/servers/{id}` | 删除服务（级联删工具） | `Mcp.Servers.Delete` | ✅ |
 | GET | `/api/mcp/tools` | 工具列表（OData 分页） | `Mcp.Tools.Read` | ✅ |
 | DELETE | `/api/mcp/tools/{id}` | 删除工具 | `Mcp.Tools.Delete` | ✅ |
 | POST | `/api/mcp/parse` | 解析 Swagger/OpenAPI 文档为操作清单 | `Mcp.Servers.Import` | ✅ |
 | POST | `/api/mcp/import` | 导入选中操作生成服务与工具 | `Mcp.Servers.Import` | ✅ |
-| GET | `/api/mcp/keys` | 密钥列表（OData 分页） | `Mcp.Keys.Read` | ✅（范围字段 ⛔ 待加） |
-| POST | `/api/mcp/keys` | 创建密钥（含授权范围） | `Mcp.Keys.Create` | ⛔ 范围参数待加 |
-| PUT | `/api/mcp/keys/{id}` | 修改名称与授权范围 | `Mcp.Keys.Update` | ⛔ 范围参数待加 |
-| DELETE | `/api/mcp/keys/{id}` | 删除密钥 | `Mcp.Keys.Delete` | ✅ |
+| GET | `/api/mcp/keys` | 密钥列表（OData 分页，含范围字段） | `Mcp.Keys.Read` | ✅ |
+| POST | `/api/mcp/keys` | 创建密钥（含授权范围） | `Mcp.Keys.Create` | ✅ |
+| PUT | `/api/mcp/keys/{id}` | 修改名称与授权范围 | `Mcp.Keys.Update` | ✅ |
+| DELETE | `/api/mcp/keys/{id}` | 删除密钥（级联删授权范围） | `Mcp.Keys.Delete` | ✅ |
 | GET | `/api/mcp/sse` | 网关：建立 SSE 连接 | MCP Key | ✅ |
-| POST | `/api/mcp/messages?sessionId=` | 网关：接收 JSON-RPC（`tools/list`、`tools/call`） | MCP Key | ✅（范围的执行 ⛔ 待加） |
+| POST | `/api/mcp/messages?sessionId=` | 网关：接收 JSON-RPC（`tools/list`、`tools/call`） | MCP Key | ✅（已执行范围校验） |
 
 ## 3. 关键接口
 
@@ -42,7 +42,7 @@ OData 分页：`$count` `$skip`（**0 起**）`$top` `$orderby` `$filter`。返�
 
 服务详情取该服务的工具：`GET /api/mcp/tools?$filter=ServerId eq {guid}&$top=500&$orderby=RoutePath asc`。
 
-### PUT /api/mcp/servers/{id}（⛔ 待实现）
+### PUT /api/mcp/servers/{id}
 
 ```json
 { "name": "Nova 内部 API 网关", "baseUrl": "http://…", "swaggerUrl": "http://…/openapi/v1.json", "authToken": null }
@@ -52,10 +52,10 @@ OData 分页：`$count` `$skip`（**0 起**）`$top` `$orderby` `$filter`。返�
 - 🔺 `authToken` **缺省 = 不修改**；不要用 `null` 覆盖已有令牌，否则一次编辑就清空认证信息。
 - 侧效应：改 `baseUrl`/`swaggerUrl` **不自动重建工具**，前端另行提示重新导入。
 
-### 密钥授权范围（⛔ 待实现，前端 + Mock 已按此跑通）
+### 密钥授权范围
 
 ```jsonc
-// McpKeyDto 新增
+// McpKeyDto 字段
 {
   "allServers": false,
   "scopes": [
@@ -111,3 +111,4 @@ OData 分页：`$count` `$skip`（**0 起**）`$top` `$orderby` `$filter`。返�
 | 日期 | 变更 | 影响 |
 |:--|:--|:--|
 | 2026-11-16 | 建域文件：归档服务/工具/密钥/网关的现有契约与两处目标契约（服务更新、密钥授权范围） | 供后端按此实现 B-* 项；前端 Mock 已按此跑通 |
+| 2026-11-16 | 后端实现 `PUT /api/mcp/servers/{id}`、密钥授权范围 CRUD 与网关校验，前端已 `pnpm gen-api` 切换生成物 | 所有 ⛔ 待实现项已完成并编译通过 |

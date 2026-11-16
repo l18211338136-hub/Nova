@@ -31,6 +31,15 @@ public class DeleteMcpKeyCommandHandler : IConsumer<DeleteMcpKeyCommand>
             throw new NovaValidationException($"MCP 密钥 {id} 不存在");
         }
 
+        var accesses = await _dbContext.McpKeyAccesses
+            .Where(a => a.McpKeyId == id)
+            .ToListAsync(context.CancellationToken);
+
+        if (accesses.Count > 0)
+        {
+            _dbContext.McpKeyAccesses.RemoveRange(accesses);
+        }
+
         _dbContext.McpKeys.Remove(key);
         await _dbContext.SaveChangesAsync(context.CancellationToken);
 

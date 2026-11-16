@@ -4,10 +4,13 @@
  * Nova.WebApi | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { McpKeyScopeDto } from './mcpKeyScopeDto';
 
 export interface McpKeyDto {
   id?: string;
   name?: string;
   keyValue?: string;
+  allServers?: boolean;
+  scopes?: McpKeyScopeDto[];
   createdAt?: string;
 }

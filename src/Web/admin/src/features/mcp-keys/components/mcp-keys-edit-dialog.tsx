@@ -27,7 +27,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { type McpKeyDto as McpKey } from '@/api/model'
 import { McpKeyScopeEditor } from './mcp-key-scope-editor'
-import { useUpdateMcpKeyWithScope } from '../hooks/use-mcp-key-mutations'
+import { useUpdateMcpKey } from '@/api/endpoints/mcp-keys'
 import { fromRow, toPayload, validateScope } from '../lib/key-scope'
 import type { McpKeyScopeValue } from '../types'
 
@@ -51,7 +51,7 @@ export function McpKeysEditDialog({
 }: McpKeysEditDialogProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const updateMutation = useUpdateMcpKeyWithScope()
+  const updateMutation = useUpdateMcpKey()
   const [scope, setScope] = useState<McpKeyScopeValue>(() => fromRow(currentRow))
   const [scopeError, setScopeError] = useState<string | null>(null)
 

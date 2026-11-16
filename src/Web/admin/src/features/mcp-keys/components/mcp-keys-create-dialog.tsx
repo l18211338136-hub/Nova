@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { copyToClipboard } from '@/lib/clipboard'
 import { McpKeyScopeEditor } from './mcp-key-scope-editor'
-import { useCreateMcpKeyWithScope } from '../hooks/use-mcp-key-mutations'
+import { useCreateMcpKey } from '@/api/endpoints/mcp-keys'
 import { toPayload, validateScope } from '../lib/key-scope'
 import { DEFAULT_SCOPE, type McpKeyScopeValue } from '../types'
 
@@ -54,7 +54,7 @@ export function McpKeysCreateDialog({
   const [copied, setCopied] = useState(false)
   const [scope, setScope] = useState<McpKeyScopeValue>(DEFAULT_SCOPE)
   const [scopeError, setScopeError] = useState<string | null>(null)
-  const createMutation = useCreateMcpKeyWithScope()
+  const createMutation = useCreateMcpKey()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(getFormSchema(t)),
@@ -84,7 +84,9 @@ export function McpKeysCreateDialog({
     }
     setScopeError(null)
 
-    createMutation.mutate(toPayload(values.name, scope), {
+    createMutation.mutate(
+      { data: toPayload(values.name, scope) },
+      {
       onSuccess: (res) => {
         const key = res?.data?.keyValue
         if (key) setGeneratedKey(key)

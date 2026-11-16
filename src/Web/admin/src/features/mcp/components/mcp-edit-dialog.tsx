@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useUpdateMcpServer } from '../hooks/use-update-mcp-server'
+import { useUpdateMcpServer } from '@/api/endpoints/mcp'
 import type { McpServerDto } from '../types'
 
 const getFormSchema = (t: (arg: string) => string) =>

@@ -26,11 +26,12 @@ import type {
 import type {
   ApiResponseOfDeleteMcpServerResult,
   ApiResponseOfDeleteMcpToolResult,
+  ApiResponseOfMcpServerDto,
   ApiResponseOfPagedResultOfMcpServerDto,
   ApiResponseOfPagedResultOfMcpToolDto,
   ImportOpenApi,
-  MessagesParams,
-  ParseSwagger
+  ParseSwagger,
+  UpdateMcpServer
 } from '../model';
 
 import { customInstance } from '../../lib/api-client';
@@ -181,16 +182,19 @@ export const useDeleteMcpServer = <TError = unknown,
       return useMutation(getDeleteMcpServerMutationOptions(options), queryClient);
     }
     /**
- * @summary 建立连接
+ * @summary 更新 MCP 服务
  */
-export const sse = (
-
+export const updateMcpServer = (
+    id: string,
+    updateMcpServer: UpdateMcpServer,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
-      return customInstance<void>(
-      {url: `/api/mcp/sse`, method: 'GET', signal
+      return customInstance<ApiResponseOfMcpServerDto>(
+      {url: `/api/mcp/servers/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateMcpServer, signal
     },
       options);
     }
@@ -198,104 +202,11 @@ export const sse = (
 
 
 
-export const getSseQueryKey = () => {
-    return [
-    `/api/mcp/sse`
-    ] as const;
-    }
+export const getUpdateMcpServerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMcpServer>>, TError,{id: string;data: UpdateMcpServer}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMcpServer>>, TError,{id: string;data: UpdateMcpServer}, TContext> => {
 
-
-export const getSseQueryOptions = <TData = Awaited<ReturnType<typeof sse>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSseQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sse>>> = ({ signal }) => sse(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SseQueryResult = NonNullable<Awaited<ReturnType<typeof sse>>>
-export type SseQueryError = unknown
-
-
-export function useSse<TData = Awaited<ReturnType<typeof sse>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sse>>,
-          TError,
-          Awaited<ReturnType<typeof sse>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSse<TData = Awaited<ReturnType<typeof sse>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sse>>,
-          TError,
-          Awaited<ReturnType<typeof sse>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSse<TData = Awaited<ReturnType<typeof sse>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 建立连接
- */
-
-export function useSse<TData = Awaited<ReturnType<typeof sse>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sse>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSseQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-/**
- * @summary 接收消息
- */
-export const messages = (
-    params?: MessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/mcp/messages`, method: 'POST',
-        params, signal
-    },
-      options);
-    }
-
-
-
-
-export const getMessagesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof messages>>, TError,{params?: MessagesParams}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof messages>>, TError,{params?: MessagesParams}, TContext> => {
-
-const mutationKey = ['messages'];
+const mutationKey = ['updateMcpServer'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -305,10 +216,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof messages>>, {params?: MessagesParams}> = (props) => {
-          const {params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMcpServer>>, {id: string;data: UpdateMcpServer}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  messages(params,requestOptions)
+          return  updateMcpServer(id,data,requestOptions)
         }
 
 
@@ -318,22 +229,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type MessagesMutationResult = NonNullable<Awaited<ReturnType<typeof messages>>>
-
-    export type MessagesMutationError = unknown
+    export type UpdateMcpServerMutationResult = NonNullable<Awaited<ReturnType<typeof updateMcpServer>>>
+    export type UpdateMcpServerMutationBody = UpdateMcpServer
+    export type UpdateMcpServerMutationError = unknown
 
     /**
- * @summary 接收消息
+ * @summary 更新 MCP 服务
  */
-export const useMessages = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof messages>>, TError,{params?: MessagesParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const useUpdateMcpServer = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMcpServer>>, TError,{id: string;data: UpdateMcpServer}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof messages>>,
+        Awaited<ReturnType<typeof updateMcpServer>>,
         TError,
-        {params?: MessagesParams},
+        {id: string;data: UpdateMcpServer},
         TContext
       > => {
-      return useMutation(getMessagesMutationOptions(options), queryClient);
+      return useMutation(getUpdateMcpServerMutationOptions(options), queryClient);
     }
     /**
  * @summary 导入配置

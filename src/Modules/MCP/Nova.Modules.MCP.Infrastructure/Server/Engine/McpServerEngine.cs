@@ -141,12 +141,13 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
             return JsonSerializer.SerializeToNode(initResult)!;
         }
 
+        private sealed record KeyAccessContext(McpKey Key, IReadOnlyList<McpKeyAccess> Accesses);
+
         /// <summary>
-        /// 根据 MCP Key 明文解析其创建者（CreatedBy）。网关通道租户无关，
-        /// 忽略多租户/软删除全局过滤器后按 KeyValue 命中。返回 null 表示无有效 Key。
-        /// 「创建者关联」复用 McpKey 与 McpTool 上已有的 CreatedBy 审计字段，无需新增表/字段。
+        /// 根据 MCP Key 明文解析密钥及授权范围明细（忽略多租户/软删除过滤器，
+        /// 仅匹配仍处于有效期的密钥）。
         /// </summary>
-        private static async Task<Guid?> ResolveCreatorIdAsync(IMcpDbContext dbContext, string? mcpKey)
+        private static async Task<KeyAccessContext?> ResolveKeyAccessAsync(IMcpDbContext dbContext, string? mcpKey)
         {
             if (string.IsNullOrWhiteSpace(mcpKey))
             {
@@ -155,9 +156,36 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
 
             var keyEntity = await dbContext.McpKeys
                 .IgnoreQueryFilters()
+                .AsNoTracking()
                 .FirstOrDefaultAsync(k => k.KeyValue == mcpKey);
 
-            return keyEntity?.CreatedBy;
+            if (keyEntity is null || !keyEntity.IsActive(DateTimeOffset.UtcNow))
+            {
+                return null;
+            }
+
+            if (keyEntity.AllServers)
+            {
+                return new KeyAccessContext(keyEntity, Array.Empty<McpKeyAccess>());
+            }
+
+            var accesses = await dbContext.McpKeyAccesses
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(a => a.McpKeyId == keyEntity.Id && !a.IsDeleted)
+                .ToListAsync();
+
+            return new KeyAccessContext(keyEntity, accesses);
+        }
+
+        private static bool IsToolAuthorized(McpTool tool, KeyAccessContext? accessContext)
+        {
+            if (accessContext is null) return false;
+            if (accessContext.Key.AllServers) return true;
+
+            return accessContext.Accesses.Any(a =>
+                a.ServerId == tool.ServerId &&
+                (a.ToolId is null || a.ToolId == tool.Id));
         }
 
         private async Task<JsonNode> HandleListToolsAsync(string? mcpKey)
@@ -165,32 +193,20 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<IMcpDbContext>();
 
-            // 网关是公开的、租户无关的通道：第三方客户端只凭 MCP Key 访问，
-            // 不会带租户上下文（也不应要求租户）。因此忽略多租户与软删除全局过滤器，
-            // 仅按业务可见性筛选，使结果不依赖请求是否携带租户。
-            // 可见工具 = （公开且启用）∪（当前 Key 创建者自己创建的工具，无论是否公开）。
-            var creatorId = await ResolveCreatorIdAsync(dbContext, mcpKey);
+            var accessContext = await ResolveKeyAccessAsync(dbContext, mcpKey);
+            if (accessContext is null)
+            {
+                return JsonSerializer.SerializeToNode(new { tools = Array.Empty<object>() })!;
+            }
 
-            var publicTools = await dbContext.McpTools
+            var enabledTools = await dbContext.McpTools
                 .IgnoreQueryFilters()
-                .Where(t => t.IsEnabled && t.IsPublic && !t.IsDeleted)
+                .AsNoTracking()
+                .Where(t => t.IsEnabled && !t.IsDeleted)
                 .ToListAsync();
 
-            IQueryable<McpTool> ownQuery = dbContext.McpTools
-                .IgnoreQueryFilters()
-                .Where(t => t.IsEnabled && !t.IsDeleted);
-            if (creatorId != null)
-            {
-                var cid = creatorId.Value;
-                ownQuery = ownQuery.Where(t => t.CreatedBy == cid);
-            }
-            var ownTools = await ownQuery.ToListAsync();
-
-            // 合并两份结果，按 McpTool.Id 去重（一个工具若既公开又属于当前创建者，只保留一条）。
-            var tools = publicTools
-                .Concat(ownTools)
-                .GroupBy(t => t.Id)
-                .Select(g => g.First())
+            var tools = enabledTools
+                .Where(t => IsToolAuthorized(t, accessContext))
                 .ToList();
 
             var toolList = tools.Select(t => new
@@ -236,13 +252,13 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                 "[MCP Engine] McpTool Entity => Id: {ToolId}, Name: {Name}, ServerId: {ServerId}, RoutePath: {RoutePath}, Method: {Method}, IsPublic: {IsPublic}, CreatedBy: {CreatedBy}",
                 mcpTool.Id, mcpTool.Name, mcpTool.ServerId, mcpTool.RoutePath, mcpTool.HttpMethod, mcpTool.IsPublic, mcpTool.CreatedBy);
 
-            // 可见性校验：公开工具任意持有 Key 可调用；非公开工具仅限「创建者关联」的 Key 调用。
-            var creatorId = await ResolveCreatorIdAsync(dbContext, mcpKey);
-            if (!mcpTool.IsPublic && (creatorId == null || mcpTool.CreatedBy != creatorId))
+            // 授权范围校验：必须与 HandleListToolsAsync 保持一致，防止知道工具名直接越权调用
+            var accessContext = await ResolveKeyAccessAsync(dbContext, mcpKey);
+            if (!IsToolAuthorized(mcpTool, accessContext))
             {
-                _logger.LogWarning("[MCP Engine] McpTool '{ToolName}' is private. CreatorId: {CreatorId}, KeyCreatorId: {KeyCreatorId}",
-                    toolName, mcpTool.CreatedBy, creatorId);
-                return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' is private and not owned by this key." } } })!;
+                _logger.LogWarning("[MCP Engine] Key is not authorized to call tool '{ToolName}' (ToolId: {ToolId}, ServerId: {ServerId}).",
+                    toolName, mcpTool.Id, mcpTool.ServerId);
+                return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' is not authorized for this key." } } })!;
             }
 
             // FindAsync 本身绕过全局过滤器，这里再显式排除已软删除的服务端。

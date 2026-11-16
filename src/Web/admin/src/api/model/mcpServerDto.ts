@@ -5,11 +5,14 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface McpServerDto {
+/**
+ * @nullable
+ */
+export type McpServerDto = {
   id?: string;
   name?: string;
   baseUrl?: string;
   /** @nullable */
   swaggerUrl?: string | null;
   createdAt?: string;
-}
+} | null;

@@ -18,9 +18,23 @@ public class CreateMcpKeyCommandHandler : IConsumer<CreateMcpKeyCommand>
 
     public async Task Consume(ConsumeContext<CreateMcpKeyCommand> context)
     {
-        var key = McpKey.Create(context.Message.Name);
+        var message = context.Message;
+        var key = McpKey.Create(message.Name, message.AllServers);
+
+        var accesses = await McpKeyScopeHelper.BuildAndValidateAccessesAsync(
+            _dbContext,
+            key.Id,
+            message.Name,
+            message.AllServers,
+            message.Scopes,
+            context.CancellationToken);
 
         _dbContext.McpKeys.Add(key);
+        if (accesses.Count > 0)
+        {
+            _dbContext.McpKeyAccesses.AddRange(accesses);
+        }
+
         await _dbContext.SaveChangesAsync(context.CancellationToken);
 
         await context.RespondAsync(new CreateMcpKeyResult

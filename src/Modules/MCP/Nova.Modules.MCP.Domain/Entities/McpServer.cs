@@ -38,8 +38,12 @@ public class McpServer : FullAuditedEntity<Guid>
 
         Name = name.Trim();
         BaseUrl = baseUrl.Trim();
-        SwaggerUrl = swaggerUrl?.Trim();
-        AuthToken = authToken?.Trim();
+        SwaggerUrl = string.IsNullOrWhiteSpace(swaggerUrl) ? null : swaggerUrl.Trim();
+        // authToken 缺省或留空时沿用原值，避免一次编辑清空已存令牌
+        if (!string.IsNullOrWhiteSpace(authToken))
+        {
+            AuthToken = authToken.Trim();
+        }
         ModifiedAt = DateTimeOffset.UtcNow;
     }
 }

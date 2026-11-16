@@ -4,14 +4,14 @@
  * Nova.WebApi | v1
  * OpenAPI spec version: 1.0.0
  */
-import type { McpServerDto } from './mcpServerDto';
+import type { McpServerDto2 } from './mcpServerDto2';
 
 /**
  * @nullable
  */
 export type PagedResultOfMcpServerDto = {
   total?: number;
-  items?: McpServerDto[];
+  items?: McpServerDto2[];
   /** @nullable */
   page?: number | null;
   /** @nullable */

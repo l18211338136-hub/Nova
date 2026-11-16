@@ -4,8 +4,16 @@
  * Nova.WebApi | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { McpKeyScopeDto } from './mcpKeyScopeDto';
 
 export interface CreateMcpKey {
   /** 密钥名称 */
   name?: string;
+  /** 是否授权全部服务（为 false 时由 Scopes 指定） */
+  allServers?: boolean;
+  /**
+     * 授权服务与工具明细
+     * @nullable
+     */
+  scopes?: McpKeyScopeDto[] | null;
 }

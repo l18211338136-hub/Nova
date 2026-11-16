@@ -141,7 +141,11 @@ export function fromRow(row: McpKeyRow | null | undefined): McpKeyScopeValue {
   const allServers = row.allServers ?? true
   return {
     allServers,
-    scopes: allServers ? [] : (row.scopes ?? []).map((s) => ({ ...s })),
+    scopes: allServers
+      ? []
+      : (row.scopes ?? [])
+          .filter((s): s is { serverId: string; toolIds?: string[] | null } => Boolean(s.serverId))
+          .map((s) => ({ serverId: s.serverId, toolIds: s.toolIds ?? null })),
   }
 }
 

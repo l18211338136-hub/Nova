@@ -20,9 +20,12 @@ public class McpKey : FullAuditedEntity<Guid>
     /// <summary>过期时间。为 null 表示永久有效。</summary>
     public DateTimeOffset? ExpiresAt { get; private set; }
 
+    /// <summary>是否授权访问全部 MCP 服务（含后续新增服务）。为 false 时受 <c>McpKeyAccess</c> 约束。</summary>
+    public bool AllServers { get; private set; } = true;
+
     private McpKey() { }
 
-    public static McpKey Create(string name)
+    public static McpKey Create(string name, bool allServers = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -32,8 +35,20 @@ public class McpKey : FullAuditedEntity<Guid>
             Name = name.Trim(),
             KeyValue = GenerateKeyValue(),
             ExpiresAt = null, // 业务约定：密钥永久有效
+            AllServers = allServers,
             CreatedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    /// <summary>
+    /// 更新名称与全局服务授权标志（密钥值一旦生成不可变更）。
+    /// </summary>
+    public void Update(string name, bool allServers)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name.Trim();
+        AllServers = allServers;
+        ModifiedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>

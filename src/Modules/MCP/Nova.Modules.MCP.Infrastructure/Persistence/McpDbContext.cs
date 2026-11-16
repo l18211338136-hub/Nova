@@ -21,6 +21,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Persistence
         public DbSet<McpServer> McpServers { get; set; }
         public DbSet<McpTool> McpTools { get; set; }
         public DbSet<McpKey> McpKeys { get; set; }
+        public DbSet<McpKeyAccess> McpKeyAccesses { get; set; }
 
         public McpDbContext(ITenantInfo tenantInfo, DbContextOptions<McpDbContext> options)
             : base(options)
@@ -92,6 +93,21 @@ namespace Nova.Modules.Mcp.Infrastructure.Persistence
                 b.Property(k => k.Name).IsRequired().HasMaxLength(100);
                 b.Property(k => k.KeyValue).IsRequired().HasMaxLength(1000);
                 b.Property(k => k.ExpiresAt).HasColumnType("timestamp with time zone");
+                b.Property(k => k.AllServers).HasDefaultValue(true);
+
+                b.IsMultiTenant();
+            });
+
+            builder.Entity<McpKeyAccess>(b =>
+            {
+                b.ToTable("McpKeyAccesses");
+                b.HasKey(a => a.Id);
+                b.HasIndex(a => new { a.McpKeyId, a.ServerId, a.ToolId });
+
+                b.HasOne<McpKey>()
+                 .WithMany()
+                 .HasForeignKey(a => a.McpKeyId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
                 b.IsMultiTenant();
             });
