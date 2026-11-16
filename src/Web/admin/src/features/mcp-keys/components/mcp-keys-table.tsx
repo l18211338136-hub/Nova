@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   type SortingState,
@@ -78,6 +78,7 @@ export function McpKeysTable({ search, navigate }: DataTableProps) {
   const totalCount = apiResponse?.data?.total ?? 0
   const pageCount = Math.ceil(totalCount / pagination.pageSize)
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: keysData,
     columns,
@@ -104,6 +105,11 @@ export function McpKeysTable({ search, navigate }: DataTableProps) {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  // 筛选/删除导致页数变少时，把 URL 里的页码收敛回有效范围（与其他列表一致）
+  useEffect(() => {
+    ensurePageInRange(table.getPageCount())
+  }, [table, ensurePageInRange])
 
   return (
     <div

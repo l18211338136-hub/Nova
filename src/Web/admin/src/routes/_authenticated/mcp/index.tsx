@@ -5,12 +5,9 @@ import { Mcp } from '@/features/mcp'
 const mcpSearchSchema = z.object({
   page: z.number().optional().catch(1),
   pageSize: z.number().optional().catch(10),
-  // Servers tab filters
+  // 服务列表筛选（工具列表已随 tab 下线，「详情」用弹窗内本地搜索）
   serverName: z.string().optional().catch(''),
   serverBaseUrl: z.string().optional().catch(''),
-  // Tools tab filters
-  toolName: z.string().optional().catch(''),
-  toolEnabled: z.string().optional().catch(''),
 })
 
 export const Route = createFileRoute('/_authenticated/mcp/')({

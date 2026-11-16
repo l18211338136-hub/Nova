@@ -8,6 +8,8 @@ import { LongText } from '@/components/long-text'
 import { type McpKeyDto as McpKey } from '@/api/model'
 import { DataTableRowActions } from './mcp-keys-row-actions'
 import { McpKeyCell } from './mcp-key-cell'
+import { McpKeyScopeCell } from './mcp-key-scope-cell'
+import type { McpKeyRow } from '../types'
 
 export const useMcpKeysColumns = () => {
   const { t } = useTranslation()
@@ -70,6 +72,19 @@ export const useMcpKeysColumns = () => {
       meta: {
         title: t('MCP Key'),
         className: 'w-[420px]',
+      },
+    },
+    {
+      id: 'scope',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('Access Scope')} />
+      ),
+      cell: ({ row }) => <McpKeyScopeCell row={row.original as McpKeyRow} />,
+      enableSorting: false,
+      enableColumnFilter: false,
+      meta: {
+        title: t('Access Scope'),
+        className: 'w-[210px]',
       },
     },
     {
