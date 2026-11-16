@@ -23,9 +23,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { type McpKeyDto as McpKey } from '@/api/model'
-import { useUpdateMcpKey } from '@/api/endpoints/mcp-keys'
+import { McpKeyScopeEditor } from './mcp-key-scope-editor'
+import { useUpdateMcpKeyWithScope } from '../hooks/use-mcp-key-mutations'
+import { fromRow, toPayload, validateScope } from '../lib/key-scope'
+import type { McpKeyScopeValue } from '../types'
 
 const getFormSchema = (t: (arg: string) => string) =>
   z.object({
@@ -47,7 +51,9 @@ export function McpKeysEditDialog({
 }: McpKeysEditDialogProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const updateMutation = useUpdateMcpKey()
+  const updateMutation = useUpdateMcpKeyWithScope()
+  const [scope, setScope] = useState<McpKeyScopeValue>(() => fromRow(currentRow))
+  const [scopeError, setScopeError] = useState<string | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(getFormSchema(t)),
@@ -56,8 +62,19 @@ export function McpKeysEditDialog({
 
   const onSubmit = (values: FormValues) => {
     if (!currentRow?.id) return
+    const invalid = validateScope(scope)
+    if (invalid) {
+      setScopeError(
+        invalid.code === 'no-server'
+          ? t('Select at least one server.')
+          : t('Select at least one tool.')
+      )
+      return
+    }
+    setScopeError(null)
+
     updateMutation.mutate(
-      { id: currentRow.id, data: { name: values.name } },
+      { id: currentRow.id, data: toPayload(values.name, scope) },
       {
         onSuccess: () => {
           toast.success(t('MCP key updated successfully'))
@@ -79,14 +96,16 @@ export function McpKeysEditDialog({
       open={open}
       onOpenChange={(state) => {
         form.reset()
+        setScope(fromRow(currentRow))
+        setScopeError(null)
         onOpenChange(state)
       }}
     >
-      <DialogContent className='sm:max-w-lg'>
+      <DialogContent className='sm:max-w-2xl [&>*]:min-w-0'>
         <DialogHeader className='text-start'>
           <DialogTitle>{t('Edit MCP Key')}</DialogTitle>
           <DialogDescription>
-            {t('Update the key name. The key value cannot be changed.')}{' '}
+            {t('Update the key name and access scope. The key value cannot be changed.')}{' '}
             {t("Click save when you're done.")}
           </DialogDescription>
         </DialogHeader>
@@ -100,15 +119,28 @@ export function McpKeysEditDialog({
               control={form.control}
               name='name'
               render={({ field }) => (
-                <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>{t('Name')}</FormLabel>
+                <FormItem className='grid grid-cols-1 items-center gap-1 space-y-0 sm:grid-cols-6 sm:gap-x-4'>
+                  <FormLabel className='sm:col-span-2 sm:text-end'>{t('Name')}</FormLabel>
                   <FormControl>
-                    <Input className='col-span-4' {...field} />
+                    <Input className='w-full sm:col-span-4' {...field} />
                   </FormControl>
-                  <FormMessage className='col-span-4 col-start-3' />
+                  <FormMessage className='sm:col-span-4 sm:col-start-3' />
                 </FormItem>
               )}
             />
+                <div className='space-y-2'>
+                  <span className='text-sm font-medium'>{t('Access Scope')}</span>
+                  <McpKeyScopeEditor
+                    value={scope}
+                    onChange={(next) => {
+                      setScope(next)
+                      setScopeError(null)
+                    }}
+                  />
+                  {scopeError && (
+                    <p className='text-xs text-destructive'>{scopeError}</p>
+                  )}
+                </div>
           </form>
         </Form>
         <DialogFooter>
