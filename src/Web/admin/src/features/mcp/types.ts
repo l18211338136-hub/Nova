@@ -24,11 +24,6 @@ export interface McpToolDto {
   routePath: string
   httpMethod: string
   createdAt: string
-  /**
-   * 分组名（二期字段）。后端 `McpToolDto` 目前没有该字段，`undefined` 时
-   * 由 `lib/mcp-tool-groups.ts` 按 routePath 推导；落库后这里可直接生效。
-   */
-  group?: string | null
 }
 
 export interface PagedResult<T> {

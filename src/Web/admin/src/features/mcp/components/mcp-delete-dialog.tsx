@@ -3,45 +3,51 @@
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useDeleteMcpServer } from '@/api/endpoints/mcp'
+import { useDeleteMcpServer, useDeleteMcpTool } from '@/api/endpoints/mcp'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { useMcpContext } from './mcp-provider'
 
-/**
- * 删除 MCP 服务。
- *
- * 「MCP 工具」tab 下线后不再提供删除单个工具的入口，因此这里只处理服务维度；
- * 后端 `DELETE /api/mcp/tools/{id}` 端点保留不动（二期如需再接入）。
- */
-export function McpDeleteDialog() {
+type Kind = 'server' | 'tool'
+
+type McpDeleteDialogProps = {
+  kind: Kind
+}
+
+export function McpDeleteDialog({ kind }: McpDeleteDialogProps) {
   const { open, setOpen, currentRow, setCurrentRow } = useMcpContext()
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const deleteServer = useDeleteMcpServer()
 
-  const isOpen = open === 'delete-server'
+  // Both hooks are called unconditionally (rules of hooks); we pick the right one.
+  const deleteServer = useDeleteMcpServer()
+  const deleteTool = useDeleteMcpTool()
+  const mutation = kind === 'server' ? deleteServer : deleteTool
+
+  const openKey = kind === 'server' ? 'delete-server' : 'delete-tool'
+  const isOpen = open === openKey
   const name = currentRow?.name ?? ''
 
   const handleDelete = () => {
-    if (!currentRow?.id) return
+    if (!currentRow) return
 
-    deleteServer.mutate(
-      { id: currentRow.id },
+    mutation.mutate(
+      { id: currentRow.id! },
       {
         onSuccess: () => {
-          toast.success(t('MCP server deleted successfully'))
+          toast.success(
+            kind === 'server'
+              ? t('MCP server deleted successfully')
+              : t('MCP tool deleted successfully')
+          )
           setOpen(null)
           setCurrentRow(null)
           queryClient.invalidateQueries({ queryKey: ['mcp-servers'] })
           queryClient.invalidateQueries({ queryKey: ['mcp-tools'] })
         },
-        onError: (error: unknown) =>
-          toast.error(
-            (error as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message || t('Delete failed.')
-          ),
+        onError: (error: any) =>
+          toast.error(error?.response?.data?.message || t('Delete failed.')),
       }
     )
   }
@@ -53,14 +59,14 @@ export function McpDeleteDialog() {
         if (!o) setOpen(null)
       }}
       handleConfirm={handleDelete}
-      isLoading={deleteServer.isPending}
+      isLoading={mutation.isPending}
       title={
         <span className='text-destructive'>
           <AlertTriangle
             className='me-1 inline-block stroke-destructive'
             size={18}
           />{' '}
-          {t('Delete MCP Server')}
+          {kind === 'server' ? t('Delete MCP Server') : t('Delete MCP Tool')}
         </span>
       }
       desc={

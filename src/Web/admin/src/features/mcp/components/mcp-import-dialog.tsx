@@ -36,7 +36,6 @@ import {
   type ImportOpenApiPayload,
   type ParsedSwaggerOperation,
 } from '../types'
-import { METHOD_FALLBACK_STYLE, METHOD_STYLES } from '../constants'
 import { useMcpContext } from './mcp-provider'
 import { useParseSwagger } from '../hooks/use-parse-swagger'
 
@@ -86,6 +85,14 @@ type ImportForm = z.infer<ReturnType<typeof getFormSchema>>
 interface OperationGroup {
   name: string
   ops: ParsedSwaggerOperation[]
+}
+
+const METHOD_STYLES: Record<string, string> = {
+  GET: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  POST: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+  PUT: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  DELETE: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  PATCH: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
 }
 
 export function McpImportDialog() {
@@ -286,12 +293,6 @@ export function McpImportDialog() {
     setOpen(state ? 'import' : null)
   }
 
-  // RHF 的 watch() 返回函数无法安全 memo（React Compiler 已知不兼容），仓库内统一按此方式处理
-  /* eslint-disable react-hooks/incompatible-library */
-  const watchedSwaggerUrl = form.watch('swaggerUrl')
-  const watchedSwaggerJson = form.watch('swaggerJson')
-  /* eslint-enable react-hooks/incompatible-library */
-
   return (
     <Dialog open={open === 'import'} onOpenChange={handleClose}>
       <DialogContent
@@ -454,7 +455,8 @@ export function McpImportDialog() {
                 onClick={handleParse}
                 disabled={
                   parseMutation.isPending ||
-                  (!watchedSwaggerUrl?.trim() && !watchedSwaggerJson?.trim())
+                  (!form.watch('swaggerUrl')?.trim() &&
+                    !form.watch('swaggerJson')?.trim())
                 }
               >
                 {parseMutation.isPending
@@ -532,7 +534,7 @@ export function McpImportDialog() {
                       selected.has(op.key)
                     ).length
                     const allChecked = selectedCount === group.ops.length
-                      return (
+                    return (
                       <div key={group.name}>
                         {/* 组头：粘性 + 三态复选 + 折叠（纯色背景，backdrop-blur 会在 transform 容器内触发 Chrome 合成层错位 bug） */}
                         <div className='sticky top-0 z-10 flex items-center gap-2 border-b bg-muted px-2 py-1.5 first:rounded-t-md'>
@@ -584,7 +586,7 @@ export function McpImportDialog() {
                                   className={cn(
                                     'inline-block w-12 shrink-0 rounded px-1 py-0.5 text-center font-mono text-[10px] font-medium leading-4',
                                     METHOD_STYLES[op.method] ??
-                                      METHOD_FALLBACK_STYLE
+                                      'bg-muted text-muted-foreground'
                                   )}
                                 >
                                   {op.method}
