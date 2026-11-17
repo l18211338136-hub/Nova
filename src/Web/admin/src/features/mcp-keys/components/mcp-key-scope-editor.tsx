@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -11,9 +11,9 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { METHOD_FALLBACK_STYLE, METHOD_STYLES } from '@/features/mcp/constants'
-import { useMcpServers, useMcpTools } from '@/features/mcp/hooks/use-mcp-servers'
-import { groupTools } from '@/features/mcp/lib/mcp-tool-groups'
-import type { McpServerDto, McpToolDto } from '@/features/mcp/types'
+import { useMcpServers } from '@/features/mcp/hooks/use-mcp-servers'
+import { useServerToolsPaged } from '@/features/mcp/hooks/use-server-tools'
+import type { McpServerDto } from '@/features/mcp/types'
 import { cn } from '@/lib/utils'
 import {
   setServerAllTools,
@@ -205,19 +205,34 @@ function ServerScopeCard({
 }: CardProps) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(toolIds !== null)
+  const [input, setInput] = useState('')
+  const [search, setSearch] = useState('')
 
-  // 已选中的服务才请求工具（key 变化时 useQuery 缓存复用，不会重复请求同一服务）
-  const { data, isLoading } = useMcpTools({
-    $filter: `ServerId eq ${serverId}`,
-    $top: 500,
-    $orderby: 'RoutePath asc',
-  })
-  const tools = useMemo(() => (data?.data?.items ?? []) as McpToolDto[], [data])
-  const groups = useMemo(() => groupTools(tools), [tools])
+  // 300ms 去抖：卡片内搜索同样下推服务端（>1000 时不能只过滤已加载集合）
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(input.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [input])
+
+  // 已选中的服务才请求工具；分页/搜索策略与「服务详情」共用同一个 hook
+  const {
+    tools,
+    groups,
+    total,
+    serviceTotal,
+    remaining,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    isSearching,
+  } = useServerToolsPaged({ serverId, search })
+
   const allIds = useMemo(() => tools.map((tool) => tool.id), [tools])
 
   const isAllTools = toolIds === null
-  const selectedCount = isAllTools ? allIds.length : (toolIds ?? []).filter((id) => allIds.includes(id)).length
+  // 🔺 总数必须用接口的 total：allIds.length 只是已加载数，分页后会少报
+  const selectedCount = isAllTools ? serviceTotal : (toolIds ?? []).length
   const isEmpty = !isAllTools && selectedCount === 0
   const selectedSet = useMemo(
     () => new Set(isAllTools ? allIds : (toolIds ?? [])),
@@ -234,10 +249,7 @@ function ServerScopeCard({
           <span className='text-xs text-muted-foreground'>
             {isLoading
               ? t('Loading...')
-              : t('{{selected}} / {{total}} tools', {
-                  selected: selectedCount,
-                  total: allIds.length,
-                })}
+              : t('{{selected}} / {{total}} tools', { selected: selectedCount, total: serviceTotal })}
           </span>
         )}
         <div className='flex items-center gap-1'>
@@ -277,8 +289,27 @@ function ServerScopeCard({
         </div>
       </div>
 
+      {!isAllTools && hasMore && (
+        <p className='px-2 pb-1 text-[11px] text-amber-600 dark:text-amber-400'>
+          {t('Only loaded tools are counted per group')}
+        </p>
+      )}
+
       {!isAllTools && expanded && (
         <div className='border-t px-2 py-2'>
+          <div className='mb-2 flex items-center gap-2'>
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={t('Search tools...')}
+              className='h-7 flex-1 text-xs'
+            />
+            {isSearching && !isLoading && (
+              <span className='shrink-0 text-[11px] text-muted-foreground'>
+                {t('{{count}} matching tools', { count: total })}
+              </span>
+            )}
+          </div>
           {isLoading ? (
             <p className='py-2 text-xs text-muted-foreground'>{t('Loading...')}</p>
           ) : tools.length === 0 ? (
@@ -347,6 +378,22 @@ function ServerScopeCard({
                   </div>
                 )
               })}
+            </div>
+          )}
+          {hasMore && (
+            <div className='mt-2 flex justify-center'>
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                className='h-7 text-xs'
+                onClick={loadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore
+                  ? t('Loading more...')
+                  : t('Load more ({{count}} remaining)', { count: remaining })}
+              </Button>
             </div>
           )}
           {isEmpty && (

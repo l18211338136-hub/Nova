@@ -59,6 +59,7 @@ export function McpToolGroups({
                 {group.tools.map((tool) => (
                   <div
                     key={tool.id}
+                    data-testid='mcp-tool-row'
                     className='flex items-center gap-2 rounded px-2 py-1.5 ps-8 hover:bg-muted/50'
                   >
                     <span

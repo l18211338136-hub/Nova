@@ -18,7 +18,15 @@ export const METHOD_STYLES: Record<string, string> = {
 export const METHOD_FALLBACK_STYLE = 'bg-muted text-muted-foreground'
 
 /**
- * 详情视图单次拉取工具数的上限。
- * 与 `05-测试报告` 中「上限提示」一致：超过时提示用搜索定位，避免一次渲染上千行。
+ * 工具列表取数策略（见 `20261117-feat-mcp工具列表取数改造` §2）。
+ *
+ * - `TOOL_PAGE_SIZE`：首屏与「加载更多」的页大小。≤该值的服务一次加载完，
+ *   分组/计数/搜索全部准确；超过则分页续加载（用户可继续浏览，不只靠搜索）。
+ * - `TOOL_SEARCH_PAGE_SIZE`：搜索态页大小（结果通常远小于全量）。
+ * - `TOOL_AUTO_EXPAND_LIMIT`：超过该条数时默认折叠所有分组，避免首屏渲染上千行。
+ *
+ * 🔺 后端 `$top` 缺省 = 全量且无 MaxTop，前端必须显式传 `$top`，否则可能拉全库。
  */
-export const DETAIL_TOOL_LIMIT = 500
+export const TOOL_PAGE_SIZE = 1000
+export const TOOL_SEARCH_PAGE_SIZE = 200
+export const TOOL_AUTO_EXPAND_LIMIT = 200
