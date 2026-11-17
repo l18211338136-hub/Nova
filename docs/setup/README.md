@@ -10,11 +10,11 @@
 | 步 | 命令/操作 | 成功长什么样 |
 |:--|:--|:--|
 | 1 依赖 | `cd src/Web/admin && pnpm install --frozen-lockfile` | `node_modules` 生成，`node_modules/.pnpm` 存在（isolated 布局） |
-| 2 配置 | 新建 `src/Web/admin/.env.development.local`：`VITE_API_URL=`、`API_BASE_URL=http://43.166.2.180:8099`（真实后端）或 `http://127.0.0.1:8098`（Mock） | `pnpm exec vite` 启动后 `/api` 请求被代理到该地址 |
+| 2 配置 | 新建 `src/Web/admin/.env.development.local`：`VITE_API_URL=`、`API_BASE_URL=http://43.166.2.180:8099` | `pnpm exec vite` 启动后 `/api` 请求被代理到该地址 |
 | 3 启动 | `cd src/Web/admin && npx vite --host 0.0.0.0 --port 5173` | 终端打印 `Local: http://localhost:5173/` |
 | 4 验证 | `curl --noproxy '*' -o /dev/null -w "%{http_code}" http://127.0.0.1:5173/` 与 `curl --noproxy '*' http://127.0.0.1:5173/api/identity/resolve-tenant` | 页面 200；接口返回 `{"code":200,...,"data":{"tenantIds":[]}}`（是后端信封，不是 SPA HTML） |
 
-**只用 Mock 时**另起一个进程：`cd src/Web/admin && node mock/server.mjs`（:8098），并把 `API_BASE_URL` 指过去。
+> 本地桩（`src/Web/admin/mock/`）**不入库**，仅维护者本机用于离线点验（见 `mock/README-本地接入.md`）。后端接口已全部上线，团队直接用远端，不需要桩。
 
 🔺 前端**不需要**本机跑 .NET 后端；后端在远端 `43.166.2.180:8099`（Kestrel）。仓库 `.env.development` 默认写的是 `https://localhost:7242`（本机后端），不改就会全量 502。
 
@@ -24,11 +24,10 @@
 
 | 项 | 位置/来源 | 备注 |
 |:--|:--|:--|
-| 主数据 | 远端 PostgreSQL（后端侧） | 前端不持数据；Mock 全内存 |
-| Mock 数据 | `src/Web/admin/mock/data/mcp.json` | 8 服务 / 54 工具 / 3 密钥；重启即还原 |
+| 主数据 | 远端 PostgreSQL（后端侧） | 前端不持数据 |
+| 本地桩（不入库） | `src/Web/admin/mock/`（业务种子 + 程序化生成的 1200 工具压力服务） | 仅维护者本机；已由 `.git/info/exclude` 排除，换机需手工拷贝 |
 | 环境配置 | `src/Web/admin/.env.development`（跟踪）与 `.env.development.local`（个人覆盖，`*.local` 不入库） | 只在 `.local` 里改地址，不要动跟踪的两份 |
 | 契约产物 | `src/Web/admin/src/api/endpoints/*`、`src/api/model/*` | 由 `pnpm gen-api` 从运行期 `/openapi/v1.json` 生成，**禁止手改** |
-| Mock 资产 | `src/Web/admin/mock/` | 已被 `.git/info/exclude` 排除，换机器需手工拷贝（见 `mock/README-本地接入.md`） |
 
 ---
 
@@ -37,7 +36,7 @@
 | 服务 | 端口 | 用途 | 备注 |
 |:--|:--|:--|:--|
 | Vite dev server | 5173 | 前端 + `/api` 同源代理 | `--host 0.0.0.0` 才能被 127.0.0.1 与局域网访问 |
-| Mock 服务 | 8098 | 本地桩（`node mock/server.mjs`） | 零依赖 Node；未实现接口返回 404 |
+| Mock 服务 | 8098 | 本地桩（`node mock/server.mjs`） | **维护者本机才有**，团队不需要 |
 | 远端后端 | 8099 | 真实 API（Kestrel） | 需要账号密码才能登录 |
 
 `vite.config.ts` 的代理前缀：`/api`、`/nova-storage`、`/uploads`（含 `ws:true`，SignalR 用）。
@@ -67,9 +66,9 @@ curl --noproxy '*' -o /dev/null -w "%{http_code}\n" http://127.0.0.1:5173/
 # 代理是否真的到后端（返回 ApiResponse 信封即为通）
 curl --noproxy '*' http://127.0.0.1:5173/api/identity/resolve-tenant
 
+# 以下两条仅维护者本机有效（mock/ 不入库，团队跳过）
 # Mock 是否活着
 curl --noproxy '*' -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8098/api/mcp/servers
-
 # Mock 契约自检（独立端口 8198，不污染 8098 数据）
 node mock/self-check.mjs
 

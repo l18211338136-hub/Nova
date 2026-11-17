@@ -17,8 +17,8 @@
 docs/
 ├── README.md            ← 本文件
 ├── api/
-│   ├── backend-todo.md  ← 后端待实现清单 + 验收 + 回写要求
-│   └── mcp.md           ← MCP 域契约（服务 / 工具 / 密钥 / 网关）
+│   ├── backend-todo.md  ← 后端待办 + 验收清单（由维护者发布）
+│   └── mcp.md           ← MCP 域契约（服务 / 工具 / 密钥 / 网关，**后端维护**）
 └── setup/
     └── README.md        ← 环境事实：启动、端口、限制、已知坑
 ```
@@ -31,23 +31,23 @@ docs/
 
 ```
 docs/local/（本地工作区，不入库）                 docs/（仓库，入库）
-├── designs/engineering-standards/  规范          ├── api/mcp.md          ┐
-├── designs/feature-designs/<迭代>/  计划+测试     ├── api/backend-todo.md │ 由脚本提取
-├── api/                            契约源 ───────►├── setup/README.md     ┘
+├── designs/engineering-standards/  规范          ├── api/mcp.md          ← 后端直接维护（正本）
+├── designs/feature-designs/<迭代>/  计划+测试     ├── api/backend-todo.md ← 脚本提取
+├── api/mcp.md                      副本（只读）    ├── setup/README.md     ← 脚本提取
 ├── setup/                          环境事实 ─────►└── README.md（手写）
 └── personal-docs / retro           个人区
 ```
 
-- 🔺 **`docs/` 下的文件是快照，内容以 `docs/local/` 的源文件为准**；直接改这里会在下次发布时被覆盖。
-- 维护者流程：改 `docs/local/` 里的源文件 → 跑本地发布脚本（`scripts/publish-docs.mjs`，**脚本未入库**）→ 提交 `docs/`。
-- 发布脚本只做一件事：复制这三份 + 把指向本地规范树的链接改成说明文字（规范不随仓库发布）。
+- `api/mcp.md` 是**契约正本，由后端维护**（2026-11-17 起），任何人不经脚本覆盖它；本地 `docs/local/api/mcp.md` 只是副本。
+- `api/backend-todo.md` 与 `setup/README.md` 由维护者从本地工作区**提取**（`scripts/publish-docs.mjs`，脚本未入库），直接改仓库版会在下次发布被覆盖。
+- 发布脚本会顺带把指向本地规范树的链接改成说明文字（规范不随仓库发布）。
 
 ---
 
 ## 3. 维护者本地操作（`scripts/` 未入库，克隆后没有这两个脚本）
 
 ```bash
-# 刷新 docs/（docs/local → docs/）
+# 刷新两份提取文档（不含 api/mcp.md，它由后端维护）
 node scripts/publish-docs.mjs
 
 # 备份本地工作区（默认到 D:/dev/backups/nova-docs-local，保留最近 20 份）
@@ -65,7 +65,7 @@ tar -xzf "D:/dev/backups/nova-docs-local/docs-local-YYYYmmdd-HHmmss.tar.gz" -C d
 
 | 时机 | 动作 |
 |:--|:--|
-| 契约有变（字段/错误码/分页） | 改 `docs/local/api/mcp.md` → 跑发布脚本 → 提交，并在 `changelogs/` 标 `[影响文档]` |
+| 契约有变（字段/错误码/分页） | **直接改 `docs/api/mcp.md`**（后端/前端都改这一份），并在 `changelogs/` 标 `[影响文档]`；本地副本按需 `cp` 同步 |
 | 后端实现完成 | 更新 `backend-todo.md` 勾选状态与实测结果，未通过的写原因 |
 | 环境/端口/启动方式变了 | 改 `docs/local/setup/README.md` → 发布 |
 | 新增一个需要协作的域 | 在 `docs/local/api/` 建 `<域>.md`，在发布脚本的 `FILES` 里加一行 |
