@@ -12,6 +12,13 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
 {
     public class OpenApiToolGenerator : IOpenApiToolGenerator
     {
+        /// <summary>
+        /// schema 展开的递归深度上限。与 McpServerEngine 的 MaxSchemaDepth 口径一致。
+        /// 只防 inline 深嵌套（$ref 循环由 visited/memo 单独处理）；超深则截断并标注，
+        /// 避免把失控的深层结构（如 AOP 事件配置）无限展开成数 MB 的 schema 写入库。
+        /// </summary>
+        private const int MaxSchemaDepth = 12;
+
         public List<McpToolDefinition> GenerateToolsFromSwagger(string swaggerJson, string baseUrl)
         {
             // 兼容降级：Microsoft.OpenApi.Readers 低版本不支持 3.1.x，将其替换为 3.0.1 以绕过版本检查
@@ -131,9 +138,14 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
             return schema;
         }
 
-        private object GetMcpSchema(OpenApiSchema? schema, OpenApiDocument doc, HashSet<string>? visited = null, Dictionary<string, object>? memo = null)
+        private object GetMcpSchema(OpenApiSchema? schema, OpenApiDocument doc, HashSet<string>? visited = null, Dictionary<string, object>? memo = null, int depth = 0)
         {
             if (schema == null) return new { type = "string" };
+
+            if (depth > MaxSchemaDepth)
+            {
+                return new { type = "object", description = "（结构过深已截断）" };
+            }
 
             visited ??= new HashSet<string>();
             memo ??= new Dictionary<string, object>();
@@ -157,7 +169,7 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                 }
                 else
                 {
-                    result = ExpandBody(resolved, doc, visited, memo);
+                    result = ExpandBody(resolved, doc, visited, memo, depth + 1);
                 }
                 // 展开完成即移出栈，允许在兄弟分支中再次引用（走 memo 复用，不再重复膨胀）
                 visited.Remove(id);
@@ -165,10 +177,10 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                 return result;
             }
 
-            return ExpandBody(schema, doc, visited, memo);
+            return ExpandBody(schema, doc, visited, memo, depth);
         }
 
-        private object ExpandBody(OpenApiSchema schema, OpenApiDocument doc, HashSet<string> visited, Dictionary<string, object> memo)
+        private object ExpandBody(OpenApiSchema schema, OpenApiDocument doc, HashSet<string> visited, Dictionary<string, object> memo, int depth)
         {
             var resolved = ResolveSchema(schema, doc);
             if (resolved == null) return new { type = "string" };
@@ -180,7 +192,7 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                 var props = new Dictionary<string, object>();
                 foreach (var prop in resolved.Properties)
                 {
-                    props[prop.Key] = GetMcpSchema(prop.Value, doc, visited, memo);
+                    props[prop.Key] = GetMcpSchema(prop.Value, doc, visited, memo, depth + 1);
                 }
 
                 var objSchema = new Dictionary<string, object>
@@ -202,7 +214,7 @@ namespace Nova.Modules.Mcp.Infrastructure.OpenApi.Generator
                 var arrSchema = new Dictionary<string, object>
                 {
                     ["type"] = "array",
-                    ["items"] = GetMcpSchema(resolved.Items, doc, visited, memo)
+                    ["items"] = GetMcpSchema(resolved.Items, doc, visited, memo, depth + 1)
                 };
 
                 if (!string.IsNullOrEmpty(resolved.Description))

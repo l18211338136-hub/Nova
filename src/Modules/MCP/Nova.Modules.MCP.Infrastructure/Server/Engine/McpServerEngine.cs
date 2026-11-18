@@ -20,6 +20,14 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
 {
     public class McpServerEngine : IMcpServerEngine
     {
+        /// <summary>
+        /// tools/list 输出时对 inputSchema 的递归深度上限。
+        /// 正常工具参数 schema 深度很少超过 6；生产库曾因导入时无界展开 inline 嵌套，
+        /// 产生 7 个各 5 MB 的递归污染 schema（深度失控），导致单次 tools/list 响应膨胀到 32.9 MB。
+        /// 超过该深度的分支在此截断，只保留字段名并标注。
+        /// </summary>
+        private const int MaxSchemaDepth = 12;
+
         private readonly ConcurrentDictionary<string, Channel<string>> _activeSessions = new();
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<McpServerEngine> _logger;
@@ -213,7 +221,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
             {
                 name = t.Name,
                 description = t.Description,
-                inputSchema = JsonNode.Parse(t.InputSchema)
+                inputSchema = TruncateSchema(JsonNode.Parse(t.InputSchema))
             }).ToArray();
 
             var toolsResult = new
@@ -221,6 +229,42 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                 tools = toolList
             };
             return JsonSerializer.SerializeToNode(toolsResult)!;
+        }
+
+        /// <summary>
+        /// 对 inputSchema 做深度限制的递归裁剪，防止超深 inline 嵌套（递归污染）把响应撑到数十 MB。
+        /// 超深分支只保留字段名，值节点替换为截断标记，schema 形状保持合法。
+        /// </summary>
+        private static JsonNode? TruncateSchema(JsonNode? node, int depth = 0)
+        {
+            if (node is null) return null;
+
+            if (depth > MaxSchemaDepth)
+            {
+                return JsonNode.Parse("{\"type\":\"object\",\"description\":\"（结构过深已截断）\"}");
+            }
+
+            if (node is JsonObject obj)
+            {
+                var result = new JsonObject();
+                foreach (var kv in obj)
+                {
+                    result[kv.Key] = TruncateSchema(kv.Value, depth + 1);
+                }
+                return result;
+            }
+
+            if (node is JsonArray arr)
+            {
+                var result = new JsonArray();
+                foreach (var item in arr)
+                {
+                    result.Add(TruncateSchema(item, depth + 1));
+                }
+                return result;
+            }
+
+            return node.DeepClone();
         }
 
         private async Task<JsonNode> HandleCallToolAsync(JsonNode? paramNode, string? mcpKey)
