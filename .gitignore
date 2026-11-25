@@ -231,3 +231,4 @@ docs/local/
 
 # 本地文档/运维脚本（仅维护者本机使用，不入库）
 scripts/
+verify-run-*/

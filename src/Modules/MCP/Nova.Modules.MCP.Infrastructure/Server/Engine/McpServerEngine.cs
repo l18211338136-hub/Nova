@@ -281,14 +281,55 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
             var dbContext = scope.ServiceProvider.GetRequiredService<IMcpDbContext>();
             var executor = scope.ServiceProvider.GetRequiredService<HttpToolExecutor>();
 
-            // 网关通道租户无关：忽略多租户/软删除过滤器，仅按业务可见性判定。
-            var mcpTool = await dbContext.McpTools
+            // ===== 关键修复：先按密钥授权范围收敛，再按名字取行 =====
+            // 历史缺陷：仅按 Name 做全局 FirstOrDefault + IgnoreQueryFilters（跨租户、无 ServerId 条件、无排序），
+            // 当同名工具存在多份（重复导入 / 多租户各导一份 / 服务删除后残留的孤儿工具行）时，
+            // 会命中"别的环境"的那一行——例如 BaseUrl 指向 ai-test 的服务，
+            // 表现为「tools/list 正常、tools/call 却 not authorized 或业务侧 401」。
+            var accessContext = await ResolveKeyAccessAsync(dbContext, mcpKey);
+            if (accessContext is null)
+            {
+                _logger.LogWarning("[MCP Engine] CallTool rejected: missing or invalid MCP Key. Tool: {ToolName}", toolName);
+                return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' is not authorized for this key." } } })!;
+            }
+
+            var toolQuery = dbContext.McpTools
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(t => t.Name == toolName && t.IsEnabled && !t.IsDeleted);
+                .Where(t => t.Name == toolName && t.IsEnabled && !t.IsDeleted);
+
+            // 指定服务/工具授权的密钥：把授权范围下推到查询，杜绝取到范围外的同名行
+            if (!accessContext.Key.AllServers)
+            {
+                var allowedServerIds = accessContext.Accesses.Select(a => a.ServerId).Distinct().ToList();
+                if (allowedServerIds.Count == 0)
+                {
+                    _logger.LogWarning("[MCP Engine] Key '{KeyName}' has no server scope, rejected tool '{ToolName}'.", accessContext.Key.Name, toolName);
+                    return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' is not authorized for this key." } } })!;
+                }
+
+                toolQuery = toolQuery.Where(t => allowedServerIds.Contains(t.ServerId));
+            }
+
+            // 同名多行时按创建时间升序取第一条，保证结果稳定、可复现（不再依赖数据库物理顺序）
+            var candidates = await toolQuery
+                .OrderBy(t => t.CreatedAt)
+                .ThenBy(t => t.Id)
+                .Take(2)
+                .ToListAsync();
+
+            if (candidates.Count > 1)
+            {
+                _logger.LogWarning(
+                    "[MCP Engine] Duplicate tool name '{ToolName}' matched multiple rows within key scope (ServerId: {ServerId}). " +
+                    "Picking the earliest created one. Please dedupe McpTools.",
+                    toolName, candidates[0].ServerId);
+            }
+
+            var mcpTool = candidates.FirstOrDefault();
 
             if (mcpTool == null)
             {
-                _logger.LogWarning("[MCP Engine] McpTool '{ToolName}' NOT found or disabled/deleted in database.", toolName);
+                _logger.LogWarning("[MCP Engine] McpTool '{ToolName}' NOT found, disabled, deleted or out of key scope.", toolName);
                 return JsonSerializer.SerializeToNode(new { content = new[] { new { type = "text", text = $"Error: Tool '{toolName}' not found or disabled." } } })!;
             }
 
@@ -296,8 +337,7 @@ namespace Nova.Modules.Mcp.Infrastructure.Server.Engine
                 "[MCP Engine] McpTool Entity => Id: {ToolId}, Name: {Name}, ServerId: {ServerId}, RoutePath: {RoutePath}, Method: {Method}, IsPublic: {IsPublic}, CreatedBy: {CreatedBy}",
                 mcpTool.Id, mcpTool.Name, mcpTool.ServerId, mcpTool.RoutePath, mcpTool.HttpMethod, mcpTool.IsPublic, mcpTool.CreatedBy);
 
-            // 授权范围校验：必须与 HandleListToolsAsync 保持一致，防止知道工具名直接越权调用
-            var accessContext = await ResolveKeyAccessAsync(dbContext, mcpKey);
+            // 二次校验（保留 ToolId 级授权判定），与 HandleListToolsAsync 保持一致
             if (!IsToolAuthorized(mcpTool, accessContext))
             {
                 _logger.LogWarning("[MCP Engine] Key is not authorized to call tool '{ToolName}' (ToolId: {ToolId}, ServerId: {ServerId}).",
